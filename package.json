@@ -1,6 +1,10 @@
 {
   "dependencies": {},
   "devDependencies": {
+    "supabase": "^1.110.1",
     "tailwindcss": "^3.3.5"
-  }
+  },
+   "trustedDependencies": [
+  "supabase"
+]
 }

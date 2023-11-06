@@ -2,9 +2,13 @@ This is a template for using Go (with go-chi and air), HTMX, and Tailwind with B
 
 
 Instructions:
-1. Install bun - https://bun.sh/docs/installation
+1. `bun install` - https://bun.sh/docs/installation
 2. `go install` - only dependency so far is air, and that's only for dev anyways
-3. Install postgresql (for local dev) - https://www.postgresql.org/download/linux/debian/
-4. `sudo pg_ctlcluster 12 main start` - more info needed on what this command does
-5. https://www.pgadmin.org/download/ - an interface for postgresql
+3. `air` - from the root dir
+4. `run.sh` is written so that you can have a tailwindcss and air run in the same terminal
 
+
+Supabase: 
+1. Supabase is installed through bun and is already in package.json
+2. `bunx supabase init`
+3. `sudo $(which bunx) supabase start` - needs to run as sudo because it's making a docker container

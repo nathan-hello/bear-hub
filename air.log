@@ -1,0 +1,13 @@
+
+  __    _   ___  
+ / /\  | | | |_) 
+/_/--\ |_| |_| \_ v1.49.0, built with Go go1.19.8
+
+!exclude bin
+!exclude node_modules
+!exclude src
+!exclude tmp
+building...
+running...
+cleaning...
+see you again~
