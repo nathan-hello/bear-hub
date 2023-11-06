@@ -1,7 +1,6 @@
-package main
+package routes
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 )
@@ -11,7 +10,7 @@ type resource struct {
 	real string
 }
 
-var resources = map[string]resource{
+var Resources = map[string]resource{
 	"output.css": {
 		url:  "/static/css/output.css",
 		real: "src/static/css/output.css",
@@ -23,7 +22,7 @@ var resources = map[string]resource{
 }
 
 func Root(w http.ResponseWriter, _ *http.Request) {
-	tmpl, err := template.ParseFiles(resources["root.html"].real)
+	tmpl, err := template.ParseFiles(Resources["root.html"].real)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -37,15 +36,12 @@ func Root(w http.ResponseWriter, _ *http.Request) {
 }
 
 func Router() {
-
-	http.HandleFunc(resources["output.css"].url, func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("HIT")
+	http.HandleFunc(Resources["output.css"].url, func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/css")
-		http.ServeFile(res, req, resources["output.css"].real)
+		http.ServeFile(res, req, Resources["output.css"].real)
 	})
 
 	http.HandleFunc("/", Root)
 
 	http.ListenAndServe(":3000", nil)
-
 }
