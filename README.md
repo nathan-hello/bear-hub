@@ -2,11 +2,10 @@ This is a template for using Go (with go-chi and air), HTMX, and Tailwind with B
 
 
 Instructions:
-1. `bun install` - https://bun.sh/docs/installation
-2. `go install` - only dependency so far is air, and that's only for dev anyways
-3. `air` - from the root dir
-4. `run.sh` is written so that you can have a tailwindcss and air run in the same terminal
-
+0. `curl -fsSL https://bun.sh/install | bash` - install bun
+1. `bun install` - bun install
+2. `go install github.com/cosmtrek/air@latest` - is this possible to be put into go.mod? it's just a dev dependency
+3. `bun run dev` - this is defined in `package.json`. it starts tailwindcss and air
 
 Supabase: 
 1. Supabase is installed through bun and is already in package.json

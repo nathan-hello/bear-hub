@@ -5,23 +5,8 @@ import (
 	"net/http"
 )
 
-type resource struct {
-	url  string
-	file string
-}
-
-var Resources = map[string]resource{
-	"output.css": {
-		url:  "/static/css/output.css",
-		file: "src/static/css/output.css",
-	},
-	"root.html": {
-		file: "src/static/templates/root.html",
-	},
-}
-
 func Root(w http.ResponseWriter, _ *http.Request) {
-	tmpl, err := template.ParseFiles(Resources["root.html"].file)
+	tmpl, err := template.ParseFiles("src/static/templates/root.html")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,9 +20,9 @@ func Root(w http.ResponseWriter, _ *http.Request) {
 }
 
 func Router() {
-	http.HandleFunc(Resources["output.css"].url, func(res http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/static/css/output.css", func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/css")
-		http.ServeFile(res, req, Resources["output.css"].file)
+		http.ServeFile(res, req, "src/static/css/output.css")
 	})
 
 	http.HandleFunc("/", Root)
