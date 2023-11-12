@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "dev": "tailwindcss -i src/static/css/tailwind.css -o src/static/css/output.css --watch && air"
+        "dev": "tailwindcss -i src/static/css/tailwind.css -o src/static/css/output.css --watch & air"
     },
   "dependencies": {},
   "devDependencies": {
