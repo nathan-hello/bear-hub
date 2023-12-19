@@ -1,0 +1,11 @@
+version: '2'
+sql:
+- schema: schema.sql
+  queries: query.sql
+  engine: postgresql
+  database:
+    uri: postgresql://postgres:${PG_PASSWORD}@localhost:5432/authors
+  gen:
+    go:
+      package: authors
+      out: postgresql
