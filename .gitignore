@@ -1,6 +1,5 @@
 node_modules/
 tmp/
-bin/
 *.log
 output.css
 .env

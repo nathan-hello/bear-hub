@@ -1,11 +1,18 @@
 This is a template for using Go (with go-chi and air), HTMX, and Tailwind with Bun being our package manager and builder.
 
 
-Instructions:
-0. `curl -fsSL https://bun.sh/install | bash` - install bun
-1. `bun install` - bun install
-2. `go install github.com/cosmtrek/air@latest` - is this possible to be put into go.mod? it's just a dev dependency
-3. `bun run dev` - this is defined in `package.json`. it starts tailwindcss and air
+Install:
+bun
+1. `curl -fsSL https://bun.sh/install | bash`
+air
+2. `go install github.com/cosmtrek/air@latest`
+sqlc
+3. `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
+Tailwindcss and Supabase
+3. `bun install` - bun install
+
+Bun Scripts
+- `bun run dev` - this is defined in `package.json`. it starts tailwindcss and air
 
 Supabase: 
 
@@ -16,6 +23,7 @@ Supabase:
     - `$SUPA_ACCESS_TOKEN`: Go to https://supabase.com/dashboard/account/tokens and make a token. This will be used alongside your database password for authenticating. 
     - `$SUPA_PROJECT_REF`: This is the Reference ID for your project. You can find it in the dashboard Settings > General > Reference ID
     - `$SUPA_DB_HOST`: You can find this in the dashboard Settings > Database > Host
+ 
     The following it put into .env.example because they are defaulted values.
     - `$SUPA_DB_PORT`: This is 5432 by default. Find it at Settings > Database > Port > Port
     - `$SUPA_DB_NAME`: This is `postgres` by default. Find it at Settings > Database > Database name

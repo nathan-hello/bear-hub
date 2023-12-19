@@ -1,11 +1,11 @@
 version: '2'
 sql:
-- schema: schema.sql
-  queries: query.sql
+- schema: src/db/schema.sql
+  queries: src/db/queries.sql
   engine: postgresql
   database:
-    uri: postgresql://postgres:${PG_PASSWORD}@localhost:5432/authors
+    uri: ${SUPA_DB_URI}
   gen:
     go:
-      package: authors
-      out: postgresql
+      package: todos
+      out: src/sqlc
