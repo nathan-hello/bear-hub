@@ -1,20 +1,9 @@
 package main
 
 import (
-	"github.com/nathan-hello/htmx-template/src/test"
+	"github.com/nathan-hello/htmx-template/src/routes"
 )
 
 func main() {
-
-	test.Database()
+	routes.Router()
 }
-
-// import (
-// 	"github.com/nathan-hello/htmx-template/src/routes"
-// )
-//
-//
-//
-// func main() {
-// 	routes.Router()
-// }
