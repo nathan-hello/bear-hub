@@ -1,14 +1,3 @@
-1. make a todo app
-    - create, read, update, delete todos
-    - this can just be in memory
-    - no users
-    - uses HTMX to render todos through api (is this RESTing?)
-
-2. create database, save todos to database
-    - still no users yet
-    - use `supabase/seed.sql`
-    - be sure to have a delete all button
-
 3. auth!
     - potentially two versions: one using supabase primatives and one using as much non-db specific apis (sql)
     - use email, github oauth, implement JWTs? again this might be something supabase can handle with their db api

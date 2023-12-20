@@ -1,39 +1,46 @@
-This is a template for using Go (with go-chi and air), HTMX, and Tailwind with Bun being our package manager and builder.
+Goals: 
+1. Groundwork: This is a template for making a web application using go, htmx, and a postgres database. 
+    - Notably, I don't have an opinion on what the best golang HTTP router is. This stack will use the built-in router unless it becomes too much to bear. It's up to the user to determine what HTTP router they want.
+2. Make the DX akin to developing on NextJS, Astro, or any of the other great JS frameworks. 
+    - Attached to this project should be a neovim lua config and VSCode settings.json for LSPs inside of .tmpl files that includes tailwindcss, htmx, and postgresql.
+    - This also includes instructions for beginners on how to use each piece of the stack.
+    - Project structure in golang, from what I hear, is a hot topic. This folder structure makes sense to me, but if it's no idiomatic to go professionals then I'm all ears to have my mind changed.
+3. Minimal abstractions: Or, at least abstractions where it makes sense. Server performance is important. Abstractions should compliment (or develop!) someone's skills in standard technologies (sql, css, http, etc), not get in the way of them.
+    - sqlc is a great choice for this. It makes you write actual, real-deal SQL but gives a great DX when you're inside your .go files.
+4. Script the things that are annoying. This should include installing all of the relevant packages, and setting up the stack.
+5. Examples: So far this includes a todo app and live chat app using websockets.
+    - Auth: We're going to use Supabase Auth because it's open source, self-hostable, and an out of the box solution with a good database. 
+        - Q: Should there be a DB layer and Auth layer? Or just DB layer?
+    - Testing: A cool thing about HTMX and sqlc is that they are highly testable. Testing in web applications might be overkill, but it should be included in any examples. 
+    - Cool things that are a discussion for later: SEO, SSG & SSR, Serverless, Docker containers for development and production, an optional build step for optimizing for production (re: file sizes).
+
+Known limitations:
+1. Javascript is required: Because HTMX is client-side javascript, any browsers not using javascript can't use htmx. If you're someone who care a lot about making a JS-free webapp, then you could remove the HTMX dependency. Support for this approach is not something this project is going to consider (at least for now).
 
 
-Install:
-bun
-1. `curl -fsSL https://bun.sh/install | bash`
-air
-2. `go install github.com/cosmtrek/air@latest`
-sqlc
-3. `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
-Tailwindcss and Supabase
-3. `bun install` - bun install
+The following is in order of most to least important to this stack.
+1. htmx        - `https://htmx.org/docs/#installing`
+2. Postgresql  - `https://www.postgresql.org/download/`
+3. sqlc        - `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
+4. tmpl        - `https://github.com/a-h/templ`
+5. air         - `go install github.com/cosmtrek/air@latest`
+6. Tailwindcss - `https://tailwindcss.com/blog/standalone-cli`
 
-Bun Scripts
-- `bun run dev` - this is defined in `package.json`. it starts tailwindcss and air
 
-Supabase: 
+Because this is my workflow, I'm going to assume the foollowing about the database.
+    - This project is using Supabase. - `https://supabase.com/docs/guides/cli/getting-started`
+    - This project does not care about a local database (though that is a feature of supabase, and is really cool)
+    - By extension, the database is Postgresql.
 
-- First, you want to create a Supabase database: https://supabase.com/dashboard/projects
-- You are going to need the following variables:
-    Tip: After you have written the .env file, you can `source .env` to put those variables in your shell!
-    - `$SUPA_DB_PASSWORD`: This is the password you used when you created the project.
-    - `$SUPA_ACCESS_TOKEN`: Go to https://supabase.com/dashboard/account/tokens and make a token. This will be used alongside your database password for authenticating. 
-    - `$SUPA_PROJECT_REF`: This is the Reference ID for your project. You can find it in the dashboard Settings > General > Reference ID
-    - `$SUPA_DB_HOST`: You can find this in the dashboard Settings > Database > Host
- 
-    The following it put into .env.example because they are defaulted values.
-    - `$SUPA_DB_PORT`: This is 5432 by default. Find it at Settings > Database > Port > Port
-    - `$SUPA_DB_NAME`: This is `postgres` by default. Find it at Settings > Database > Database name
-    - `$SUPA_DB_USER`: This is `postgres` by default. Find it at Settings > Database > User
-    - `$SUPA_DB_URI`: This is a combination of the user, password, host, port and database name. You can find it at Settings > Datbase > Connection String > URI. Again, .env.example has this already filled out.     
+Environment Variables:
+`$DB_URI`: This is a combination of the user, password, host, port and database name. You can find it with the Supabase web interface at Settings > Datbase > Connection String > URI.
+    - We need this to get the schema of the remote database with `pg_dump $DB_URI -s -f src/sqlc/input/remote-schema.sqlc`
 
-1. Supabase is installed through bun and is already in package.json
-2. `bunx supabase init`
-3. `bunx supabase login --token $SUPA_ACCESS_TOKEN` 
-    - The --token flag is optional. If not passed in, it will open the browser for you to log in.
-    - If you can't open a browser from the terminal, you can pass `--no-browser` so it will give you a link that you can paste into a browser and log in elsewhere. See https://supabase.com/docs/reference/cli/supabase-login
-4. `bunx supabase link --project-ref $SUPA_PROJECT_REF -p $SUPA_DB_PASSWORD`
 
+Misc Notes:
+- Turn off browser caching on your browser for your `localhost:3000` or whatever port you use.
+
+Notable Commands (to be scripted...):
+- `DB_URI=$DB_URI sqlc generate`
+    - For sqlc.yml to know about ${DB_URI}, it has to be passed in the command.
+    - You could `alias sqlcc="DB_URI=$DB_URI sqlc"` to make this easier

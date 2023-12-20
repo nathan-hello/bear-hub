@@ -1,11 +1,11 @@
 version: '2'
 sql:
-- schema: src/db/schema.sql
-  queries: src/db/queries.sql
+- schema: src/sqlc/input/remote-schema.sql
+  queries: src/sqlc/input/queries.sql
   engine: postgresql
   database:
-    uri: ${SUPA_DB_URI}
+    uri: ${DB_URI}
   gen:
     go:
-      package: todos
-      out: src/sqlc
+      package: sqlc
+      out: src/sqlc/
