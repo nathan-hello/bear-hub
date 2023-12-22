@@ -1,4 +1,4 @@
-package config
+package src
 
 import (
 	"fmt"
@@ -43,7 +43,7 @@ func parseRequiredEnvVars(dotenv map[string]string, fields []string) Config {
 
 }
 
-func NewCopy() Config {
+func NewEnv() Config {
 	requiredEnvVars := parseConfigStruct(Config{})
 
 	dotenv, err := godotenv.Read(".env")
@@ -55,8 +55,8 @@ func NewCopy() Config {
 
 }
 
-var GlobalConfig Config = NewCopy()
+var GlobalConfig Config = NewEnv()
 
-func Get() *Config {
+func Env() *Config {
 	return &GlobalConfig
 }

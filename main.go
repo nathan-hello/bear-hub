@@ -1,9 +1,7 @@
 package main
 
-import (
-	"github.com/nathan-hello/htmx-template/src/routes"
-)
+import "github.com/nathan-hello/htmx-template/src"
 
 func main() {
-	routes.Router()
+	src.Router()
 }
