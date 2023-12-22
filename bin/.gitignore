@@ -1,4 +1,0 @@
-# Ignore all files but keep the folder itself. 
-# We need this folder so air can send its binary and tmp/ folder here
-*
-!.gitignore

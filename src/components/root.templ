@@ -1,0 +1,50 @@
+package components
+
+import "github.com/nathan-hello/htmx-template/src/sqlc"
+
+templ Navbar() {
+<nav class="w-screen bg-gray-900 h-10 flex items-stretch">
+  <div class="h-4 w-4 rounded-full bg-black">asdf</div>
+</nav>
+}
+
+templ Layout(child templ.Component) {
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Homepage</title>
+  <script src="https://unpkg.com/htmx.org@1.9.7"
+    integrity="sha384-EAzY246d6BpbWR7sQ8+WEm40J8c3dHFsqC58IgPlh4kMbRRI6P6WA+LA/qGAyAu8"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="/static/css/tw-output.css" />
+  @Navbar()
+</head>
+
+<body class="bg-gray-500">
+  @child
+</body>
+
+</html>
+}
+
+templ Greeting(name string) {
+<p class="text-blue-900">greeting: { name }</p>
+}
+
+templ Todos(todos []sqlc.Todo) {
+<ul class="">
+  for _, v := range todos {
+  <li class="">
+    <div class="">{ string(v.ID) }</div>
+    <div class="">{ v.Body }</div>
+    <div class="">{ v.CreatedAt.String() }</div>
+  </li>
+  }
+</ul>
+}
+
+templ Root(todos []sqlc.Todo) {
+@Layout(Todos(todos))
+}
