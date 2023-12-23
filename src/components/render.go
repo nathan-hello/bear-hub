@@ -1,33 +1,28 @@
-package test
+package components
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"testing"
 
 	_ "github.com/lib/pq"
 	"github.com/nathan-hello/htmx-template/src/config"
 	"github.com/nathan-hello/htmx-template/src/sqlc"
 )
 
-func TestDatabaseConnection(t *testing.T) {
+func getTodos() ([]sqlc.Todo, error) {
 	ctx := context.Background()
-
 	db, err := sql.Open("postgres", config.Env().DB_URI)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	f := sqlc.New(db)
-
-	rows, err := f.AllTodos(ctx, 10)
+	todosTable := sqlc.New(db)
+	rows, err := todosTable.AllTodos(ctx, 99)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	fmt.Printf("rows of todos: %#v", rows)
-
+	return rows, err
 }

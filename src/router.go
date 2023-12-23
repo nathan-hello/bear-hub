@@ -1,15 +1,27 @@
 package src
 
 import (
-	"context"
-	"database/sql"
 	"net/http"
 
 	"github.com/a-h/templ"
-	_ "github.com/lib/pq"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
 )
+
+func Todo(w http.ResponseWriter, r *http.Request) {
+
+	post := func() {
+		if err := r.ParseForm(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		body := r.FormValue("body")
+
+		if len(body) > 255 {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+	}
+
+}
 
 func Router() {
 	http.HandleFunc("/static/css/tw-output.css", func(res http.ResponseWriter, req *http.Request) {
@@ -21,20 +33,11 @@ func Router() {
 		http.ServeFile(res, req, "src/static/favicon.ico")
 	})
 
-	ctx := context.Background()
-	db, err := sql.Open("postgres", Env().DB_URI)
-	if err != nil {
-		panic(err)
-	}
+	http.HandleFunc("/white-bear.ico", func(res http.ResponseWriter, req *http.Request) {
+		http.ServeFile(res, req, "src/static/white-bear.ico")
+	})
 
-	todosTable := sqlc.New(db)
-	rows, err := todosTable.AllTodos(ctx, 99)
-
-	if err != nil {
-		panic(err)
-	}
-
-	http.Handle("/", templ.Handler(components.Root(rows)))
+	http.Handle("/", templ.Handler(components.Root()))
 
 	// mime.AddExtensionType(".css", "text/css")
 	http.ListenAndServe(":3000", nil)
