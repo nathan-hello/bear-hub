@@ -3,5 +3,8 @@ tmp/
 *.log
 output.css
 .env
-# This is so we don't flood the git repo with a ton of code that's generated.
+# This is so the repo isn't flooded with a ton of generated sql.
 remote-schema.sql
+# This is so the repo isn't flooded with a ton of generated css.
+# There should be a mechanism in place in CI for css generation.
+tw-output.css
