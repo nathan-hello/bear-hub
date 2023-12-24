@@ -45,3 +45,21 @@ Problems to be ironed out:
 - templ [claims to support hot reloading in the browser](https://templ.guide/commands-and-tools/hot-reload). Whenever I try to run `templ generate --proxy="localhost:3000"`, the program crashes. Maybe there's something else I should do. Even so, it's not entirely clear if the hot reloading extends to .go files. For now, we'll use air and refresh like cavemen.
   - Even using air, there is a compile time with templ or air (probably templ), where when you press refresh, the server is down until templ can compile, and air can compile that. Is there a browser setting to adjust the timeout period? Is there a misconfig somewhere? Maybe this is just the cost of using a compiled langauge, because air does compile to `tmp/` before throwing back up the server. Even so, why does it terminate? Does it know that it's not caught up yet?
 
+VSCode
+- For VSCode users, install the relevant extensions. Making a `.vscode/` folder isn't necessary because the setup is pretty easy. If this turns into a fully fledged out thing, there will be an option to add this automatically. For now, this is what you need to add. You can make them recommended extensions, then search `@recommended` in the Extensions tab to see them all, or just search for them, they're not hard to find. TODO: Provide proper workflow for working with Postgresql. 
+
+extensions.json
+```json
+{ "recommendations": [
+    "golang.go",
+    "a-h.templ",
+    "tamasfe.even-better-toml",
+    "bradlc.vscode-tailwindcss",
+    "mads-hartmann.bash-ide-vscode",
+]}
+```
+
+settings.json
+```json
+{ "gopls": { "ui.semanticTokens": true } }
+```

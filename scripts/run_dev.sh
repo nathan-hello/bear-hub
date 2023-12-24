@@ -20,9 +20,9 @@ log_with_timestamp() {
     echo -e "$cmd @ PID: $!"
 }
 
-log_with_timestamp "tailwindcss -i src/static/css/tw-base.css -o src/static/css/tw-output.css -w" "log/dev/tailwind.log"
-log_with_timestamp "templ generate -path src/components --watch" "log/dev/templ.log"
-log_with_timestamp "air" "log/dev/air.log"
+log_with_timestamp "tailwindcss -i src/static/css/tw-base.css -o src/static/css/tw-output.css -w" "log/tailwind.log"
+log_with_timestamp "templ generate -path src/components --watch" "log/templ.log"
+log_with_timestamp "air" "log/air.log"
 
 
 trap 'cleanup' INT # Trap interrupt signal and call cleanup function
