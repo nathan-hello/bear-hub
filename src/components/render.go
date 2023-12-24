@@ -5,13 +5,13 @@ import (
 	"database/sql"
 
 	_ "github.com/lib/pq"
-	"github.com/nathan-hello/htmx-template/src/config"
+	"github.com/nathan-hello/htmx-template/src/utils"
 	"github.com/nathan-hello/htmx-template/src/sqlc"
 )
 
 func getTodos() ([]sqlc.Todo, error) {
 	ctx := context.Background()
-	db, err := sql.Open("postgres", config.Env().DB_URI)
+	db, err := sql.Open("postgres", utils.Env().DB_URI)
 
 	if err != nil {
 		return nil, err

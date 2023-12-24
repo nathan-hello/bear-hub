@@ -1,0 +1,14 @@
+// Recommend VSCode Extensions.
+// Install these by going to Extensions Tab and in the search bar
+// type @recommended and they will pop up.
+{
+    "recommendations": [
+        "golang.go",
+        "a-h.templ",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "tamasfe.even-better-toml",
+        "bradlc.vscode-tailwindcss",
+        "mads-hartmann.bash-ide-vscode",
+    ]
+}
