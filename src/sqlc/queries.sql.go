@@ -7,25 +7,28 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 )
 
-const allTodos = `-- name: AllTodos :many
-SELECT id, created_at, body FROM todo LIMIT $1
+const getTodosWithLimit = `-- name: GetTodosWithLimit :many
+SELECT body
+FROM todo
+LIMIT $1
 `
 
-func (q *Queries) AllTodos(ctx context.Context, limit int64) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, allTodos, limit)
+func (q *Queries) GetTodosWithLimit(ctx context.Context, dollar_1 sql.NullInt64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getTodosWithLimit, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Todo
+	var items []string
 	for rows.Next() {
-		var i Todo
-		if err := rows.Scan(&i.ID, &i.CreatedAt, &i.Body); err != nil {
+		var body string
+		if err := rows.Scan(&body); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, body)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

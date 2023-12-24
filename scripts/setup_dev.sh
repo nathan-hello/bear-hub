@@ -1,8 +1,16 @@
 #!/bin/bash
 
-install_postgresql_apt_get() {
-    echo "Installing Postgres through apt-get: https://www.postgresql.org/download/linux/ubuntu/"
-    sudo apt-get -y install postgresql-12
+install_postgresql_ubuntu_debian() {
+    echo "Installing Postgres through apt-get."
+    echo "Postgresql-15 is not available on normal apt-get at time of writing. Installing as per instructions https://www.postgresql.org/download/linux/ubuntu/"
+    # Installation instructions for Debian and Ubuntu are idential.
+
+    # Create the file repository configuration:
+    sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+    sudo apt-get update
+    sudo apt-get -y install postgresql
 }
 
 install_sqlc() {
@@ -27,10 +35,10 @@ install_air() {
 
 install_tailwindcss() {
     echo -e "\nhttps://github.com/tailwindlabs/tailwindcss/releases \nReleases are in the link above. The files without extensions are binaries. Place whichever is relevant to your OS/platform in a PATH folder (e.g. /bin/)"
-    echo -e "Alternatively, you can run `wget -O ~/.local/bin/tailwindcss <url of file> & chmod +x ~/.local/bin/tailwindcss`"
+    echo -e "Alternatively, you can run `wget -O ~/.local/bin/tailwindcss <url of file> \& chmod +x ~/.local/bin/tailwindcss`"
 }
 
-install_postgresql_apt_get
+install_postgresql_ubuntu_debian
 install_sqlc
 install_templ
 install_air
