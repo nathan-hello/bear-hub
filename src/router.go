@@ -5,21 +5,23 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/src/sqlc"
 )
 
-func Todo(w http.ResponseWriter, r *http.Request) {
-
-	post := func() {
-		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		body := r.FormValue("body")
-
-		if len(body) > 255 {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-
+func Todo(w http.ResponseWriter, r *http.Request) *sqlc.Todo {
+	if err := r.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil
 	}
+	body := r.FormValue("body")
+
+	if len(body) > 255 {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
+	// keeping the compiler happy. to be implemented.
+	return nil
 
 }
 

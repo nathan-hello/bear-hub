@@ -20,11 +20,11 @@ Known limitations:
 
 
 The following is in order of most to least important to this stack.
-1. htmx        - `https://htmx.org/docs/#installing`
+1. htmx        - `https://htmx.org/docs/`
 2. Postgresql  - `https://www.postgresql.org/download/`
-3. sqlc        - `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`
+3. sqlc        - `https://github.com/sqlc-dev/sqlc/cmd/sqlc`
 4. tmpl        - `https://github.com/a-h/templ`
-5. air         - `go install github.com/cosmtrek/air@latest`
+5. air         - `https://github.com/cosmtrek/air`
 6. Tailwindcss - `https://tailwindcss.com/blog/standalone-cli`
 
 
