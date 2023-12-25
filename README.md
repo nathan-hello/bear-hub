@@ -40,6 +40,7 @@ Environment Variables:
 
 Misc Notes:
 - Turn off browser caching on your browser for your `localhost:3000` or whatever port you use. This ensures when you do a `:wa`, you'll see the change.
+- To run tests, use `go test -v ./...`. This is because the tests are in the tests/ folder. Again, folder structure here is what makes sense to me, I'm open to having my mind changed. 
 
 Problems to be ironed out:
 - templ [claims to support hot reloading in the browser](https://templ.guide/commands-and-tools/hot-reload). Whenever I try to run `templ generate --proxy="localhost:3000"`, the program crashes. Maybe there's something else I should do. Even so, it's not entirely clear if the hot reloading extends to .go files. For now, we'll use air and refresh like cavemen.

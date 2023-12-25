@@ -7,28 +7,45 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 )
 
-const getTodosWithLimit = `-- name: GetTodosWithLimit :many
-SELECT body
-FROM todo
-LIMIT $1
+const deleteTodo = `-- name: DeleteTodo :exec
+DELETE FROM todo WHERE id = $1
 `
 
-func (q *Queries) GetTodosWithLimit(ctx context.Context, dollar_1 sql.NullInt64) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getTodosWithLimit, dollar_1)
+func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteTodo, id)
+	return err
+}
+
+const insertTodo = `-- name: InsertTodo :one
+INSERT INTO todo (body) values ($1) RETURNING id, created_at, body
+`
+
+func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, insertTodo, body)
+	var i Todo
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Body)
+	return i, err
+}
+
+const selectTodos = `-- name: SelectTodos :many
+SELECT id, created_at, body FROM todo LIMIT $1
+`
+
+func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, selectTodos, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []Todo
 	for rows.Next() {
-		var body string
-		if err := rows.Scan(&body); err != nil {
+		var i Todo
+		if err := rows.Scan(&i.ID, &i.CreatedAt, &i.Body); err != nil {
 			return nil, err
 		}
-		items = append(items, body)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

@@ -3,10 +3,11 @@ package components
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/nathan-hello/htmx-template/src/utils"
 	"github.com/nathan-hello/htmx-template/src/sqlc"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func getTodos() ([]sqlc.Todo, error) {
@@ -18,11 +19,15 @@ func getTodos() ([]sqlc.Todo, error) {
 	}
 
 	todosTable := sqlc.New(db)
-	rows, err := todosTable.AllTodos(ctx, 99)
+	rows, err := todosTable.SelectTodos(ctx, 99)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return rows, err
+}
+
+func formatTime(t *time.Time) string {
+	return t.Format(time.RFC822)
 }
