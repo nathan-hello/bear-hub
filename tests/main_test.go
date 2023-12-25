@@ -22,12 +22,24 @@ func TestDatabaseConnection(t *testing.T) {
 
 	f := sqlc.New(db)
 
-	rows, err := f.AllTodos(ctx, 10)
+	rows, err := f.SelectTodos(ctx, 10)
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("rows of todos: %#v", rows)
+	fmt.Printf("rows of todos: %#v\n", rows)
+
+	row, err := f.InsertTodo(ctx, "gotest 1")
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("inserted row: %#v\n", row)
+
+	// f.DeleteTodo(ctx, row.ID)
+
+	// fmt.Printf("deleted row: %#v\n", row)
 
 }
