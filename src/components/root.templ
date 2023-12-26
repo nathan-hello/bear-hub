@@ -1,118 +1,70 @@
 package components
 
-import "github.com/nathan-hello/htmx-template/src/sqlc"
-import "fmt"
-
-templ navbar(title string) {
-	<nav class="bg-white border-gray-200 dark:bg-gray-900">
-		<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-			<a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
-				<img src="/white-bear.ico" class="h-8" alt="Flowbite Logo"/>
-				<span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">{ title }</span>
-			</a>
-			<button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
-				<span class="sr-only">Open main menu</span>
-				<svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
-				</svg>
-			</button>
-			<div class="hidden w-full md:block md:w-auto" id="navbar-default">
-				<ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-					<li>
-						<a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500" aria-current="page">Home</a>
-					</li>
-					<li>
-						<a href="#" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Todos</a>
-					</li>
-					<li>
-						<a href="#" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Chat</a>
-					</li>
-				</ul>
+templ root() {
+	<div class="bg-white dark:bg-gray-900 min-h-screen">
+		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+			<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 mb-8">
+				<h1 class="text-gray-900 dark:text-white text-3xl md:text-5xl font-extrabold mb-2">
+					tools for bears
+				</h1>
+				<p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-6">
+					This website was make using go, htmx, templ, sqlc, and tailwind.
+				</p>
+				<a href="https://github.com/nathan-hello/htmx-template" class="inline-flex justify-center items-center py-2.5 px-5 text-base font-medium text-center text-white rounded-lg bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900">
+					Learn about the stack
+					<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path>
+					</svg>
+				</a>
+			</div>
+			<div class="grid md:grid-cols-2 gap-8">
+				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
+					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
+						Bear Todo 
+					</h2>
+					<p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+						The hello world of websites, this is an example of doing create, read, and deleting Todos. Updated might be implemeneted later.
+					</p>
+					<a href="/todo" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-lg inline-flex items-center">
+						Make a todo
+						<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+							<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path>
+						</svg>
+					</a>
+				</div>
+				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
+					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
+						Bear Chat
+					</h2>
+					<p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+						Chat with our community of bears. Very much to-be-implemented, but when it is, it's going to be really cool.
+					</p>
+					<a href="/chat" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-lg inline-flex items-center">
+						Chat now
+						<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+							<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path>
+						</svg>
+					</a>
+				</div>
+				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
+					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
+						Credits 
+					</h2>
+					<p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+						This is more of a showcase on making a bunch of different technologies work together, while providing massive DX wins.
+					</p>
+					<a href="/credit" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-lg inline-flex items-center">
+						Learn who made this possible
+						<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+							<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path>
+						</svg>
+					</a>
+				</div>
 			</div>
 		</div>
-	</nav>
-}
-
-templ layout(name string, title string, child templ.Component) {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ title }</title>
-			<script src="https://unpkg.com/htmx.org@1.9.7" integrity="sha384-EAzY246d6BpbWR7sQ8+WEm40J8c3dHFsqC58IgPlh4kMbRRI6P6WA+LA/qGAyAu8" crossorigin="anonymous"></script>
-			<link rel="stylesheet" type="text/css" href="/static/css/tw-output.css"/>
-			@navbar(title)
-		</head>
-		<body class="bg-gray-500">
-			@child
-		</body>
-	</html>
-}
-
-templ createTodo() {
-	<div class="w-full flex my-5">
-		<form class="w-96 mx-auto" hx-post="/todo" hx-target="#todos-body" hx-swap="beforeend" hx-on::after-request="this.reset()" >
-			<textarea name="body" rows="4" class="block p-2.5 w-full text-sm rounded-lg border bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Add todo..."></textarea>
-			<div class="w-full flex justify-between">
-				<button class="bg-red-300 h-10 w-20 mx-auto my-2 rounded-xl ">Cancel</button>
-				<button type="submit" class="bg-blue-600 h-10 w-20 mx-auto my-2 rounded-xl ">Submit</button>
-			</div>
-		</form>
 	</div>
 }
-
-templ todosTable(todos []sqlc.Todo, err error) {
-	if err != nil {
-		<div class="bg-red-500">Error!</div>
-	}
-	<div id="todos-table-and-submitter">
-		<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">
-			<table class="w-full text-sm text-left rtl:text-right text-white min-w-0 break-words word-wrap">
-				<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-					<tr>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Task
-						</th>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Date
-						</th>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Delete
-						</th>
-					</tr>
-				</thead>
-				<tbody id="todos-body">
-					for _, v := range todos {
-						@TodoRow(&v)
-					}
-				</tbody>
-			</table>
-		</div>
-		@createTodo()
-	</div>
-}
-
-templ TodoRow(v *sqlc.Todo) {
-	<tr id={ fmt.Sprintf("todo-%v", v.ID) } class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-		<td class="px-6 py-4 max-w-xs">
-			{ v.Body }
-		</td>
-		<th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-xs">
-			{ formatTime(&v.CreatedAt) }
-		</th>
-		<td class="px-6 py-4 max-w-xs">
-			<button
- 				hx-delete={ fmt.Sprintf("/todo?id=%v", v.ID) }
- 				hx-swap="delete"
- 				hx-target={ fmt.Sprintf("#todo-%v", v.ID) }
- 				class="bg-red-300 h-10 w-20 mx-auto my-2 rounded-xl "
-			>Delete</button>
-		</td>
-	</tr>
-}
-
 
 templ Root() {
-	@layout("Bear's Todos", "Bear's Todos", todosTable(getTodos()))
+	@layout("Bear Hub", "Bear Hub", root())
 }

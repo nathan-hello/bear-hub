@@ -1,106 +1,28 @@
 package src
 
 import (
-	"context"
-	"database/sql"
-	"html/template"
 	"net/http"
-	"strconv"
 
-	"github.com/a-h/templ"
-	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
-	"github.com/nathan-hello/htmx-template/src/utils"
+	"github.com/nathan-hello/htmx-template/src/routes"
 )
 
-func Todo(w http.ResponseWriter, r *http.Request) {
+func staticGet(path string, filepath string) http.HandlerFunc {
 
-	var response template.HTML
-	ctx := context.Background()
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path != "/todo" || r.Method != "POST" && r.Method != "DELETE" {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	db, err := sql.Open("postgres", utils.Env().DB_URI)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	todosTable := sqlc.New(db)
-
-	post := func() {
-
-		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		if r.URL.Path != path {
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		body := r.FormValue("body")
-
-		if len(body) > 255 || len(body) < 3 {
-			w.WriteHeader(http.StatusBadRequest)
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
-		row, err := todosTable.InsertTodo(ctx, body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		response, err = templ.ToGoHTML(ctx, components.TodoRow(&row))
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Write([]byte(response))
-		return
+		http.ServeFile(w, r, filepath)
 	}
 
-	del := func() {
-		id := r.URL.Query().Get("id")
-		parsedId, err := strconv.ParseInt(id, 10, 0)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-		todosTable.DeleteTodo(ctx, parsedId)
-		w.WriteHeader(http.StatusOK)
-
-	}
-
-	if r.Method == "POST" {
-		post()
-		return
-	}
-
-	if r.Method == "DELETE" {
-		del()
-		return
-	}
-
-}
-
-func Root(w http.ResponseWriter, r *http.Request) {
-
-	if r.URL.Path != "/" || r.Method != "GET" {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	ctx := context.Background()
-
-	response, err := templ.ToGoHTML(ctx, components.Root())
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	w.Write([]byte(response))
 }
 
 func Router() {
@@ -109,17 +31,11 @@ func Router() {
 		http.ServeFile(res, req, "src/static/css/tw-output.css")
 	})
 
-	http.HandleFunc("/favicon.ico", func(res http.ResponseWriter, req *http.Request) {
-		http.ServeFile(res, req, "src/static/favicon.ico")
-	})
+	http.HandleFunc("/favicon.ico", staticGet("/favicon.ico", "src/static/favicon.ico"))
+	http.HandleFunc("/white-bear.ico", staticGet("/white-bear.ico", "src/static/white-bear.ico"))
 
-	http.HandleFunc("/white-bear.ico", func(res http.ResponseWriter, req *http.Request) {
-		http.ServeFile(res, req, "src/static/white-bear.ico")
-	})
+	http.HandleFunc("/", routes.Root)
+	http.HandleFunc("/todo", routes.Todo)
 
-	http.HandleFunc("/", Root)
-	http.HandleFunc("/todo", Todo)
-
-	// mime.AddExtensionType(".css", "text/css")
 	http.ListenAndServe(":3000", nil)
 }
