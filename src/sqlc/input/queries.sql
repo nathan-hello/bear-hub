@@ -6,3 +6,12 @@ INSERT INTO todo (body) values ($1) RETURNING *;
 
 -- name: DeleteTodo :exec
 DELETE FROM todo WHERE id = $1;
+
+-- name: InsertProfile :one
+INSERT INTO profile (user_id, username) values ($1, $2) RETURNING *;
+
+-- name: SelectProfileById :one
+SELECT * FROM profile WHERE profile.id = $1;
+
+-- name: SelectProfileByUsername :one
+SELECT * FROM profile WHERE profile.username = $1;

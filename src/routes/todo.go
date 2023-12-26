@@ -34,9 +34,9 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	todosTable := sqlc.New(db)
+	conn := sqlc.New(db)
 
-	post := func() {
+	if r.Method == "POST" {
 
 		if err := r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		row, err := todosTable.InsertTodo(ctx, body)
+		row, err := conn.InsertTodo(ctx, body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -66,18 +66,18 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	del := func() {
+	if r.Method == "DELETE" {
 		id := r.URL.Query().Get("id")
 		parsedId, err := strconv.ParseInt(id, 10, 0)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		todosTable.DeleteTodo(ctx, parsedId)
+		conn.DeleteTodo(ctx, parsedId)
 		w.WriteHeader(http.StatusOK)
 
 	}
 
-	get := func() {
+	if r.Method == "GET" {
 
 		response, err := templ.ToGoHTML(ctx, components.Todo())
 
@@ -89,21 +89,6 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(response))
 		return
 
-	}
-
-	if r.Method == "GET" {
-		get()
-		return
-	}
-
-	if r.Method == "POST" {
-		post()
-		return
-	}
-
-	if r.Method == "DELETE" {
-		del()
-		return
 	}
 
 }
