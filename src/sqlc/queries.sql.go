@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const deleteTodo = `-- name: DeleteTodo :exec
@@ -18,6 +20,27 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 	return err
 }
 
+const insertProfile = `-- name: InsertProfile :one
+INSERT INTO profile (user_id, username) values ($1, $2) RETURNING id, username, user_id, todos
+`
+
+type InsertProfileParams struct {
+	UserID   uuid.UUID
+	Username string
+}
+
+func (q *Queries) InsertProfile(ctx context.Context, arg InsertProfileParams) (Profile, error) {
+	row := q.db.QueryRowContext(ctx, insertProfile, arg.UserID, arg.Username)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.UserID,
+		&i.Todos,
+	)
+	return i, err
+}
+
 const insertTodo = `-- name: InsertTodo :one
 INSERT INTO todo (body) values ($1) RETURNING id, created_at, body
 `
@@ -26,6 +49,38 @@ func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
 	row := q.db.QueryRowContext(ctx, insertTodo, body)
 	var i Todo
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.Body)
+	return i, err
+}
+
+const selectProfileById = `-- name: SelectProfileById :one
+SELECT id, username, user_id, todos FROM profile WHERE profile.id = $1
+`
+
+func (q *Queries) SelectProfileById(ctx context.Context, id int64) (Profile, error) {
+	row := q.db.QueryRowContext(ctx, selectProfileById, id)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.UserID,
+		&i.Todos,
+	)
+	return i, err
+}
+
+const selectProfileByUsername = `-- name: SelectProfileByUsername :one
+SELECT id, username, user_id, todos FROM profile WHERE profile.username = $1
+`
+
+func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) (Profile, error) {
+	row := q.db.QueryRowContext(ctx, selectProfileByUsername, username)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.UserID,
+		&i.Todos,
+	)
 	return i, err
 }
 

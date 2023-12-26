@@ -377,6 +377,13 @@ type AuthUser struct {
 	DeletedAt sql.NullTime
 }
 
+type Profile struct {
+	ID       int64
+	Username string
+	UserID   uuid.UUID
+	Todos    sql.NullInt64
+}
+
 type Todo struct {
 	ID        int64
 	CreatedAt time.Time
