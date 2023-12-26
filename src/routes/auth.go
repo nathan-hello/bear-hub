@@ -31,7 +31,7 @@ func (c *Credentials) Validate() bool {
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path != "/signin" {
+	if r.URL.Path != "/signup" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
