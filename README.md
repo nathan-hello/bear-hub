@@ -17,6 +17,7 @@ Goals:
 
 Known limitations:
 1. Javascript is required: Because HTMX is client-side javascript, any browsers not using javascript can't use htmx. If you're someone who care a lot about making a JS-free webapp, then you could remove the HTMX dependency. Support for this approach is not something this project is going to consider (at least for now). Though if you're someone who cares about this, you probably already know what you're doing.
+2. At time of writing, templ doesn't seem to support compilation of .templ files into a directory other than the one they are already written in. And also they will be 1:1 where `foo.templ` will go into `foo_templ.go`, opposed to having one file that takes in all of the templ. I'm sure features like these will get added over time (and I'd like to see if I could help!) but for now, the `components/` folder is a bit messy. 
 
 
 The following is in order of most to least important to this stack.
