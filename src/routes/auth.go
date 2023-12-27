@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"net/mail"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -14,20 +13,6 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 	"github.com/nedpals/supabase-go"
 )
-
-type Credentials struct {
-	username string
-	password string
-	email    string
-}
-
-func (c *Credentials) Validate() bool {
-	user := len(c.username) > 3
-	pass := len(c.password) > 4
-	_, err := mail.ParseAddress(c.email)
-	return user && pass && err == nil
-
-}
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 
@@ -46,20 +31,42 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	conn := sqlc.New(db)
 
+	returnFormWithErrors := func(errs *utils.SignUpErrors) {
+		response, err := templ.ToGoHTML(ctx, components.SignInForm(*errs))
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Write([]byte(response))
+		return
+	}
+
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		cred := Credentials{
-			username: r.FormValue("username"),
-			password: r.FormValue("password"),
-			email:    r.FormValue("email"),
+		cred := utils.Credentials{
+			Username: r.FormValue("username"),
+			Password: r.FormValue("password"),
+			PassConf: r.FormValue("password-confirm"),
+			Email:    r.FormValue("email"),
 		}
 
-		if ok := cred.Validate(); !ok {
-			w.WriteHeader(http.StatusBadRequest)
+		errs := cred.Validate()
+
+		if len(errs.ErrsStr) > 0 {
+			returnFormWithErrors(errs)
+			return
+		}
+
+		errs = cred.ValidateEmailUsername()
+
+		if len(errs.ErrsStr) > 0 {
+			returnFormWithErrors(errs)
 			return
 		}
 
@@ -68,42 +75,41 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		client := supabase.CreateClient(url, publicKey)
 
 		user, err := client.Auth.SignUp(ctx, supabase.UserCredentials{
-			Email:    cred.email,
-			Password: cred.password,
+			Email:    cred.Email,
+			Password: cred.Password,
 		})
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			returnFormWithErrors(cred.CustomErrorMessage("Internal Server Error - 125632"))
 			return
 		}
 
 		var profileArgs sqlc.InsertProfileParams
 		profileArgs.UserID, _ = uuid.Parse(user.ID)
-		profileArgs.Username = cred.username
-
-		existing, err := conn.SelectProfileByUsername(ctx, profileArgs.Username)
-		if err != nil {
-			if err != sql.ErrNoRows || existing.ID > 0 {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		}
-
+		profileArgs.Username = cred.Username
 		prof, err := conn.InsertProfile(ctx, profileArgs)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			returnFormWithErrors(cred.CustomErrorMessage("Internal Server Error - 153294"))
 			return
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("/profile/%v", prof.ID), http.StatusSeeOther)
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", prof.ID))
 		return
 
 	}
 
 	if r.Method == "GET" {
 
-		response, err := templ.ToGoHTML(ctx, components.SignIn())
+		defaultFormErr := utils.FormErr{BorderColor: "border-blue-500"}
+		form := utils.SignUpErrors{
+			Email:    defaultFormErr,
+			Username: defaultFormErr,
+			Password: defaultFormErr,
+			PassConf: defaultFormErr,
+		}
+
+		response, err := templ.ToGoHTML(ctx, components.SignIn(form))
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

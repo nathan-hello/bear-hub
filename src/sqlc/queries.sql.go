@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -50,6 +51,16 @@ func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
 	var i Todo
 	err := row.Scan(&i.ID, &i.CreatedAt, &i.Body)
 	return i, err
+}
+
+const selectEmailAlreadyExists = `-- name: SelectEmailAlreadyExists :one
+SELECT email FROM auth.users WHERE auth.users.email = $1
+`
+
+func (q *Queries) SelectEmailAlreadyExists(ctx context.Context, email sql.NullString) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, selectEmailAlreadyExists, email)
+	err := row.Scan(&email)
+	return email, err
 }
 
 const selectProfileById = `-- name: SelectProfileById :one
