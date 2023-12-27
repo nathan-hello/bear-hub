@@ -65,9 +65,6 @@ templ TodoRow(v *sqlc.Todo) {
 	</tr>
 }
 
-templ Todo() {
-	@layout("Bear's Todos", "Bear's Todos", todosTable(getTodos()))
-}
 templ root() {
 	<div class="bg-white dark:bg-gray-900 min-h-screen">
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
@@ -133,18 +130,8 @@ templ root() {
 	</div>
 }
 
-templ Root() {
-	@layout("Bear Hub", "Bear Hub", root())
-}
-
 templ profile(p *sqlc.Profile) {
-	<div>
-    {fmt.Sprintf("%#v\n", p)}
-  </div>
-}
-
-templ Profile(p *sqlc.Profile) {
-	@layout("Bear's Profile", "Bear's Profile", profile(p))
+	{ fmt.Sprintf("%#v\n", p) }
 }
 
 templ credit() {
@@ -158,4 +145,16 @@ templ credit() {
 
 templ Credit() {
 	@layout("asdf", "fdsa", credit())
+}
+
+templ Profile(p *sqlc.Profile) {
+	@layout("Bear's Profile", "Bear's Profile", profile(p))
+}
+
+templ Root() {
+	@layout("Bear Hub", "Bear Hub", root())
+}
+
+templ Todo() {
+	@layout("Bear's Todos", "Bear's Todos", todosTable(getTodos()))
 }

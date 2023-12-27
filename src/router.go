@@ -37,6 +37,7 @@ func Router() {
 	http.HandleFunc("/", routes.Root)
 	http.HandleFunc("/todo", routes.Todo)
 	http.HandleFunc("/signup", routes.SignUp)
+	http.HandleFunc("/profile/", routes.UserProfile)
 
 	http.ListenAndServe(":3000", nil)
 }

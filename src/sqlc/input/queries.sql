@@ -15,3 +15,6 @@ SELECT * FROM profile WHERE profile.id = $1;
 
 -- name: SelectProfileByUsername :one
 SELECT * FROM profile WHERE profile.username = $1;
+
+-- name: SelectEmailAlreadyExists :one
+SELECT email FROM auth.users WHERE auth.users.email = $1;
