@@ -3,7 +3,7 @@
 //   sqlc v1.24.0
 // source: queries.sql
 
-package sqlc
+package db
 
 import (
 	"context"
@@ -61,6 +61,17 @@ func (q *Queries) SelectEmailAlreadyExists(ctx context.Context, email sql.NullSt
 	row := q.db.QueryRowContext(ctx, selectEmailAlreadyExists, email)
 	err := row.Scan(&email)
 	return email, err
+}
+
+const selectProfileByAuthUserId = `-- name: SelectProfileByAuthUserId :one
+SELECT id FROM profile WHERE profile.user_id = $1
+`
+
+func (q *Queries) SelectProfileByAuthUserId(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, selectProfileByAuthUserId, userID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const selectProfileById = `-- name: SelectProfileById :one

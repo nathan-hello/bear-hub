@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
+	sqlc "github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
