@@ -13,16 +13,17 @@ cleanup() {
 log_with_timestamp() {
     local cmd=$1
     local logfile=$2
+    local program=$3
 
     bash -c "$cmd" 2>&1 | while IFS= read -r line; do
-        echo "$(date): $line"
-    done >> "$logfile" &
+        echo "$program = $(date +"%T"): $line" | tee -a $logfile
+    done &
     echo -e "$cmd @ PID: $!"
 }
 
-log_with_timestamp "tailwindcss -i src/static/css/tw-base.css -o src/static/css/tw-output.css -w" "log/tailwind.log"
-log_with_timestamp "templ generate -path src/components --watch" "log/templ.log"
-log_with_timestamp "air" "log/air.log"
+log_with_timestamp "tailwindcss -i src/static/css/tw-base.css -o src/static/css/tw-output.css -w" "log/tailwind.log" "tailwindcss"
+log_with_timestamp "templ generate -path src/components --watch" "log/templ.log" "templ      "
+log_with_timestamp "air" "log/air.log" "air        "  
 
 
 trap 'cleanup' INT # Trap interrupt signal and call cleanup function
