@@ -72,12 +72,12 @@ templ passwordConfirm(borderColor string, value string) {
 	</div>
 }
 
-templ SignInForm(s utils.SignUpErrors) {
+templ SignUpForm(s utils.SignUpErrors) {
 	for _, v := range s.ErrsStr {
 		@errorMsg(v)
 	}
-  <div class="py-2"/>
-	<form class="w-96 mx-auto" hx-post="/signup" id="sign-in-form" hx-target="this">
+	<div class="py-2"></div>
+	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
 		@email(s.Email.BorderColor, s.Email.Value)
 		@username(s.Username.BorderColor, s.Username.Value)
 		@password(s.Password.BorderColor, "")
@@ -86,18 +86,41 @@ templ SignInForm(s utils.SignUpErrors) {
 	</form>
 }
 
-templ SignInContainer(s utils.SignUpErrors) {
+templ SignUpContainer(s utils.SignUpErrors) {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-		@SignInForm(s)
+		@SignUpForm(s)
 	</div>
 }
 
-templ SignIn(s utils.SignUpErrors) {
-	@layout("Bear Hub - Sign In", "Sign In", SignInContainer(s))
+templ SignUp(s utils.SignUpErrors) {
+	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer(s))
 }
 
 templ errorMsg(s string) {
 	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
 		{ s }
 	</div>
+}
+
+templ SignInForm(s *utils.SignInErrors) {
+  
+	for _, v := range s.ErrsStr {
+		@errorMsg(v)
+	}
+	<div class="py-2"></div>
+	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
+		@email(s.Email.BorderColor, s.Email.Value)
+		@password(s.Password.BorderColor, "")
+		<button class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
+	</form>
+}
+
+templ SignInContainer(s *utils.SignInErrors) {
+	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+		@SignInForm(s)
+	</div>
+}
+
+templ SignIn(s *utils.SignInErrors) {
+	@layout("Bear Hub - Sign In", "Sign In", SignInContainer(s))
 }

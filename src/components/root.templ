@@ -1,6 +1,6 @@
 package components
 
-import "github.com/nathan-hello/htmx-template/src/sqlc"
+import "github.com/nathan-hello/htmx-template/src/db"
 import "fmt"
 
 templ createTodo() {
@@ -15,7 +15,7 @@ templ createTodo() {
 	</div>
 }
 
-templ todosTable(todos []sqlc.Todo, err error) {
+templ todosTable(todos []db.Todo, err error) {
 	if err != nil {
 		<div class="bg-red-500">Error!</div>
 	}
@@ -46,7 +46,7 @@ templ todosTable(todos []sqlc.Todo, err error) {
 	</div>
 }
 
-templ TodoRow(v *sqlc.Todo) {
+templ TodoRow(v *db.Todo) {
 	<tr id={ fmt.Sprintf("todo-%v", v.ID) } class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
 		<td class="px-6 py-4 max-w-xs">
 			{ v.Body }
@@ -130,7 +130,7 @@ templ root() {
 	</div>
 }
 
-templ profile(p *sqlc.Profile) {
+templ profile(p *db.Profile) {
 	{ fmt.Sprintf("%#v\n", p) }
 }
 
@@ -147,7 +147,7 @@ templ Credit() {
 	@layout("asdf", "fdsa", credit())
 }
 
-templ Profile(p *sqlc.Profile) {
+templ Profile(p *db.Profile) {
 	@layout("Bear's Profile", "Bear's Profile", profile(p))
 }
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/nathan-hello/htmx-template/src/sqlc"
+	"github.com/nathan-hello/htmx-template/src/db"
 )
 
 // Form submission validation belongs in routes/auth.go
@@ -25,14 +25,14 @@ type SignUpErrors struct {
 	ErrsStr  []string
 }
 
-type Credentials struct {
+type SignUpCredentials struct {
 	Username string
 	Password string
 	PassConf string
 	Email    string
 }
 
-func (c *Credentials) Validate() *SignUpErrors {
+func (c *SignUpCredentials) ValidateStrings() *SignUpErrors {
 	errs := SignUpErrors{
 		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
 		Username: FormErr{BorderColor: "bg-blue-500", Value: c.Username},
@@ -41,7 +41,7 @@ func (c *Credentials) Validate() *SignUpErrors {
 	}
 
 	user := len(c.Username) > 3
-	pass := len(c.Password) > 4
+	pass := len(c.Password) > 7
 	_, err := mail.ParseAddress(c.Email)
 
 	if !user {
@@ -77,7 +77,7 @@ func (c *Credentials) Validate() *SignUpErrors {
 	return &errs
 }
 
-func (c *Credentials) ValidateEmailUsername() *SignUpErrors {
+func (c *SignUpCredentials) ValidateDatabase() *SignUpErrors {
 	errs := SignUpErrors{
 		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
 		Username: FormErr{BorderColor: "bg-blue-500", Value: c.Username},
@@ -86,14 +86,14 @@ func (c *Credentials) ValidateEmailUsername() *SignUpErrors {
 	}
 
 	ctx := context.Background()
-	db, err := sql.Open("postgres", Env().DB_URI)
+	d, err := sql.Open("postgres", Env().DB_URI)
 
 	if err != nil {
 		errs.ErrsStr = append(errs.ErrsStr, "Internal Server Error - 135232")
 		return &errs
 	}
 
-	conn := sqlc.New(db)
+	conn := db.New(d)
 	_, err = conn.SelectEmailAlreadyExists(ctx, sql.NullString{String: c.Email, Valid: c.Email != ""})
 	emailOk := false
 
@@ -127,13 +127,100 @@ func (c *Credentials) ValidateEmailUsername() *SignUpErrors {
 
 }
 
-func (c *Credentials) CustomErrorMessage(err string) *SignUpErrors {
+func (c *SignUpCredentials) CustomErrorMessage(err string) *SignUpErrors {
 
 	errs := SignUpErrors{
 		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
 		Username: FormErr{BorderColor: "bg-blue-500", Value: c.Username},
 		Password: FormErr{BorderColor: "bg-blue-500", Value: ""},
 		PassConf: FormErr{BorderColor: "bg-blue-500", Value: ""},
+	}
+	errs.ErrsStr = append(errs.ErrsStr, err)
+	return &errs
+
+}
+
+type SignInFormErr struct {
+	Value       string
+	BorderColor string
+}
+
+type SignInErrors struct {
+	Email    FormErr
+	Password FormErr
+	ErrsStr  []string
+}
+
+type SignInCredentials struct {
+	Email    string
+	Password string
+}
+
+func (c SignInCredentials) ValidateStrings() *SignInErrors {
+
+	errs := SignInErrors{
+		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
+		Password: FormErr{BorderColor: "bg-blue-500", Value: ""},
+	}
+
+	pass := len(c.Password) > 7
+	_, err := mail.ParseAddress(c.Email)
+
+	if !pass {
+		errs.Password = FormErr{
+			Value:       "",
+			BorderColor: "border-red-500",
+		}
+		errs.ErrsStr = append(errs.ErrsStr, "Incorrect password or account does not exist")
+	}
+	if err != nil {
+		errs.Email = FormErr{
+			Value:       "",
+			BorderColor: "border-red-500",
+		}
+		errs.ErrsStr = append(errs.ErrsStr, "Email invalid")
+	}
+	return &errs
+
+}
+
+func (c SignInCredentials) ValidateDatabase() *SignInErrors {
+
+	errs := SignInErrors{
+		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
+		Password: FormErr{BorderColor: "bg-blue-500", Value: ""},
+	}
+
+	ctx := context.Background()
+	d, err := sql.Open("postgres", Env().DB_URI)
+
+	if err != nil {
+		errs.ErrsStr = append(errs.ErrsStr, "Internal Server Error - 145482")
+		return &errs
+	}
+
+	conn := db.New(d)
+	_, err = conn.SelectEmailAlreadyExists(ctx, sql.NullString{String: c.Email, Valid: c.Email != ""})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			errs.ErrsStr = append(errs.ErrsStr, "Incorrect password or account does not exist")
+			return &errs
+		} else {
+			errs.ErrsStr = append(errs.ErrsStr, "Internal Server Error - 135234")
+			return &errs
+		}
+	}
+
+	return &errs
+
+}
+
+func (c *SignInCredentials) CustomErrorMessage(err string) *SignInErrors {
+
+	errs := SignInErrors{
+		Email:    FormErr{BorderColor: "bg-blue-500", Value: c.Email},
+		Password: FormErr{BorderColor: "bg-blue-500", Value: ""},
 	}
 	errs.ErrsStr = append(errs.ErrsStr, err)
 	return &errs

@@ -6,19 +6,19 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-func getTodos() ([]sqlc.Todo, error) {
+func getTodos() ([]db.Todo, error) {
 	ctx := context.Background()
-	db, err := sql.Open("postgres", utils.Env().DB_URI)
+	d, err := sql.Open("postgres", utils.Env().DB_URI)
 
 	if err != nil {
 		return nil, err
 	}
 
-	todosTable := sqlc.New(db)
+	todosTable := db.New(d)
 	rows, err := todosTable.SelectTodos(ctx, 99)
 
 	if err != nil {

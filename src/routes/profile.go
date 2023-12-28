@@ -9,19 +9,20 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
-	db, err := sql.Open("postgres", utils.Env().DB_URI)
+	d, err := sql.Open("postgres", utils.Env().DB_URI)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	conn := sqlc.New(db)
+
+	conn := db.New(d)
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {

@@ -10,7 +10,7 @@ import "context"
 import "io"
 import "bytes"
 
-import "github.com/nathan-hello/htmx-template/src/sqlc"
+import "github.com/nathan-hello/htmx-template/src/db"
 import "fmt"
 
 func createTodo() templ.Component {
@@ -55,7 +55,7 @@ func createTodo() templ.Component {
 	})
 }
 
-func todosTable(todos []sqlc.Todo, err error) templ.Component {
+func todosTable(todos []db.Todo, err error) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -139,7 +139,7 @@ func todosTable(todos []sqlc.Todo, err error) templ.Component {
 	})
 }
 
-func TodoRow(v *sqlc.Todo) templ.Component {
+func TodoRow(v *db.Todo) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -354,7 +354,7 @@ func root() templ.Component {
 	})
 }
 
-func profile(p *sqlc.Profile) templ.Component {
+func profile(p *db.Profile) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -467,7 +467,7 @@ func Credit() templ.Component {
 	})
 }
 
-func Profile(p *sqlc.Profile) templ.Component {
+func Profile(p *db.Profile) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {

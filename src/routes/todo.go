@@ -9,7 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/sqlc"
+	sqlc "github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
