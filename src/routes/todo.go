@@ -79,7 +79,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 
-		response, err := templ.ToGoHTML(ctx, components.Todo())
+		response, err := templ.ToGoHTML(ctx, components.Todo(nil))
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
