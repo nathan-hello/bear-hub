@@ -378,10 +378,9 @@ type AuthUser struct {
 }
 
 type Profile struct {
-	ID       int64
 	Username string
-	UserID   uuid.UUID
 	Todos    sql.NullInt64
+	ID       uuid.UUID
 }
 
 type Todo struct {
