@@ -44,26 +44,32 @@ INSERT INTO users (
         password_created_at
     )
 values ($1, $2, $3, $4)
-RETURNING (email, username)
+RETURNING email,
+    username
 `
 
 type InsertUserParams struct {
 	Email             sql.NullString
-	Username          sql.NullString
+	Username          string
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
 }
 
-func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (interface{}, error) {
+type InsertUserRow struct {
+	Email    sql.NullString
+	Username string
+}
+
+func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error) {
 	row := q.db.QueryRowContext(ctx, insertUser,
 		arg.Email,
 		arg.Username,
 		arg.EncryptedPassword,
 		arg.PasswordCreatedAt,
 	)
-	var column_1 interface{}
-	err := row.Scan(&column_1)
-	return column_1, err
+	var i InsertUserRow
+	err := row.Scan(&i.Email, &i.Username)
+	return i, err
 }
 
 const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
@@ -75,7 +81,7 @@ WHERE users.email = $1
 
 type SelectEmailOrUsernameAlreadyExistsParams struct {
 	Email    sql.NullString
-	Username sql.NullString
+	Username string
 }
 
 func (q *Queries) SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg SelectEmailOrUsernameAlreadyExistsParams) (sql.NullString, error) {
@@ -127,21 +133,42 @@ func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) 
 	return items, nil
 }
 
-const selectUserWithEmailPassword = `-- name: SelectUserWithEmailPassword :one
-SELECT (id)
+const selectUserByEmail = `-- name: SelectUserByEmail :one
+SELECT created_at, username, email, encrypted_password, password_created_at, id
 FROM users
 WHERE email = $1
-    AND encrypted_password = $2
 `
 
-type SelectUserWithEmailPasswordParams struct {
-	Email             sql.NullString
-	EncryptedPassword string
+func (q *Queries) SelectUserByEmail(ctx context.Context, email sql.NullString) (User, error) {
+	row := q.db.QueryRowContext(ctx, selectUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.Username,
+		&i.Email,
+		&i.EncryptedPassword,
+		&i.PasswordCreatedAt,
+		&i.ID,
+	)
+	return i, err
 }
 
-func (q *Queries) SelectUserWithEmailPassword(ctx context.Context, arg SelectUserWithEmailPasswordParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, selectUserWithEmailPassword, arg.Email, arg.EncryptedPassword)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+const selectUserByUsername = `-- name: SelectUserByUsername :one
+SELECT created_at, username, email, encrypted_password, password_created_at, id
+FROM users
+WHERE username = $1
+`
+
+func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, selectUserByUsername, username)
+	var i User
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.Username,
+		&i.Email,
+		&i.EncryptedPassword,
+		&i.PasswordCreatedAt,
+		&i.ID,
+	)
+	return i, err
 }

@@ -25,7 +25,7 @@ type Todo struct {
 
 type User struct {
 	CreatedAt         time.Time
-	Username          sql.NullString
+	Username          string
 	Email             sql.NullString
 	EncryptedPassword string
 	PasswordCreatedAt time.Time

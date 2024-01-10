@@ -26,9 +26,13 @@ INSERT INTO users (
         password_created_at
     )
 values ($1, $2, $3, $4)
-RETURNING (email, username);
--- name: SelectUserWithEmailPassword :one
-SELECT (id)
+RETURNING email,
+    username;
+-- name: SelectUserByEmail :one
+SELECT *
 FROM users
-WHERE email = $1
-    AND encrypted_password = $2;
+WHERE email = $1;
+-- name: SelectUserByUsername :one
+SELECT *
+FROM users
+WHERE username = $1;
