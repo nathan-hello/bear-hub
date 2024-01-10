@@ -7,17 +7,17 @@ INSERT INTO todo (body) values ($1) RETURNING *;
 -- name: DeleteTodo :exec
 DELETE FROM todo WHERE id = $1;
 
--- name: InsertProfile :one
-INSERT INTO profile (user_id, username) values ($1, $2) RETURNING *;
-
 -- name: SelectProfileById :one
-SELECT * FROM profile WHERE profile.id = $1;
+SELECT * FROM profiles WHERE profiles.id = $1;
+
+-- name: SelectUsernameFromProfileById :one
+SELECT username FROM profiles WHERE profiles.id = $1;
 
 -- name: SelectProfileByUsername :one
-SELECT * FROM profile WHERE profile.username = $1;
+SELECT * FROM profiles WHERE profiles.username = $1;
 
--- name: SelectProfileByAuthUserId :one
-SELECT id FROM profile WHERE profile.user_id = $1;
+-- name: UpdateProfileUsername :one
+UPDATE profiles SET username = $1 WHERE profiles.id = $2 RETURNING *;
 
 -- name: SelectEmailAlreadyExists :one
 SELECT email FROM auth.users WHERE auth.users.email = $1;

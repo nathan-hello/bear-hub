@@ -79,29 +79,21 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			Password: cred.Password,
 		})
 
+		uid, err := uuid.Parse(user.ID)
+
+		if err != nil {
+			returnFormWithErrors(cred.CustomErrorMessage(fmt.Sprintf("Internal Server Error - 482012 %#v", err)))
+			return
+		}
+
+		uname, err := conn.UpdateProfileUsername(ctx, db.UpdateProfileUsernameParams{Username: cred.Username, ID: uid})
+
 		if err != nil {
 			returnFormWithErrors(cred.CustomErrorMessage("Internal Server Error - 125632"))
 			return
 		}
 
-		var profileArgs db.InsertProfileParams
-		profileArgs.UserID, err = uuid.Parse(user.ID)
-
-		if err != nil {
-			returnFormWithErrors(cred.CustomErrorMessage(fmt.Sprintf("%#v\n%#v\n\n\n%#v\n%#v\n%#v\n%#v", err, user, cred.Email, cred.Password, cred.PassConf, cred.Username)))
-			// returnFormWithErrors(cred.CustomErrorMessage("Internal Server Error - 814293"))
-			return
-		}
-
-		profileArgs.Username = cred.Username
-		prof, err := conn.InsertProfile(ctx, profileArgs)
-
-		if err != nil {
-			returnFormWithErrors(cred.CustomErrorMessage("Internal Server Error - 153294"))
-			return
-		}
-
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", prof.ID))
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", uname))
 		return
 
 	}
@@ -204,7 +196,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		profileId, err := conn.SelectProfileByAuthUserId(ctx, userUuid)
+		profileId, err := conn.SelectProfileById(ctx, userUuid)
 
 		if err != nil {
 			// returnFormWithErrors(cred.CustomErrorMessage("Incorrect password or account does not exist"))

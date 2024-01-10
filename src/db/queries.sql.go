@@ -21,27 +21,6 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 	return err
 }
 
-const insertProfile = `-- name: InsertProfile :one
-INSERT INTO profile (user_id, username) values ($1, $2) RETURNING id, username, user_id, todos
-`
-
-type InsertProfileParams struct {
-	UserID   uuid.UUID
-	Username string
-}
-
-func (q *Queries) InsertProfile(ctx context.Context, arg InsertProfileParams) (Profile, error) {
-	row := q.db.QueryRowContext(ctx, insertProfile, arg.UserID, arg.Username)
-	var i Profile
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.UserID,
-		&i.Todos,
-	)
-	return i, err
-}
-
 const insertTodo = `-- name: InsertTodo :one
 INSERT INTO todo (body) values ($1) RETURNING id, created_at, body
 `
@@ -63,46 +42,25 @@ func (q *Queries) SelectEmailAlreadyExists(ctx context.Context, email sql.NullSt
 	return email, err
 }
 
-const selectProfileByAuthUserId = `-- name: SelectProfileByAuthUserId :one
-SELECT id FROM profile WHERE profile.user_id = $1
-`
-
-func (q *Queries) SelectProfileByAuthUserId(ctx context.Context, userID uuid.UUID) (int64, error) {
-	row := q.db.QueryRowContext(ctx, selectProfileByAuthUserId, userID)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const selectProfileById = `-- name: SelectProfileById :one
-SELECT id, username, user_id, todos FROM profile WHERE profile.id = $1
+SELECT username, todos, id FROM profiles WHERE profiles.id = $1
 `
 
-func (q *Queries) SelectProfileById(ctx context.Context, id int64) (Profile, error) {
+func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile, error) {
 	row := q.db.QueryRowContext(ctx, selectProfileById, id)
 	var i Profile
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.UserID,
-		&i.Todos,
-	)
+	err := row.Scan(&i.Username, &i.Todos, &i.ID)
 	return i, err
 }
 
 const selectProfileByUsername = `-- name: SelectProfileByUsername :one
-SELECT id, username, user_id, todos FROM profile WHERE profile.username = $1
+SELECT username, todos, id FROM profiles WHERE profiles.username = $1
 `
 
 func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) (Profile, error) {
 	row := q.db.QueryRowContext(ctx, selectProfileByUsername, username)
 	var i Profile
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.UserID,
-		&i.Todos,
-	)
+	err := row.Scan(&i.Username, &i.Todos, &i.ID)
 	return i, err
 }
 
@@ -131,4 +89,31 @@ func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const selectUsernameFromProfileById = `-- name: SelectUsernameFromProfileById :one
+SELECT username FROM profiles WHERE profiles.id = $1
+`
+
+func (q *Queries) SelectUsernameFromProfileById(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, selectUsernameFromProfileById, id)
+	var username string
+	err := row.Scan(&username)
+	return username, err
+}
+
+const updateProfileUsername = `-- name: UpdateProfileUsername :one
+UPDATE profiles SET username = $1 WHERE profiles.id = $2 RETURNING username, todos, id
+`
+
+type UpdateProfileUsernameParams struct {
+	Username string
+	ID       uuid.UUID
+}
+
+func (q *Queries) UpdateProfileUsername(ctx context.Context, arg UpdateProfileUsernameParams) (Profile, error) {
+	row := q.db.QueryRowContext(ctx, updateProfileUsername, arg.Username, arg.ID)
+	var i Profile
+	err := row.Scan(&i.Username, &i.Todos, &i.ID)
+	return i, err
 }

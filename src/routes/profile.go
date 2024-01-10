@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -31,13 +30,9 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestedProfile := pathSegments[2]
-	rq, err := strconv.ParseInt(requestedProfile, 10, 0)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
 
-	row, err := conn.SelectProfileById(ctx, rq)
+	row, err := conn.SelectProfileByUsername(ctx, requestedProfile)
+
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
