@@ -8,10 +8,8 @@ import (
 )
 
 type Config struct {
-	DB_URI                    string
-	SUPABASE_PUBLIC_KEY       string
-	SUPABASE_SERVICE_ROLE_KEY string
-	SUPABASE_POSTGREST_URL    string
+	DB_URI     string
+	JWT_SECRET string
 }
 
 func parseConfigStruct(s interface{}) []string {

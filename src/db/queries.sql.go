@@ -8,12 +8,14 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const deleteTodo = `-- name: DeleteTodo :exec
-DELETE FROM todo WHERE id = $1
+DELETE FROM todos
+WHERE id = $1
 `
 
 func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
@@ -22,7 +24,9 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 }
 
 const insertTodo = `-- name: InsertTodo :one
-INSERT INTO todo (body) values ($1) RETURNING id, created_at, body
+INSERT INTO todos (body)
+values ($1)
+RETURNING id, created_at, body
 `
 
 func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
@@ -32,18 +36,59 @@ func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
 	return i, err
 }
 
-const selectEmailAlreadyExists = `-- name: SelectEmailAlreadyExists :one
-SELECT email FROM auth.users WHERE auth.users.email = $1
+const insertUser = `-- name: InsertUser :one
+INSERT INTO users (
+        email,
+        username,
+        encrypted_password,
+        password_created_at
+    )
+values ($1, $2, $3, $4)
+RETURNING (email, username)
 `
 
-func (q *Queries) SelectEmailAlreadyExists(ctx context.Context, email sql.NullString) (sql.NullString, error) {
-	row := q.db.QueryRowContext(ctx, selectEmailAlreadyExists, email)
+type InsertUserParams struct {
+	Email             sql.NullString
+	Username          sql.NullString
+	EncryptedPassword string
+	PasswordCreatedAt time.Time
+}
+
+func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (interface{}, error) {
+	row := q.db.QueryRowContext(ctx, insertUser,
+		arg.Email,
+		arg.Username,
+		arg.EncryptedPassword,
+		arg.PasswordCreatedAt,
+	)
+	var column_1 interface{}
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
+SELECT email
+FROM users
+WHERE users.email = $1
+    OR users.username = $2
+`
+
+type SelectEmailOrUsernameAlreadyExistsParams struct {
+	Email    sql.NullString
+	Username sql.NullString
+}
+
+func (q *Queries) SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg SelectEmailOrUsernameAlreadyExistsParams) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, selectEmailOrUsernameAlreadyExists, arg.Email, arg.Username)
+	var email sql.NullString
 	err := row.Scan(&email)
 	return email, err
 }
 
 const selectProfileById = `-- name: SelectProfileById :one
-SELECT username, todos, id FROM profiles WHERE profiles.id = $1
+SELECT username, todos, id
+FROM profiles
+WHERE profiles.id = $1
 `
 
 func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile, error) {
@@ -53,19 +98,10 @@ func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile,
 	return i, err
 }
 
-const selectProfileByUsername = `-- name: SelectProfileByUsername :one
-SELECT username, todos, id FROM profiles WHERE profiles.username = $1
-`
-
-func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) (Profile, error) {
-	row := q.db.QueryRowContext(ctx, selectProfileByUsername, username)
-	var i Profile
-	err := row.Scan(&i.Username, &i.Todos, &i.ID)
-	return i, err
-}
-
 const selectTodos = `-- name: SelectTodos :many
-SELECT id, created_at, body FROM todo LIMIT $1
+SELECT id, created_at, body
+FROM todos
+LIMIT $1
 `
 
 func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) {
@@ -91,29 +127,21 @@ func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) 
 	return items, nil
 }
 
-const selectUsernameFromProfileById = `-- name: SelectUsernameFromProfileById :one
-SELECT username FROM profiles WHERE profiles.id = $1
+const selectUserWithEmailPassword = `-- name: SelectUserWithEmailPassword :one
+SELECT (id)
+FROM users
+WHERE email = $1
+    AND encrypted_password = $2
 `
 
-func (q *Queries) SelectUsernameFromProfileById(ctx context.Context, id uuid.UUID) (string, error) {
-	row := q.db.QueryRowContext(ctx, selectUsernameFromProfileById, id)
-	var username string
-	err := row.Scan(&username)
-	return username, err
+type SelectUserWithEmailPasswordParams struct {
+	Email             sql.NullString
+	EncryptedPassword string
 }
 
-const updateProfileUsername = `-- name: UpdateProfileUsername :one
-UPDATE profiles SET username = $1 WHERE profiles.id = $2 RETURNING username, todos, id
-`
-
-type UpdateProfileUsernameParams struct {
-	Username string
-	ID       uuid.UUID
-}
-
-func (q *Queries) UpdateProfileUsername(ctx context.Context, arg UpdateProfileUsernameParams) (Profile, error) {
-	row := q.db.QueryRowContext(ctx, updateProfileUsername, arg.Username, arg.ID)
-	var i Profile
-	err := row.Scan(&i.Username, &i.Todos, &i.ID)
-	return i, err
+func (q *Queries) SelectUserWithEmailPassword(ctx context.Context, arg SelectUserWithEmailPasswordParams) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, selectUserWithEmailPassword, arg.Email, arg.EncryptedPassword)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
