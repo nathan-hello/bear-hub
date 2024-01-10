@@ -2,13 +2,11 @@ package routes
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
@@ -60,8 +58,14 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		username, errs := cred.SignUp()
 
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", newUser.Username))
+		if len(errs.ErrsStr) > 0 {
+			returnFormWithErrors(errs)
+			return
+		}
+
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
 
 	}
@@ -97,14 +101,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	d, err := sql.Open("postgres", utils.Env().DB_URI)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	conn := db.New(d)
 
 	returnFormWithErrors := func(errs *utils.AuthErrors) {
 		response, err := templ.ToGoHTML(ctx, components.SignInForm(errs))
@@ -129,20 +125,14 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			Password:        r.FormValue("password"),
 		}
 
-		errs := cred.ValidateDatabase()
+		username, errs := cred.SignIn()
 
 		if len(errs.ErrsStr) > 0 {
 			returnFormWithErrors(errs)
 			return
 		}
 
-		isEmail := cred.IsEmail()
-
-		var user db.User
-
-		user := conn.SelectUserWithEmailPassword()
-
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", cred.Username))
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
 
 	}
@@ -150,7 +140,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 
 		defaultFormErr := utils.FormErr{BorderColor: "border-blue-500"}
-		errs := utils.SignInErrors{
+		errs := utils.AuthErrors{
 			Email:    defaultFormErr,
 			Password: defaultFormErr,
 		}

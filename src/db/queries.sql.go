@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const deleteTodo = `-- name: DeleteTodo :exec
@@ -26,13 +27,18 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 const insertTodo = `-- name: InsertTodo :one
 INSERT INTO todos (body)
 values ($1)
-RETURNING id, created_at, body
+RETURNING id, created_at, body, author
 `
 
 func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
 	row := q.db.QueryRowContext(ctx, insertTodo, body)
 	var i Todo
-	err := row.Scan(&i.ID, &i.CreatedAt, &i.Body)
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Body,
+		&i.Author,
+	)
 	return i, err
 }
 
@@ -92,7 +98,7 @@ func (q *Queries) SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg Se
 }
 
 const selectProfileById = `-- name: SelectProfileById :one
-SELECT username, todos, id
+SELECT id, todos
 FROM profiles
 WHERE profiles.id = $1
 `
@@ -100,18 +106,58 @@ WHERE profiles.id = $1
 func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile, error) {
 	row := q.db.QueryRowContext(ctx, selectProfileById, id)
 	var i Profile
-	err := row.Scan(&i.Username, &i.Todos, &i.ID)
+	err := row.Scan(&i.ID, pq.Array(&i.Todos))
 	return i, err
 }
 
-const selectTodos = `-- name: SelectTodos :many
-SELECT id, created_at, body
-FROM todos
-LIMIT $1
+const selectProfileByUsername = `-- name: SelectProfileByUsername :one
+SELECT profiles.id, todos, created_at, username, email, encrypted_password, password_created_at, users.id
+FROM profiles
+    INNER JOIN users ON profiles.id = users.id
+WHERE users.username = $1
 `
 
-func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, selectTodos, limit)
+type SelectProfileByUsernameRow struct {
+	ID                uuid.UUID
+	Todos             []int64
+	CreatedAt         time.Time
+	Username          string
+	Email             sql.NullString
+	EncryptedPassword string
+	PasswordCreatedAt time.Time
+	ID_2              uuid.UUID
+}
+
+func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) (SelectProfileByUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, selectProfileByUsername, username)
+	var i SelectProfileByUsernameRow
+	err := row.Scan(
+		&i.ID,
+		pq.Array(&i.Todos),
+		&i.CreatedAt,
+		&i.Username,
+		&i.Email,
+		&i.EncryptedPassword,
+		&i.PasswordCreatedAt,
+		&i.ID_2,
+	)
+	return i, err
+}
+
+const selectTodosByIds = `-- name: SelectTodosByIds :many
+SELECT id, created_at, body, author
+FROM todos
+WHERE id = ANY($1::int [])
+LIMIT $2
+`
+
+type SelectTodosByIdsParams struct {
+	Column1 []int32
+	Limit   int64
+}
+
+func (q *Queries) SelectTodosByIds(ctx context.Context, arg SelectTodosByIdsParams) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, selectTodosByIds, pq.Array(arg.Column1), arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +165,12 @@ func (q *Queries) SelectTodos(ctx context.Context, limit int64) ([]Todo, error) 
 	var items []Todo
 	for rows.Next() {
 		var i Todo
-		if err := rows.Scan(&i.ID, &i.CreatedAt, &i.Body); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Body,
+			&i.Author,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

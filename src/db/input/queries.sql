@@ -1,7 +1,8 @@
--- name: SelectTodos :many
+-- name: SelectTodosByIds :many
 SELECT *
 FROM todos
-LIMIT $1;
+WHERE id = ANY($1::int [])
+LIMIT $2;
 -- name: InsertTodo :one
 INSERT INTO todos (body)
 values ($1)
@@ -36,3 +37,8 @@ WHERE email = $1;
 SELECT *
 FROM users
 WHERE username = $1;
+-- name: SelectProfileByUsername :one
+SELECT *
+FROM profiles
+    INNER JOIN users ON profiles.id = users.id
+WHERE users.username = $1;

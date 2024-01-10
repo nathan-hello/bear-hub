@@ -130,7 +130,7 @@ templ root() {
 	</div>
 }
 
-templ profile(p *db.Profile) {
+templ profile(p *interface{}) {
 	{ fmt.Sprintf("%#v\n", p) }
 }
 
