@@ -12,6 +12,11 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
+type ProfileProps struct {
+	username string
+	todos    *[]db.Todo
+}
+
 func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
@@ -38,7 +43,9 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := templ.ToGoHTML(ctx, components.Profile(&row))
+	todos, err := conn.SelectTodosByIds(ctx, db.SelectTodosByIdsParams{})
+
+	response, err := templ.ToGoHTML(ctx, components.Profile(ProfileProps{username: row.Username}))
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

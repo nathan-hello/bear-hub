@@ -72,7 +72,7 @@ templ passwordConfirm(borderColor string, value string) {
 	</div>
 }
 
-templ SignUpForm(s utils.SignUpErrors) {
+templ SignUpForm(s utils.AuthErrors) {
 	for _, v := range s.ErrsStr {
 		@errorMsg(v)
 	}
@@ -86,13 +86,13 @@ templ SignUpForm(s utils.SignUpErrors) {
 	</form>
 }
 
-templ SignUpContainer(s utils.SignUpErrors) {
+templ SignUpContainer(s utils.AuthErrors) {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 		@SignUpForm(s)
 	</div>
 }
 
-templ SignUp(s utils.SignUpErrors) {
+templ SignUp(s utils.AuthErrors) {
 	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer(s))
 }
 
@@ -102,8 +102,7 @@ templ errorMsg(s string) {
 	</div>
 }
 
-templ SignInForm(s *utils.SignInErrors) {
-  
+templ SignInForm(s *utils.AuthErrors) {
 	for _, v := range s.ErrsStr {
 		@errorMsg(v)
 	}
@@ -115,12 +114,12 @@ templ SignInForm(s *utils.SignInErrors) {
 	</form>
 }
 
-templ SignInContainer(s *utils.SignInErrors) {
+templ SignInContainer(s *utils.AuthErrors) {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 		@SignInForm(s)
 	</div>
 }
 
-templ SignIn(s *utils.SignInErrors) {
+templ SignIn(s *utils.AuthErrors) {
 	@layout("Bear Hub - Sign In", "Sign In", SignInContainer(s))
 }

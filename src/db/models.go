@@ -12,15 +12,15 @@ import (
 )
 
 type Profile struct {
-	Username sql.NullString
-	Todos    sql.NullInt64
-	ID       uuid.UUID
+	ID    uuid.UUID
+	Todos []int64
 }
 
 type Todo struct {
 	ID        int64
 	CreatedAt time.Time
 	Body      string
+	Author    uuid.UUID
 }
 
 type User struct {
