@@ -39,6 +39,8 @@ func Router() {
 	http.HandleFunc("/signup", routes.SignUp)
 	http.HandleFunc("/signin", routes.SignIn)
 	http.HandleFunc("/profile/", routes.UserProfile)
+	http.HandleFunc("/404", routes.NotFound)
+	http.HandleFunc("/500", routes.InternalServerError)
 
 	http.ListenAndServe(":3000", nil)
 }
