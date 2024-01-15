@@ -20,15 +20,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	returnFormWithErrors := func(errs *utils.AuthErrors) {
-		response, err := templ.ToGoHTML(ctx, components.SignUpForm(*errs))
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Write([]byte(response))
-		return
+		components.SignUpForm(*errs).Render(r.Context(), w)
 	}
 
 	if r.Method == "POST" {
@@ -103,15 +95,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	returnFormWithErrors := func(errs *utils.AuthErrors) {
-		response, err := templ.ToGoHTML(ctx, components.SignInForm(errs))
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Write([]byte(response))
-		return
+		components.SignInForm(errs).Render(r.Context(), w)
 	}
 
 	if r.Method == "POST" {
