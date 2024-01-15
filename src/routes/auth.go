@@ -1,11 +1,9 @@
 package routes
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
@@ -14,19 +12,19 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/signup" {
 		w.WriteHeader(http.StatusNotFound)
+		w.Header().Set("HX-Redirect", "404")
 		return
 	}
 
-	ctx := context.Background()
-
-	returnFormWithErrors := func(errs *utils.AuthErrors) {
-		components.SignUpForm(*errs).Render(r.Context(), w)
+	returnFormWithErrors := func(errs *[]utils.AuthError) {
+		components.SignUpForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			returnFormWithErrors(&[]utils.AuthError{
+				{Err: utils.ErrParseForm},
+			})
 		}
 
 		cred := utils.SignUpCredentials{
@@ -38,21 +36,14 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 		errs := cred.ValidateStrings()
 
-		if len(errs.ErrsStr) > 0 {
-			returnFormWithErrors(errs)
-			return
-		}
-
-		errs = cred.ValidateDatabase()
-
-		if len(errs.ErrsStr) > 0 {
+		if errs != nil {
 			returnFormWithErrors(errs)
 			return
 		}
 
 		username, errs := cred.SignUp()
 
-		if len(errs.ErrsStr) > 0 {
+		if errs != nil {
 			returnFormWithErrors(errs)
 			return
 		}
@@ -63,25 +54,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-
-		defaultFormErr := utils.FormErr{BorderColor: "border-blue-500"}
-		form := utils.AuthErrors{
-			Email:    defaultFormErr,
-			Username: defaultFormErr,
-			Password: defaultFormErr,
-			PassConf: defaultFormErr,
-		}
-
-		response, err := templ.ToGoHTML(ctx, components.SignUp(form))
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Write([]byte(response))
-		return
-
+		components.SignUpForm(nil).Render(r.Context(), w)
 	}
 }
 
@@ -89,29 +62,30 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/signin" {
 		w.WriteHeader(http.StatusNotFound)
+		w.Header().Set("HX-Redirect", "404")
 		return
 	}
 
-	ctx := context.Background()
-
-	returnFormWithErrors := func(errs *utils.AuthErrors) {
-		components.SignInForm(errs).Render(r.Context(), w)
+	returnFormWithErrors := func(errs *[]utils.AuthError) {
+		components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			returnFormWithErrors(&[]utils.AuthError{
+				{Err: utils.ErrParseForm2},
+			})
 			return
 		}
 
 		cred := utils.SignInCredentials{
-			EmailOrUsername: r.FormValue("EmailOrUsername"),
-			Password:        r.FormValue("password"),
+			User: r.FormValue("user"),
+			Pass: r.FormValue("password"),
 		}
 
 		username, errs := cred.SignIn()
 
-		if len(errs.ErrsStr) > 0 {
+		if errs != nil {
 			returnFormWithErrors(errs)
 			return
 		}
@@ -122,22 +96,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-
-		defaultFormErr := utils.FormErr{BorderColor: "border-blue-500"}
-		errs := utils.AuthErrors{
-			Email:    defaultFormErr,
-			Password: defaultFormErr,
-		}
-
-		response, err := templ.ToGoHTML(ctx, components.SignIn(&errs))
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Write([]byte(response))
-		return
-
+		components.SignInForm(nil).Render(r.Context(), w)
 	}
 }

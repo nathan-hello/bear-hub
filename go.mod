@@ -3,7 +3,7 @@ module github.com/nathan-hello/htmx-template
 go 1.19
 
 require (
-	github.com/a-h/templ v0.2.501
+	github.com/a-h/templ v0.2.513
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.5.0
 	github.com/joho/godotenv v1.5.1
