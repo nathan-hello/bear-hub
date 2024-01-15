@@ -94,7 +94,7 @@ templ passwordConfirm(borderColor string, value string) {
 
 templ SignUpForm(s map[string]FieldError) {
 	for _, v := range s {
-		@errorMsg(v.Err)
+		@formError(v.Err)
 	}
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
@@ -116,7 +116,7 @@ templ SignUp() {
 	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer())
 }
 
-templ errorMsg(s string) {
+templ formError(s string) {
 	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
 		{ s }
 	</div>
@@ -124,7 +124,7 @@ templ errorMsg(s string) {
 
 templ SignInForm(s map[string]FieldError) {
 	for _, v := range s {
-		@errorMsg(v.Err)
+		@formError(v.Err)
 	}
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">

@@ -11,8 +11,7 @@ import (
 func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/signup" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("HX-Redirect", "404")
+		redirectNotFound(w, r)
 		return
 	}
 
@@ -61,8 +60,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/signin" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("HX-Redirect", "404")
+		redirectNotFound(w, r)
 		return
 	}
 
