@@ -1,3 +1,17 @@
+This is the `no-magic-stack`. Build web applications with as little magic as possible. 
+
+This is my contribution of the trend that web-dev has seen recently. The move towards abstractions that don't hand-wave away extremely complicated software techniques. These pieces are ones that lead to less learning how someone else configured a piece of software and more learning fundamental webdev technologies (such as HTTP headers with htmx, css with tailwind, sql with sqlc)
+
+The following is in order of most to least important to this stack.
+1. htmx        - `https://htmx.org/docs/`
+2. Postgresql  - `https://www.postgresql.org/download/`
+3. sqlc        - `https://github.com/sqlc-dev/sqlc/cmd/sqlc`
+4. tmpl        - `https://github.com/a-h/templ`
+5. air         - `https://github.com/cosmtrek/air`
+6. Tailwindcss - `https://tailwindcss.com/blog/standalone-cli`
+
+
+
 Goals: 
 1. Groundwork: This is a template for making a web application using go, templ, htmx, and a postgres database. 
     - Notably, I don't have an opinion on what the best golang HTTP router is. This stack will use the built-in router unless it becomes too much to bear. It's up to the user to determine what HTTP router they want.
@@ -20,13 +34,6 @@ Known limitations:
 2. At time of writing, templ doesn't seem to support compilation of .templ files into a directory other than the one they are already written in. And also they will be 1:1 where `foo.templ` will go into `foo_templ.go`, opposed to having one file that takes in all of the templ. I'm sure features like these will get added over time (and I'd like to see if I could help!) but for now, the `components/` folder is a bit messy. 
 
 
-The following is in order of most to least important to this stack.
-1. htmx        - `https://htmx.org/docs/`
-2. Postgresql  - `https://www.postgresql.org/download/`
-3. sqlc        - `https://github.com/sqlc-dev/sqlc/cmd/sqlc`
-4. tmpl        - `https://github.com/a-h/templ`
-5. air         - `https://github.com/cosmtrek/air`
-6. Tailwindcss - `https://tailwindcss.com/blog/standalone-cli`
 
 
 Because this is my workflow, I'm going to assume the following about the database.

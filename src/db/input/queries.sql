@@ -1,24 +1,20 @@
+-- table: todos
+-- name: SelectAllTodos :many
+SELECT *
+FROM todos;
 -- name: SelectTodosByIds :many
 SELECT *
 FROM todos
 WHERE id = ANY($1::int [])
 LIMIT $2;
 -- name: InsertTodo :one
-INSERT INTO todos (body)
-values ($1)
+INSERT INTO todos (body, author)
+values ($1, $2)
 RETURNING *;
 -- name: DeleteTodo :exec
 DELETE FROM todos
 WHERE id = $1;
--- name: SelectProfileById :one
-SELECT *
-FROM profiles
-WHERE profiles.id = $1;
--- name: SelectEmailOrUsernameAlreadyExists :one
-SELECT email
-FROM users
-WHERE users.email = $1
-    OR users.username = $2;
+-- table: users
 -- name: InsertUser :one
 INSERT INTO users (
         email,
@@ -27,7 +23,8 @@ INSERT INTO users (
         password_created_at
     )
 values ($1, $2, $3, $4)
-RETURNING email,
+RETURNING id,
+    email,
     username;
 -- name: SelectUserByEmail :one
 SELECT *
@@ -37,8 +34,28 @@ WHERE email = $1;
 SELECT *
 FROM users
 WHERE username = $1;
+-- name: SelectEmailOrUsernameAlreadyExists :one
+SELECT email
+FROM users
+WHERE users.email = $1
+    OR users.username = $2;
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1;
+-- table: profiles
+-- name: SelectProfileById :one
+SELECT *
+FROM profiles
+WHERE profiles.id = $1;
 -- name: SelectProfileByUsername :one
 SELECT *
 FROM profiles
     INNER JOIN users ON profiles.id = users.id
 WHERE users.username = $1;
+-- name: InsertProfile :one
+INSERT INTO profiles (id)
+values ($1)
+returning (id);
+-- name: DeleteProfile :exec
+DELETE from profiles
+where id = $1;

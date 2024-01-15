@@ -14,6 +14,16 @@ import (
 	"github.com/lib/pq"
 )
 
+const deleteProfile = `-- name: DeleteProfile :exec
+DELETE from profiles
+where id = $1
+`
+
+func (q *Queries) DeleteProfile(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteProfile, id)
+	return err
+}
+
 const deleteTodo = `-- name: DeleteTodo :exec
 DELETE FROM todos
 WHERE id = $1
@@ -24,14 +34,41 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 	return err
 }
 
-const insertTodo = `-- name: InsertTodo :one
-INSERT INTO todos (body)
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
+const insertProfile = `-- name: InsertProfile :one
+INSERT INTO profiles (id)
 values ($1)
+returning (id)
+`
+
+func (q *Queries) InsertProfile(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, insertProfile, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
+const insertTodo = `-- name: InsertTodo :one
+INSERT INTO todos (body, author)
+values ($1, $2)
 RETURNING id, created_at, body, author
 `
 
-func (q *Queries) InsertTodo(ctx context.Context, body string) (Todo, error) {
-	row := q.db.QueryRowContext(ctx, insertTodo, body)
+type InsertTodoParams struct {
+	Body   string
+	Author uuid.UUID
+}
+
+func (q *Queries) InsertTodo(ctx context.Context, arg InsertTodoParams) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, insertTodo, arg.Body, arg.Author)
 	var i Todo
 	err := row.Scan(
 		&i.ID,
@@ -50,7 +87,8 @@ INSERT INTO users (
         password_created_at
     )
 values ($1, $2, $3, $4)
-RETURNING email,
+RETURNING id,
+    email,
     username
 `
 
@@ -62,10 +100,12 @@ type InsertUserParams struct {
 }
 
 type InsertUserRow struct {
+	ID       uuid.UUID
 	Email    sql.NullString
 	Username string
 }
 
+// table: users
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error) {
 	row := q.db.QueryRowContext(ctx, insertUser,
 		arg.Email,
@@ -74,8 +114,42 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 		arg.PasswordCreatedAt,
 	)
 	var i InsertUserRow
-	err := row.Scan(&i.Email, &i.Username)
+	err := row.Scan(&i.ID, &i.Email, &i.Username)
 	return i, err
+}
+
+const selectAllTodos = `-- name: SelectAllTodos :many
+SELECT id, created_at, body, author
+FROM todos
+`
+
+// table: todos
+func (q *Queries) SelectAllTodos(ctx context.Context) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, selectAllTodos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Body,
+			&i.Author,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
@@ -103,6 +177,7 @@ FROM profiles
 WHERE profiles.id = $1
 `
 
+// table: profiles
 func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile, error) {
 	row := q.db.QueryRowContext(ctx, selectProfileById, id)
 	var i Profile

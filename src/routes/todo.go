@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"database/sql"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -25,7 +24,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response template.HTML
+	// var response template.HTML
 	ctx := context.Background()
 	db, err := sql.Open("postgres", utils.Env().DB_URI)
 
@@ -50,20 +49,20 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		row, err := conn.InsertTodo(ctx, body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		// row, err := conn.InsertTodo(ctx, body)
+		// if err != nil {
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	return
+		// }
 
-		response, err = templ.ToGoHTML(ctx, components.TodoRow(&row))
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		// response, err = templ.ToGoHTML(ctx, components.TodoRow(&row))
+		// if err != nil {
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	return
+		// }
 
-		w.Write([]byte(response))
-		return
+		// w.Write([]byte(response))
+		// return
 	}
 
 	if r.Method == "DELETE" {
