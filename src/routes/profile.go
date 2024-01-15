@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
@@ -25,7 +24,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	d, err := sql.Open("postgres", utils.Env().DB_URI)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		redirectServerError(w, r)
 		return
 	}
 
@@ -42,7 +41,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	row, err := conn.SelectProfileByUsername(ctx, requestedProfile)
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		redirectNotFound(w, r)
 		return
 	}
 
@@ -54,24 +53,12 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		})
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	
-	response, err := templ.ToGoHTML(
-		ctx,
-		components.Profile(
-			&components.ProfileProps{
-				Username: row.Username,
-				Todos:    &todos,
-			}))
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		redirectServerError(w, r)
 		return
 	}
 
-	w.Write([]byte(response))
-	return
-
+	components.Profile(&components.ProfileProps{
+		Username: row.Username,
+		Todos:    &todos,
+	}).Render(r.Context(), w)
 }
