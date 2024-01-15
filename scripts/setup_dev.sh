@@ -38,9 +38,9 @@ install_tailwindcss() {
     echo -e "Alternatively, you can run `wget -O ~/.local/bin/tailwindcss <url of file> \& chmod +x ~/.local/bin/tailwindcss`"
 }
 
-install_postgresql_ubuntu_debian
-install_sqlc
+#install_postgresql_ubuntu_debian
+#install_sqlc
 install_templ
-install_air
-install_tailwindcss
+#install_air
+#install_tailwindcss
 

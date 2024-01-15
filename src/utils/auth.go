@@ -25,8 +25,12 @@ var (
 	ErrPassNoMatch      = errors.New("Passwords don't match")
 	ErrBadLogin         = errors.New("Incorrect password or account does not exist")
 	ErrDbConnection     = errors.New("Internal Server Error - 12482")
+	ErrDbConnection2    = errors.New("Internal Server Error - 12483")
 	ErrHashPassword     = errors.New("Internal Server Error - 19283")
+	ErrHashPassword2    = errors.New("Internal Server Error - 19284")
 	ErrDbInsertUser     = errors.New("Internal Server Error - 12382")
+	ErrParseForm        = errors.New("Internal Server Error - 13481")
+	ErrParseForm2       = errors.New("Internal Server Error - 13482")
 )
 
 const (
@@ -34,7 +38,16 @@ const (
 	FieldPassword = "password"
 	FieldEmail    = "email"
 	FieldPassConf = "password-confirmation"
+	FieldUser     = "user"
 )
+
+var AllFields = []string{
+	FieldUsername,
+	FieldEmail,
+	FieldPassConf,
+	FieldPassword,
+	FieldUser,
+}
 
 type AuthError struct {
 	Field string
@@ -42,32 +55,41 @@ type AuthError struct {
 	Err   error
 }
 
-type AuthCredentials struct {
+type SignUpCredentials struct {
 	Username string
 	Password string
 	PassConf string
 	Email    string
 }
 
-func (c *AuthCredentials) SignInStrings() *[]AuthError {
+type SignInCredentials struct {
+	User string
+	Pass string
+}
 
-	user := len(c.Username) > 3
-	pass := len(c.Password) > 7
-	_, emailErr := mail.ParseAddress(c.Email)
+func (c *SignUpCredentials) ValidateStrings() *[]AuthError {
 	errs := []AuthError{}
 	ok := true
-	if !user {
+
+	_, emailErr := mail.ParseAddress(c.Email)
+	if c.Email != "" && emailErr != nil {
+		errs = append(errs, AuthError{Field: FieldEmail, Err: ErrEmailInvalid, Value: c.Email})
+		ok = false
+	}
+
+	if !(len(c.Username) > 3) {
 		errs = append(errs, AuthError{Field: FieldUsername, Err: ErrUsernameTooShort, Value: c.Username})
 		ok = false
 	}
-	if !pass {
-		errs.Error(SectionPassword, ErrPasswordTooShort, "")
+
+	if !(len(c.Password) > 7) {
+		errs = append(errs, AuthError{Field: FieldPassword, Err: ErrPasswordTooShort, Value: ""})
+		ok = false
 	}
-	if c.Email != "" && emailErr != nil {
-		errs.Error(SectionEmail, ErrEmailInvalid, c.Email)
-	}
+
 	if c.Password != c.PassConf {
-		errs.Error(SectionPassConf, ErrPassNoMatch, "")
+		errs = append(errs, AuthError{Field: FieldPassConf, Err: ErrPassNoMatch, Value: ""})
+		ok = false
 	}
 
 	if !ok {
@@ -77,50 +99,13 @@ func (c *AuthCredentials) SignInStrings() *[]AuthError {
 	}
 }
 
-func (c *SignUpCredentials) ValidateDatabase() *AuthErrors {
-	errs := AuthErrors{}
-	ok := true
+func (c *SignUpCredentials) SignUp() (string, *[]AuthError) {
 	ctx := context.Background()
+	errs := []AuthError{}
+
 	d, err := sql.Open("postgres", Env().DB_URI)
-
 	if err != nil {
-		errs.Error("", ErrDbConnection, "")
-		ok = false
-		return &errs
-	}
-
-	conn := db.New(d)
-	_, err = conn.SelectEmailOrUsernameAlreadyExists(ctx,
-		db.SelectEmailOrUsernameAlreadyExistsParams{
-			Email:    sql.NullString{String: c.Email, Valid: c.Email != ""},
-			Username: c.Username,
-		})
-
-	if err != nil && err != sql.ErrNoRows {
-		errs.Error("", ErrDbConnection, "")
-		ok = false
-		return &errs
-	}
-
-	if !ok {
-		return &errs
-	} else {
-		return nil
-	}
-
-}
-
-func (c *SignUpCredentials) MiscErrorMessage(err string) *AuthErrors {
-	return &AuthErrors{ErrsStr: []string{err}}
-}
-
-func (c *SignUpCredentials) SignUp() (string, *AuthErrors) {
-	ctx := context.Background()
-	d, err := sql.Open("postgres", Env().DB_URI)
-
-	errs := AuthErrors{}
-	if err != nil {
-		errs.Error("", ErrDbConnection, "")
+		errs = append(errs, AuthError{Field: "", Err: ErrDbConnection, Value: ""})
 		return "", &errs
 	}
 
@@ -129,7 +114,7 @@ func (c *SignUpCredentials) SignUp() (string, *AuthErrors) {
 	email := sql.NullString{String: c.Email, Valid: c.Email != ""}
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
 	if err != nil {
-		errs.Error("", ErrHashPassword, "")
+		errs = append(errs, AuthError{Field: "", Err: ErrHashPassword, Value: ""})
 		return "", &errs
 	}
 
@@ -143,54 +128,55 @@ func (c *SignUpCredentials) SignUp() (string, *AuthErrors) {
 		})
 
 	if err != nil {
-		errs.Error("", ErrDbInsertUser, "")
+		errs = append(errs, AuthError{Field: "", Err: ErrDbInsertUser, Value: ""})
 		return "", &errs
 	}
 
-	return newUser.Username, &errs
+	return newUser.Username, nil
 
 }
 
-func (c *SignInCredentials) IsEmail() bool {
-	_, err := mail.ParseAddress(c.EmailOrUsername)
-	return err == nil
-}
+func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
+	errs := []AuthError{}
+	if c.User == "" || c.Pass == "" {
+		errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+		return nil, &errs
+	}
 
-func (c *SignInCredentials) SignIn() (string, *AuthErrors) {
 	var user db.User
-	errs := AuthErrors{}
-
 	ctx := context.Background()
 	d, err := sql.Open("postgres", Env().DB_URI)
-
 	if err != nil {
-		errs.Error("", ErrBadLogin, "")
+		errs = append(errs, AuthError{Err: ErrDbConnection2})
+		return nil, &errs
 	}
 
 	conn := db.New(d)
 
-	if c.IsEmail() {
-		userDb, err := conn.SelectUserByEmail(ctx, sql.NullString{String: c.EmailOrUsername, Valid: c.IsEmail()})
-		user = userDb
+	if _, err := mail.ParseAddress(c.User); err == nil {
+		user, err = conn.SelectUserByEmail(ctx, sql.NullString{String: c.User, Valid: err == nil})
 		if err != nil {
-			errs.Error("", ErrBadLogin, "")
+			errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+			return nil, &errs
 		}
 	} else {
-		userDb, err := conn.SelectUserByUsername(ctx, c.EmailOrUsername)
-		user = userDb
+		user, err = conn.SelectUserByUsername(ctx, c.User)
 		if err != nil {
-			errs.Error("", ErrBadLogin, "")
+			errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+			return nil, &errs
 		}
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Pass))
 
 	if err != nil {
-		errs.Error("", ErrBadLogin, "")
+		errs = append(errs, AuthError{Err: ErrHashPassword})
+		return nil, &errs
 	}
 
-	return user.Username, &errs
+	user.EncryptedPassword = ""
 
+	return &user, nil
 }
 
 type JwtStrings struct {

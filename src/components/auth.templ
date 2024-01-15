@@ -3,6 +3,27 @@ package components
 import "fmt"
 import "github.com/nathan-hello/htmx-template/src/utils"
 
+
+templ user(borderColor string, value string) {
+	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
+	<div class="relative mb-6">
+		<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+			<svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 16">
+				<path d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z"></path>
+				<path d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"></path>
+			</svg>
+		</div>
+		<input
+			type="text"
+			id="input-group-1"
+			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor) }
+			placeholder="Smokey96 or smokey96@bears.com"
+			name="user"
+			value={ value }
+		/>
+	</div>
+}
+
 templ email(borderColor string, value string) {
 	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
 	<div class="relative mb-6">
@@ -62,8 +83,7 @@ templ passwordConfirm(borderColor string, value string) {
 		<label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
 		<input
 			type="password"
-			id="confirm_password"
-			name="password-confirm"
+			name={ utils.FieldPassConf }
 			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor) }
 			placeholder="•••••••••"
 			required
@@ -72,28 +92,28 @@ templ passwordConfirm(borderColor string, value string) {
 	</div>
 }
 
-templ SignUpForm(s utils.AuthErrors) {
-	for _, v := range s.ErrsStr {
-		@errorMsg(v)
+templ SignUpForm(s map[string]FieldError) {
+	for _, v := range s {
+		@errorMsg(v.Err)
 	}
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
-		@email(s.Email.BorderColor, s.Email.Value)
-		@username(s.Username.BorderColor, s.Username.Value)
-		@password(s.Password.BorderColor, "")
-		@passwordConfirm(s.PassConf.BorderColor, "")
+		@email(s[utils.FieldEmail].BorderColor, s[utils.FieldEmail].Value)
+		@username(s[utils.FieldUsername].BorderColor, s[utils.FieldUsername].Value)
+		@password(s[utils.FieldPassword].BorderColor, "")
+		@passwordConfirm(s[utils.FieldPassConf].BorderColor, "")
 		<button class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignUpContainer(s utils.AuthErrors) {
+templ SignUpContainer() {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-		@SignUpForm(s)
+		@SignUpForm(nil)
 	</div>
 }
 
-templ SignUp(s utils.AuthErrors) {
-	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer(s))
+templ SignUp() {
+	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer())
 }
 
 templ errorMsg(s string) {
@@ -102,24 +122,24 @@ templ errorMsg(s string) {
 	</div>
 }
 
-templ SignInForm(s *utils.AuthErrors) {
-	for _, v := range s.ErrsStr {
-		@errorMsg(v)
+templ SignInForm(s map[string]FieldError) {
+	for _, v := range s {
+		@errorMsg(v.Err)
 	}
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
-		@email(s.Email.BorderColor, s.Email.Value)
-		@password(s.Password.BorderColor, "")
+		@user(s[utils.FieldUser].BorderColor, s[utils.FieldUser].Value)
+		@password(s[utils.FieldPassword].BorderColor, "")
 		<button class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignInContainer(s *utils.AuthErrors) {
+templ SignInContainer() {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-		@SignInForm(s)
+		@SignInForm(nil)
 	</div>
 }
 
-templ SignIn(s *utils.AuthErrors) {
-	@layout("Bear Hub - Sign In", "Sign In", SignInContainer(s))
+templ SignIn() {
+	@layout("Bear Hub - Sign In", "Sign In", SignInContainer())
 }
