@@ -41,6 +41,7 @@ func Router() {
 	http.HandleFunc("/profile/", routes.UserProfile)
 	http.HandleFunc("/404", routes.NotFound)
 	http.HandleFunc("/500", routes.InternalServerError)
+	http.HandleFunc("/testing/", routes.TestingEntryPoint)
 
 	http.ListenAndServe(":3000", nil)
 }
