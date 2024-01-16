@@ -4,7 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+
+	// "fmt"
 	"net/mail"
 	"time"
 
@@ -13,9 +14,6 @@ import (
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// Form submission validation belongs in routes/auth.go
-// It's in here to prevent circular imports between components and routes.
 
 var (
 	ErrUsernameTooShort = errors.New("Username too short")
@@ -179,11 +177,6 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 	return &user, nil
 }
 
-type JwtStrings struct {
-	access  string
-	refresh string
-}
-
 const (
 	ErrJwtExpired       = "JWT Expired, %#v"
 	ErrJwtSigningMethod = "unexpected signing method, %#v"
@@ -191,9 +184,9 @@ const (
 	ErrJwtParseFailed   = "JWT could not be parsed, %#v"
 )
 
-func CreateJwt(userId uuid.UUID) (*JwtStrings, error) {
+func CreateAccess(userId uuid.UUID) (string, error) {
 
-	access := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	access := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
 		"expires_at": time.Now().Add(time.Hour * 1).Unix(),
 		"created_at": time.Now().Unix(),
 		"user_id":    userId,
@@ -202,10 +195,14 @@ func CreateJwt(userId uuid.UUID) (*JwtStrings, error) {
 	signedAccessToken, err := access.SignedString(Env().JWT_SECRET)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	return signedAccessToken, nil
+}
 
-	refresh := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+func CreateRefresh(userId uuid.UUID) (string, error) {
+
+	refresh := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
 		"user_id":    userId,
 		"expires_at": time.Now().Add(time.Hour * 72).Unix(),
 		"created_at": time.Now().Unix(),
@@ -214,42 +211,42 @@ func CreateJwt(userId uuid.UUID) (*JwtStrings, error) {
 	signedRefreshToken, err := refresh.SignedString(Env().JWT_SECRET)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &JwtStrings{access: signedAccessToken, refresh: signedRefreshToken}, nil
+	return signedRefreshToken, nil
 }
 
-func RefreshJwt(j JwtStrings) (*JwtStrings, error) {
+// func RefreshJwt(access string, refresh string) (string, error) {
 
-	token, err := jwt.Parse(j.refresh, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf(ErrJwtSigningMethod, token.Header["alg"])
-		}
-		return []byte(Env().JWT_SECRET), nil
-	})
+// token, err := jwt.Parse(refresh, func(token *jwt.Token) (interface{}, error) {
+// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// return nil, fmt.Errorf(ErrJwtSigningMethod, token.Header["alg"])
+// }
+// return []byte(Env().JWT_SECRET), nil
+// })
 
-	if err != nil {
-		return nil, fmt.Errorf(ErrJwtParseFailed, token)
-	}
+// if err != nil {
+// return "", fmt.Errorf(ErrJwtParseFailed, token)
+// }
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+// claims, ok := token.Claims.(jwt.MapClaims)
 
-	if ok && token.Valid {
-		if claims["expires_at"].(int64) < time.Now().Unix() {
-			return nil, fmt.Errorf(ErrJwtExpired, claims)
-		}
-		if !ok {
-			return nil, fmt.Errorf(ErrJwtNotValid, claims)
-		}
-	}
+// if ok && token.Valid {
+// if claims["expires_at"].(int64) < time.Now().Unix() {
+// return "", fmt.Errorf(ErrJwtExpired, claims)
+// }
+// if !ok {
+// return "", fmt.Errorf(ErrJwtNotValid, claims)
+// }
+// }
 
-	newPair, err := CreateJwt(claims["user_id"].(uuid.UUID))
+// newAccess, err := CreateAccess(claims["user_id"].(uuid.UUID))
 
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
+// if err != nil {
+// return nil, fmt.Errorf(err.Error())
+// }
 
-	return newPair, nil
+// return newPair, nil
 
-}
+// }
