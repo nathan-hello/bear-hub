@@ -9,26 +9,24 @@ import (
 	"net/mail"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrUsernameTooShort = errors.New("Username too short")
-	ErrPasswordTooShort = errors.New("Password too short")
-	ErrEmailInvalid     = errors.New("Invalid email")
-	ErrPasswordInvalid  = errors.New("Password invalid")
-	ErrPassNoMatch      = errors.New("Passwords don't match")
-	ErrBadLogin         = errors.New("Incorrect password or account does not exist")
-	ErrDbConnection     = errors.New("Internal Server Error - 12482")
-	ErrDbConnection2    = errors.New("Internal Server Error - 12483")
-	ErrHashPassword     = errors.New("Internal Server Error - 19283")
-	ErrHashPassword2    = errors.New("Internal Server Error - 19284")
-	ErrDbInsertUser     = errors.New("Internal Server Error - 12382")
-	ErrParseForm        = errors.New("Internal Server Error - 13481")
-	ErrParseForm2       = errors.New("Internal Server Error - 13482")
+	ErrUsernameTooShort = errors.New("username too short")
+	ErrPasswordTooShort = errors.New("password too short")
+	ErrEmailInvalid     = errors.New("invalid email")
+	ErrPasswordInvalid  = errors.New("password invalid")
+	ErrPassNoMatch      = errors.New("passwords don't match")
+	ErrBadLogin         = errors.New("incorrect password or account does not exist")
+	ErrDbConnection     = errors.New("internal Server Error - 12482")
+	ErrDbConnection2    = errors.New("internal Server Error - 12483")
+	ErrHashPassword     = errors.New("internal Server Error - 19283")
+	ErrHashPassword2    = errors.New("internal Server Error - 19284")
+	ErrDbInsertUser     = errors.New("internal Server Error - 12382")
+	ErrParseForm        = errors.New("internal Server Error - 13481")
+	ErrParseForm2       = errors.New("internal Server Error - 13482")
 )
 
 const (
@@ -176,77 +174,3 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 
 	return &user, nil
 }
-
-const (
-	ErrJwtExpired       = "JWT Expired, %#v"
-	ErrJwtSigningMethod = "unexpected signing method, %#v"
-	ErrJwtNotValid      = "JWT not valid, %#v"
-	ErrJwtParseFailed   = "JWT could not be parsed, %#v"
-)
-
-func CreateAccess(userId uuid.UUID) (string, error) {
-
-	access := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"expires_at": time.Now().Add(time.Hour * 1).Unix(),
-		"created_at": time.Now().Unix(),
-		"user_id":    userId,
-	})
-
-	signedAccessToken, err := access.SignedString(Env().JWT_SECRET)
-
-	if err != nil {
-		return "", err
-	}
-	return signedAccessToken, nil
-}
-
-func CreateRefresh(userId uuid.UUID) (string, error) {
-
-	refresh := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"user_id":    userId,
-		"expires_at": time.Now().Add(time.Hour * 72).Unix(),
-		"created_at": time.Now().Unix(),
-	})
-
-	signedRefreshToken, err := refresh.SignedString(Env().JWT_SECRET)
-
-	if err != nil {
-		return "", err
-	}
-
-	return signedRefreshToken, nil
-}
-
-// func RefreshJwt(access string, refresh string) (string, error) {
-
-// token, err := jwt.Parse(refresh, func(token *jwt.Token) (interface{}, error) {
-// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-// return nil, fmt.Errorf(ErrJwtSigningMethod, token.Header["alg"])
-// }
-// return []byte(Env().JWT_SECRET), nil
-// })
-
-// if err != nil {
-// return "", fmt.Errorf(ErrJwtParseFailed, token)
-// }
-
-// claims, ok := token.Claims.(jwt.MapClaims)
-
-// if ok && token.Valid {
-// if claims["expires_at"].(int64) < time.Now().Unix() {
-// return "", fmt.Errorf(ErrJwtExpired, claims)
-// }
-// if !ok {
-// return "", fmt.Errorf(ErrJwtNotValid, claims)
-// }
-// }
-
-// newAccess, err := CreateAccess(claims["user_id"].(uuid.UUID))
-
-// if err != nil {
-// return nil, fmt.Errorf(err.Error())
-// }
-
-// return newPair, nil
-
-// }

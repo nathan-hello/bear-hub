@@ -3,13 +3,21 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+type Dotenv struct {
 	DB_URI     string
 	JWT_SECRET string
+}
+
+type FullConfig struct {
+	DB_URI              string
+	JWT_SECRET          string
+	REFRESH_EXPIRY_TIME time.Duration
+	ACCESS_EXPIRY_TIME  time.Duration
 }
 
 func parseConfigStruct(s interface{}) []string {
@@ -29,8 +37,8 @@ func parseConfigStruct(s interface{}) []string {
 	return fieldNames
 }
 
-func parseRequiredEnvVars(dotenv map[string]string, fields []string) Config {
-	var c Config
+func parseRequiredEnvVars(dotenv map[string]string, fields []string) Dotenv {
+	var c Dotenv
 	v := reflect.ValueOf(&c).Elem()
 	for _, field := range fields {
 		if value, ok := dotenv[field]; ok {
@@ -44,8 +52,8 @@ func parseRequiredEnvVars(dotenv map[string]string, fields []string) Config {
 
 }
 
-func NewEnv() Config {
-	requiredEnvVars := parseConfigStruct(Config{})
+func NewEnv() Dotenv {
+	requiredEnvVars := parseConfigStruct(Dotenv{})
 
 	dotenv, err := godotenv.Read(".env")
 	if err != nil {
@@ -56,8 +64,14 @@ func NewEnv() Config {
 
 }
 
-var GlobalConfig Config = NewEnv()
+var g Dotenv = NewEnv()
+var C = FullConfig{
+	DB_URI:              g.DB_URI,
+	JWT_SECRET:          g.JWT_SECRET,
+	REFRESH_EXPIRY_TIME: time.Hour * 72,
+	ACCESS_EXPIRY_TIME:  time.Hour * 3,
+}
 
-func Env() *Config {
-	return &GlobalConfig
+func Env() *FullConfig {
+	return &C
 }
