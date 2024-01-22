@@ -47,6 +47,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		SetTokenCookies(w)
 		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
 

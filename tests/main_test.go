@@ -23,7 +23,7 @@ func TestDatabaseConnection(t *testing.T) {
 	f := db.New(d)
 
 	user, err := f.InsertUser(ctx, db.InsertUserParams{
-		Username:          "black-bear-test-5",
+		Username:          "black-bear-test-2",
 		EncryptedPassword: "honey",
 	})
 
@@ -31,7 +31,7 @@ func TestDatabaseConnection(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Printf("New user: %#v\n", user)
+	// fmt.Printf("New user: %#v\n", user)
 
 	fullUser, err := f.SelectUserByUsername(ctx, user.Username)
 
@@ -39,7 +39,7 @@ func TestDatabaseConnection(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Printf("full user %#v\n", fullUser)
+	// fmt.Printf("full user %#v\n", fullUser)
 
 	newProfile, err := f.InsertProfile(ctx, fullUser.ID)
 
@@ -53,15 +53,17 @@ func TestDatabaseConnection(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
+		fmt.Printf("deleted profile: %#v\n", newProfile.String())
 
 		err = f.DeleteUser(ctx, fullUser.ID)
 
 		if err != nil {
 			t.Error(err)
 		}
+		fmt.Printf("deleted user: %#v\n", fullUser.ID.String())
 	}()
 
-	fmt.Printf("newProfile: %#v\n", newProfile)
+	// fmt.Printf("newProfile: %#v\n", newProfile)
 
 	newTodo, err := f.InsertTodo(ctx, db.InsertTodoParams{Body: "eat honey", Author: fullUser.ID})
 
@@ -77,21 +79,21 @@ func TestDatabaseConnection(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Printf("newTodo: %#v\n", newTodo)
+	// fmt.Printf("newTodo: %#v\n", newTodo)
 
-	rows, err := f.SelectUserTodos(ctx, fullUser.ID)
+	_, err = f.SelectUserTodos(ctx, fullUser.ID)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	fmt.Printf("printing up to 10 todos\n")
-
-	for i, v := range rows {
-		fmt.Printf("row %v: %#v", i, v)
-		if i >= 10 {
-			break
-		}
-	}
+	// fmt.Printf("printing up to 10 todos\n")
+	//
+	// for i, v := range rows {
+	// 	fmt.Printf("row %v: %#v", i, v)
+	// 	if i >= 10 {
+	// 		break
+	// 	}
+	// }
 
 }
