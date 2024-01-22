@@ -10,64 +10,48 @@ import (
 	"github.com/nathan-hello/htmx-template/src/db"
 )
 
-type JwtFormat struct {
-	exp int64
-	iat int64
-	sub uuid.UUID
-	iss string
+type CustomClaims struct {
+	jwt.RegisteredClaims
+	UserId   uuid.UUID
+	Username string
+	Jwt_type string
 }
 
-func (j *JwtFormat) New(u uuid.UUID, t time.Duration) *JwtFormat {
-	j.exp = time.Now().Add(t).Unix()
-	j.iat = time.Now().Unix()
-	j.sub = u
-	j.iss = "no-magic-stack-example"
-	return j
-}
-
-func CreateAccess(userId uuid.UUID) (string, error) {
-	j := JwtFormat{}
-	j = *j.New(userId, Env().ACCESS_EXPIRY_TIME)
-	claims := jwt.MapClaims{
-		"exp": j.exp,
-		"iat": j.iat,
-		"sub": j.sub,
-		"iss": j.iss,
+func NewTokenPair(userId uuid.UUID, username string) (string, string, error) {
+	ac := jwt.MapClaims{
+		"exp":      time.Now().Add(Env().ACCESS_EXPIRY_TIME).Unix(),
+		"iat":      time.Now().Unix(),
+		"sub":      userId,
+		"iss":      "no-magic-stack-example",
+		"username": username,
 	}
 
-	access := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	access := jwt.NewWithClaims(jwt.SigningMethodHS256, &ac)
 
-	signedAccessToken, err := access.SignedString([]byte(Env().JWT_SECRET))
+	as, err := access.SignedString([]byte(Env().JWT_SECRET))
 
 	if err != nil {
-		return "", err
-	}
-	return signedAccessToken, nil
-}
-
-func CreateRefresh(userId uuid.UUID) (string, error) {
-
-	j := JwtFormat{}
-	j = *j.New(userId, Env().REFRESH_EXPIRY_TIME)
-	claims := jwt.MapClaims{
-		"exp": j.exp,
-		"iat": j.iat,
-		"sub": j.sub,
-		"iss": j.iss,
+		return "", "", err
 	}
 
-	refresh := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	rc := jwt.MapClaims{
+		"exp":      time.Now().Add(Env().ACCESS_EXPIRY_TIME).Unix(),
+		"iat":      time.Now().Unix(),
+		"sub":      userId,
+		"iss":      "no-magic-stack-example",
+		"username": username,
+	}
 
-	signedRefreshToken, err := refresh.SignedString(Env().JWT_SECRET)
-
+	refresh := jwt.NewWithClaims(jwt.SigningMethodHS256, &rc)
+	rs, err := refresh.SignedString([]byte(Env().JWT_SECRET))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return signedRefreshToken, nil
+	return as, rs, nil
 }
 
-func ExtractInfoForNewToken(t string) (*uuid.UUID, error) {
+func ParseToken(t string) (*CustomClaims, error) {
 	token, err := jwt.Parse(
 		t, func(token *jwt.Token) (interface{}, error) {
 			ok := token.Method.Alg() == "HS256"
@@ -87,17 +71,12 @@ func ExtractInfoForNewToken(t string) (*uuid.UUID, error) {
 		return nil, ErrParsingJwt2
 	}
 
-	subStr, err := token.Claims.GetSubject()
-	if err != nil {
-		return nil, ErrJwtParseSub
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return nil, ErrParsingJwt2
 	}
 
-	u, err := uuid.Parse(subStr)
-	if err != nil {
-		return nil, ErrJwtParseSubUuid
-	}
-
-	return &u, nil
+	return claims, nil
 
 }
 
@@ -196,7 +175,7 @@ func InvalidateTokenFromTokenString(t string) error {
 		return ErrDbSelectUserFromToken
 	}
 
-	err = f.UpdateUserTokensToInvalid(ctx, user[0])
+	err = f.UpdateUserTokensToInvalid(ctx, user)
 	if err != nil {
 		return ErrDbUpdateTokensInvalid
 	}
@@ -205,16 +184,12 @@ func InvalidateTokenFromTokenString(t string) error {
 }
 
 func NewTokenPairFromRefreshString(r string) (string, string, error) {
-	userId, err := ExtractInfoForNewToken(r)
+	claims, err := ParseToken(r)
 	if err != nil {
 		return "", "", err
 	}
 
-	access, err := CreateAccess(*userId)
-	if err != nil {
-		return "", "", err
-	}
-	refresh, err := CreateAccess(*userId)
+	access, refresh, err := NewTokenPair(claims.UserId, claims.Username)
 	if err != nil {
 		return "", "", err
 	}

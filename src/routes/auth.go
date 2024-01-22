@@ -40,20 +40,41 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		username, errs := cred.SignUp()
+		username, userId, errs := cred.SignUp()
 
 		if errs != nil {
 			returnFormWithErrors(errs)
 			return
 		}
 
-		SetTokenCookies(w)
+		access, refresh, err := utils.NewTokenPair(*userId, username)
+		if err != nil {
+			returnFormWithErrors(&[]utils.AuthError{
+				{Err: err},
+			})
+		}
+
+		SetTokenCookies(w, access, refresh)
 		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
 
 	}
 
 	if r.Method == "GET" {
+		if ValidateOrRefreshPairFromCookies(w, r) {
+
+			access, err := r.Cookie("access_token")
+			if err != nil {
+				w.Header().Set("HX-Redirect", "500")
+			}
+
+			c, err := utils.ParseToken(access.Value)
+			if err != nil {
+				w.Header().Set("HX-Redirect", "500")
+			}
+
+			w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", c.Username))
+		}
 		components.SignUpForm(nil).Render(r.Context(), w)
 	}
 }
@@ -93,8 +114,21 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-
 	if r.Method == "GET" {
+		if ValidateOrRefreshPairFromCookies(w, r) {
+
+			access, err := r.Cookie("access_token")
+			if err != nil {
+				w.Header().Set("HX-Redirect", "500")
+			}
+
+			c, err := utils.ParseToken(access.Value)
+			if err != nil {
+				w.Header().Set("HX-Redirect", "500")
+			}
+
+			w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", c.Username))
+		}
 		components.SignInForm(nil).Render(r.Context(), w)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -78,14 +79,14 @@ func (c *SignUpCredentials) ValidateStrings() *[]AuthError {
 	}
 }
 
-func (c *SignUpCredentials) SignUp() (string, *[]AuthError) {
+func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
 	d, err := sql.Open("postgres", Env().DB_URI)
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: ErrDbConnection, Value: ""})
-		return "", &errs
+		return "", nil, &errs
 	}
 
 	conn := db.New(d)
@@ -94,7 +95,7 @@ func (c *SignUpCredentials) SignUp() (string, *[]AuthError) {
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: ErrHashPassword, Value: ""})
-		return "", &errs
+		return "", nil, &errs
 	}
 
 	newUser, err := conn.InsertUser(
@@ -108,10 +109,10 @@ func (c *SignUpCredentials) SignUp() (string, *[]AuthError) {
 
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: ErrDbInsertUser, Value: ""})
-		return "", &errs
+		return "", nil, &errs
 	}
 
-	return newUser.Username, nil
+	return newUser.Username, &newUser.ID, nil
 
 }
 
