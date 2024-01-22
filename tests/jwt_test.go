@@ -79,16 +79,25 @@ func TestDbJwt(t *testing.T) {
 
 	f := db.New(d)
 
-	user, err := f.InsertUser(ctx, db.InsertUserParams{
-		Username:          "black-bear-test-5",
+	fullUser, err := f.InsertUser(ctx, db.InsertUserParams{
+		Username:          "black-bear-test-1",
 		EncryptedPassword: "honey",
 	})
+
+	defer func() {
+		err = f.DeleteUser(ctx, fullUser.ID)
+
+		if err != nil {
+			t.Error(err)
+		}
+		fmt.Printf("deleted user: %#v\n", fullUser.ID.String())
+	}()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	access, err := utils.CreateAccess(uuid.New())
+	access, err := utils.CreateAccess(fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +112,13 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Printf("%#v\n", user)
-	fmt.Printf("\n\n\nCONFIG: %#v\n\n\n", utils.Env())
+	token, err := f.SelectUsersTokens(ctx, fullUser.ID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(token) < 1 {
+		t.Error("Token length 0: %#v\n", token)
+	}
 
 }

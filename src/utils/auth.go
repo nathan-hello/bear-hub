@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	// "fmt"
 	"net/mail"
@@ -11,22 +10,6 @@ import (
 
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	ErrUsernameTooShort = errors.New("username too short")
-	ErrPasswordTooShort = errors.New("password too short")
-	ErrEmailInvalid     = errors.New("invalid email")
-	ErrPasswordInvalid  = errors.New("password invalid")
-	ErrPassNoMatch      = errors.New("passwords don't match")
-	ErrBadLogin         = errors.New("incorrect password or account does not exist")
-	ErrDbConnection     = errors.New("internal Server Error - 12482")
-	ErrDbConnection2    = errors.New("internal Server Error - 12483")
-	ErrHashPassword     = errors.New("internal Server Error - 19283")
-	ErrHashPassword2    = errors.New("internal Server Error - 19284")
-	ErrDbInsertUser     = errors.New("internal Server Error - 12382")
-	ErrParseForm        = errors.New("internal Server Error - 13481")
-	ErrParseForm2       = errors.New("internal Server Error - 13482")
 )
 
 const (
