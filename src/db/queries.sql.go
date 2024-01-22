@@ -34,6 +34,20 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteTokensByUserId = `-- name: DeleteTokensByUserId :exec
+DELETE FROM tokens
+WHERE tokens.id = (
+        SELECT token_id
+        FROM users_tokens
+        WHERE users_tokens.user_id = $1
+    )
+`
+
+func (q *Queries) DeleteTokensByUserId(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteTokensByUserId, userID)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = $1
@@ -58,7 +72,7 @@ func (q *Queries) InsertProfile(ctx context.Context, id uuid.UUID) (uuid.UUID, e
 
 const insertTodo = `-- name: InsertTodo :one
 INSERT INTO todos (body, author)
-values ($1, $2)
+VALUES ($1, $2)
 RETURNING id, created_at, body, author
 `
 
@@ -77,6 +91,23 @@ func (q *Queries) InsertTodo(ctx context.Context, arg InsertTodoParams) (Todo, e
 		&i.Author,
 	)
 	return i, err
+}
+
+const insertToken = `-- name: InsertToken :exec
+INSERT INTO tokens (jwt_type, jwt, valid)
+VALUES ($1, $2, $3)
+`
+
+type InsertTokenParams struct {
+	JwtType string
+	Jwt     string
+	Valid   bool
+}
+
+// table: tokens
+func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
+	_, err := q.db.ExecContext(ctx, insertToken, arg.JwtType, arg.Jwt, arg.Valid)
+	return err
 }
 
 const insertUser = `-- name: InsertUser :one
@@ -118,38 +149,33 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 	return i, err
 }
 
-const selectAllTodos = `-- name: SelectAllTodos :many
-SELECT id, created_at, body, author
-FROM todos
+const insertUsersTokens = `-- name: InsertUsersTokens :exec
+INSERT INTO users_tokens (user_id, token_id)
+VALUES ($1, $2)
 `
 
-// table: todos
-func (q *Queries) SelectAllTodos(ctx context.Context) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, selectAllTodos)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Todo
-	for rows.Next() {
-		var i Todo
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.Body,
-			&i.Author,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+type InsertUsersTokensParams struct {
+	UserID  uuid.UUID
+	TokenID sql.NullInt64
+}
+
+// table: users_tokens
+func (q *Queries) InsertUsersTokens(ctx context.Context, arg InsertUsersTokensParams) error {
+	_, err := q.db.ExecContext(ctx, insertUsersTokens, arg.UserID, arg.TokenID)
+	return err
+}
+
+const isValidToken = `-- name: IsValidToken :one
+SELECT valid
+FROM tokens
+WHERE jwt = $1
+`
+
+func (q *Queries) IsValidToken(ctx context.Context, jwt string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isValidToken, jwt)
+	var valid bool
+	err := row.Scan(&valid)
+	return valid, err
 }
 
 const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
@@ -219,46 +245,6 @@ func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) 
 	return i, err
 }
 
-const selectTodosByIds = `-- name: SelectTodosByIds :many
-SELECT id, created_at, body, author
-FROM todos
-WHERE id = ANY($1::int [])
-LIMIT $2
-`
-
-type SelectTodosByIdsParams struct {
-	Column1 []int32
-	Limit   int64
-}
-
-func (q *Queries) SelectTodosByIds(ctx context.Context, arg SelectTodosByIdsParams) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, selectTodosByIds, pq.Array(arg.Column1), arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Todo
-	for rows.Next() {
-		var i Todo
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.Body,
-			&i.Author,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const selectUserByEmail = `-- name: SelectUserByEmail :one
 SELECT created_at, username, email, encrypted_password, password_created_at, id
 FROM users
@@ -297,4 +283,109 @@ func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (Us
 		&i.ID,
 	)
 	return i, err
+}
+
+const selectUserTodos = `-- name: SelectUserTodos :many
+SELECT id, created_at, body, author
+FROM todos
+WHERE author = $1
+`
+
+// table: todos
+// insert/select/update to be done
+func (q *Queries) SelectUserTodos(ctx context.Context, author uuid.UUID) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, selectUserTodos, author)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Body,
+			&i.Author,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const selectUsersTokens = `-- name: SelectUsersTokens :many
+SELECT id, user_id, token_id
+FROM users_tokens
+WHERE user_id = $1
+`
+
+func (q *Queries) SelectUsersTokens(ctx context.Context, userID uuid.UUID) ([]UsersToken, error) {
+	rows, err := q.db.QueryContext(ctx, selectUsersTokens, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UsersToken
+	for rows.Next() {
+		var i UsersToken
+		if err := rows.Scan(&i.ID, &i.UserID, &i.TokenID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTodo = `-- name: UpdateTodo :one
+UPDATE todos
+SET body = $1
+WHERE id = $2
+RETURNING id, created_at, body, author
+`
+
+type UpdateTodoParams struct {
+	Body string
+	ID   int64
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, updateTodo, arg.Body, arg.ID)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Body,
+		&i.Author,
+	)
+	return i, err
+}
+
+const updateTokenValid = `-- name: UpdateTokenValid :exec
+UPDATE tokens
+SET valid = $1
+WHERE jwt = $2
+`
+
+type UpdateTokenValidParams struct {
+	Valid bool
+	Jwt   string
+}
+
+func (q *Queries) UpdateTokenValid(ctx context.Context, arg UpdateTokenValidParams) error {
+	_, err := q.db.ExecContext(ctx, updateTokenValid, arg.Valid, arg.Jwt)
+	return err
 }

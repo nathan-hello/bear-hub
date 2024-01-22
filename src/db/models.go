@@ -23,6 +23,13 @@ type Todo struct {
 	Author    uuid.UUID
 }
 
+type Token struct {
+	ID      int64
+	JwtType string
+	Jwt     string
+	Valid   bool
+}
+
 type User struct {
 	CreatedAt         time.Time
 	Username          string
@@ -30,4 +37,10 @@ type User struct {
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
 	ID                uuid.UUID
+}
+
+type UsersToken struct {
+	ID      int64
+	UserID  uuid.UUID
+	TokenID sql.NullInt64
 }

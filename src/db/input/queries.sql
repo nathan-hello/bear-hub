@@ -1,15 +1,17 @@
 -- table: todos
--- name: SelectAllTodos :many
-SELECT *
-FROM todos;
--- name: SelectTodosByIds :many
+-- insert/select/update to be done
+-- name: SelectUserTodos :many
 SELECT *
 FROM todos
-WHERE id = ANY($1::int [])
-LIMIT $2;
+WHERE author = $1;
 -- name: InsertTodo :one
 INSERT INTO todos (body, author)
-values ($1, $2)
+VALUES ($1, $2)
+RETURNING *;
+-- name: UpdateTodo :one
+UPDATE todos
+SET body = $1
+WHERE id = $2
 RETURNING *;
 -- name: DeleteTodo :exec
 DELETE FROM todos
@@ -59,3 +61,30 @@ returning (id);
 -- name: DeleteProfile :exec
 DELETE from profiles
 where id = $1;
+-- table: tokens
+-- name: InsertToken :exec
+INSERT INTO tokens (jwt_type, jwt, valid)
+VALUES ($1, $2, $3);
+-- name: UpdateTokenValid :exec
+UPDATE tokens
+SET valid = $1
+WHERE jwt = $2;
+-- name: DeleteTokensByUserId :exec
+DELETE FROM tokens
+WHERE tokens.id = (
+        SELECT token_id
+        FROM users_tokens
+        WHERE users_tokens.user_id = $1
+    );
+-- name: SelectUsersTokens :many
+SELECT *
+FROM users_tokens
+WHERE user_id = $1;
+-- name: IsValidToken :one
+SELECT valid
+FROM tokens
+WHERE jwt = $1;
+-- table: users_tokens
+-- name: InsertUsersTokens :exec
+INSERT INTO users_tokens (user_id, token_id)
+VALUES ($1, $2);

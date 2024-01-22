@@ -45,20 +45,20 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	todos, err := conn.SelectTodosByIds(
-		ctx,
-		db.SelectTodosByIdsParams{
-			Column1: convertInt64ToInt32(row.Todos),
-			Limit:   10,
-		})
+	// todos, err := conn.SelectTodosByIds(
+	// 	ctx,
+	// 	sequel.SelectTodosByIdsParams{
+	// 		Column1: convertInt64ToInt32(row.Todos),
+	// 		Limit:   10,
+	// 	})
 
-	if err != nil {
-		redirectServerError(w, r)
-		return
-	}
+	// if err != nil {
+	// 	redirectServerError(w, r)
+	// 	return
+	// }
 
 	components.Profile(&components.ProfileProps{
 		Username: row.Username,
-		Todos:    &todos,
+		Todos:    &[]db.Todo{},
 	}).Render(r.Context(), w)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
-	sqlc "github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
@@ -26,14 +26,14 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 
 	// var response template.HTML
 	ctx := context.Background()
-	db, err := sql.Open("postgres", utils.Env().DB_URI)
+	d, err := sql.Open("postgres", utils.Env().DB_URI)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	conn := sqlc.New(db)
+	conn := db.New(d)
 
 	if r.Method == "POST" {
 
