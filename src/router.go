@@ -38,7 +38,7 @@ func Router() {
 	http.HandleFunc("/todo", routes.Todo)
 	http.HandleFunc("/signup", routes.SignUp)
 	http.HandleFunc("/signin", routes.SignIn)
-	http.HandleFunc("/profile/", routes.UserProfile)
+	// http.HandleFunc("/profile/", routes.UserProfile)
 	http.HandleFunc("/404", routes.NotFound)
 	http.HandleFunc("/500", routes.InternalServerError)
 	http.HandleFunc("/testing/", routes.TestingEntryPoint)

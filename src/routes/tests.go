@@ -16,17 +16,18 @@ func say(w http.ResponseWriter, s string) {
 func sampleProtectedRoute(w http.ResponseWriter, r *http.Request) {
 
 	say(w, "hello from protected route")
-	err := utils.VerifyJWT(r.Header["Token"][0])
+	claims, err := utils.ParseToken(r.Header["Token"][0])
 
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	say(w, fmt.Sprintf("%#v\n", claims))
 	say(w, "a big secret! i really like this girl named natalie!")
 }
 
 func signUp(w http.ResponseWriter, r *http.Request) {
-	access, err := utils.CreateAccess(uuid.New())
+	access, _, err := utils.NewTokenPair(uuid.New(), "black-bear")
 
 	if err != nil {
 		say(w, "error in signUproute")
