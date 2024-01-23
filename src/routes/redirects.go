@@ -31,6 +31,10 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func RedirectUnauthorized(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/?unauthorized=true", http.StatusSeeOther)
+}
+
 func InternalServerError(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/500" {
 		w.WriteHeader(http.StatusNotFound)

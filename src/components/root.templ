@@ -62,17 +62,18 @@ templ TodoRow(v *db.Todo) {
 	</tr>
 }
 
-templ root(alerts *[]string, isLoggedIn bool) {
+templ root() {
+	@AlertOnQueryParams("signedout", "true", "/alert/signout")
+	@AlertOnQueryParams("unauthorized", "true", "/alert/unauthorized")
 	<div class="bg-white dark:bg-gray-900 min-h-screen">
+  // Notifications
+		<div id="notification-container" class="hidden bg-blue-600 w-min whitespace-nowrap mx-auto p-10 rounded-md shadow-black z-10 cursor-pointer" onclick="this.remove();" >
+    <span class="text-red-800 pr-6 font-bold">X</span>
+			<span id="notification"></span>
+		</div>
+  // Big box
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 mb-8">
-				if alerts != nil {
-					for _, alert := range *alerts {
-						<div class="w-20 h-10 bg-blue-600 text-center">
-							<p class="">{ alert }</p>
-						</div>
-					}
-				}
 				<h1 class="text-gray-900 dark:text-white text-3xl md:text-5xl font-extrabold mb-2">
 					tools for bears
 				</h1>
@@ -87,7 +88,7 @@ templ root(alerts *[]string, isLoggedIn bool) {
 				</a>
 			</div>
 			<div class="grid md:grid-cols-2 gap-8">
-      // Todos
+				// Todos
 				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
 					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
 						Bear Todo 
@@ -102,7 +103,7 @@ templ root(alerts *[]string, isLoggedIn bool) {
 						</svg>
 					</a>
 				</div>
-      // Chat
+				// Chat
 				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
 					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
 						Bear Chat
@@ -117,7 +118,7 @@ templ root(alerts *[]string, isLoggedIn bool) {
 						</svg>
 					</a>
 				</div>
-      // Credits
+				// Credits
 				<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
 					<h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">
 						Credits 
@@ -158,11 +159,8 @@ templ Profile(p *ProfileProps) {
 	@layout("Bear's Profile", "Bear's Profile", profile(p))
 }
 
-templ Alert(s string) {
-}
-
-templ Root(child *templ.Component) {
-	@layout("Bear Hub", "Bear Hub", root(child))
+templ Root() {
+	@layout("Bear Hub", "Bear Hub", root())
 }
 
 templ Todo(t *[]db.Todo) {
