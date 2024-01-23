@@ -1,17 +1,15 @@
-package routes
+package utils
 
 import (
 	"net/http"
 	"time"
-
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func SetTokenCookies(w http.ResponseWriter, a string, r string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    a,
-		Expires:  time.Now().Add(utils.Env().REFRESH_EXPIRY_TIME), // Access token expiry time
+		Expires:  time.Now().Add(Env().REFRESH_EXPIRY_TIME), // Access token expiry time
 		Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
@@ -21,7 +19,7 @@ func SetTokenCookies(w http.ResponseWriter, a string, r string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    r,
-		Expires:  time.Now().Add(utils.Env().REFRESH_EXPIRY_TIME), // Refresh token expiry time, e.g., 7 days
+		Expires:  time.Now().Add(Env().REFRESH_EXPIRY_TIME), // Refresh token expiry time, e.g., 7 days
 		Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
@@ -60,28 +58,32 @@ func DeleteJwtCookies(w http.ResponseWriter) {
 	DeleteCookie(w, "refresh_token")
 }
 
-func ValidateOrRefreshPairFromCookies(w http.ResponseWriter, r *http.Request) bool {
+func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) {
 
 	access, err := r.Cookie("access_token")
 	if err != nil {
 		DeleteJwtCookies(w)
-		return false
+		return "", false
 	}
 
 	refresh, err := r.Cookie("refresh_token")
 	if err != nil {
 		DeleteJwtCookies(w)
-		return false
+		return "", false
 	}
 
-	vAccess, vRefresh, err := utils.ValidatePairOrRefresh(access.Value, refresh.Value)
+	vAccess, vRefresh, err := ValidatePairOrRefresh(access.Value, refresh.Value)
 
 	if err != nil {
 		DeleteJwtCookies(w)
-		return false
+		return "", false
 	}
 
 	SetTokenCookies(w, vAccess, vRefresh)
-	return true
+	return vAccess, true
+}
+
+func RedirectToUserProfile(w http.ResponseWriter, r *http.Request, access string) {
+	return
 
 }

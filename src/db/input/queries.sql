@@ -25,7 +25,8 @@ DELETE FROM users WHERE id = $1;
 
 -- table: profiles
 -- name: SelectProfileById :one
-SELECT * FROM profiles WHERE profiles.id = $1; -- name: SelectProfileByUsername :one
+SELECT * FROM profiles WHERE profiles.id = $1; 
+-- name: SelectProfileByUsername :one
 SELECT * FROM profiles INNER JOIN users ON profiles.id = users.id WHERE users.username = $1;
 -- name: InsertProfile :one
 INSERT INTO profiles (id) values ($1) returning (id);
@@ -34,22 +35,26 @@ DELETE from profiles where id = $1;
 
 
 -- table: tokens
+-- name: SelectTokenFromId :one
+SELECT * FROM tokens WHERE id = $1;
 -- name: SelectTokenFromJwtString :one
 SELECT * FROM tokens WHERE jwt = $1;
 -- name: InsertToken :one
-INSERT INTO tokens (jwt_type, jwt, valid) VALUES ($1, $2, $3) RETURNING id;
+INSERT INTO tokens (jwt_type, jwt, valid, family) VALUES ($1, $2, $3, $4) RETURNING id;
 -- name: UpdateTokenValid :one
 UPDATE tokens SET valid = $1 WHERE jwt = $2 RETURNING id;
 -- name: UpdateUserTokensToInvalid :exec
+UPDATE tokens SET valid = FALSE FROM users_tokens
+INNER JOIN tokens AS t ON users_tokens.token_id = t.id
+    WHERE users_tokens.user_id = $1
+    AND tokens.id = t.id;
+-- name: UpdateTokensFamilyInvalid :exec
 UPDATE tokens 
 SET valid = FALSE 
-FROM users_tokens
-INNER JOIN tokens AS t ON users_tokens.token_id = t.id
-WHERE users_tokens.user_id = $1
-AND tokens.id = t.id;
+WHERE family = $1;
 -- name: DeleteTokensByUserId :exec
 DELETE FROM tokens
-WHERE tokens.id = (
+WHERE tokens.id IN (
         SELECT token_id FROM users_tokens WHERE users_tokens.user_id = $1
     );
 

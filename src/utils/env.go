@@ -69,7 +69,7 @@ var C = FullConfig{
 	DB_URI:              g.DB_URI,
 	JWT_SECRET:          g.JWT_SECRET,
 	REFRESH_EXPIRY_TIME: time.Hour * 72,
-	ACCESS_EXPIRY_TIME:  time.Hour * 3,
+	ACCESS_EXPIRY_TIME:  time.Hour * 24,
 }
 
 func Env() *FullConfig {

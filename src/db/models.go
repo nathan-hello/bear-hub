@@ -28,6 +28,7 @@ type Token struct {
 	JwtType string
 	Jwt     string
 	Valid   bool
+	Family  uuid.UUID
 }
 
 type User struct {
@@ -42,5 +43,5 @@ type User struct {
 type UsersToken struct {
 	ID      int64
 	UserID  uuid.UUID
-	TokenID sql.NullInt64
+	TokenID int64
 }
