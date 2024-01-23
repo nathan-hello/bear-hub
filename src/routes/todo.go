@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
@@ -37,6 +36,18 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 
+		access, ok := utils.ValidateJwtOrDelete(w, r)
+		if !ok {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		claims, err := utils.ParseToken(access)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -49,20 +60,14 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// row, err := conn.InsertTodo(ctx, body)
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	return
-		// }
+		row, err := conn.InsertTodo(ctx, db.InsertTodoParams{Body: body, Author: claims.UserId})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-		// response, err = templ.ToGoHTML(ctx, components.TodoRow(&row))
-		// if err != nil {
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	return
-		// }
-
-		// w.Write([]byte(response))
-		// return
+		components.TodoRow(&row).Render(r.Context(), w)
+		return
 	}
 
 	if r.Method == "DELETE" {
@@ -77,17 +82,19 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-
-		response, err := templ.ToGoHTML(ctx, components.Todo(nil))
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		access, ok := utils.ValidateJwtOrDelete(w, r)
+		if !ok {
+			RedirectUnauthorized(w, r)
 			return
 		}
 
-		w.Write([]byte(response))
-		return
-
+		claims, err := utils.ParseToken(access)
+		if err != nil {
+			InternalServerError(w, r)
+			return
+		}
+		todos, err := conn.SelectUserTodos(ctx, claims.UserId)
+		components.Todo(&todos).Render(r.Context(), w)
 	}
 
 }

@@ -1,0 +1,16 @@
+package components
+
+script AlertOnQueryParams(key string, value string, route string) {
+  window.onload = function() {
+    htmx.config.debug = true
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(key) === value) {
+      window.history.replaceState({}, document.title, "/");
+      let element = document.getElementById("notification-container")
+      if (element) {
+        element.classList.remove("hidden")
+      }
+      htmx.ajax("GET", route, "#notification")
+    }
+  };
+}

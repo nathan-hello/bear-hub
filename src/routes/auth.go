@@ -61,20 +61,15 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
-		SetTokenCookies(w, access, refresh)
+		utils.SetTokenCookies(w, access, refresh)
 		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
 
 	}
 
 	if r.Method == "GET" {
-		if ValidateJwtOrDelete(w, r) {
-			access, err := r.Cookie("access_token")
-			if err != nil {
-				w.Header().Set("HX-Redirect", "500")
-			}
-
-			c, err := utils.ParseToken(access.Value)
+		if access, ok := utils.ValidateJwtOrDelete(w, r); ok {
+			c, err := utils.ParseToken(access)
 			if err != nil {
 				w.Header().Set("HX-Redirect", "500")
 			}
@@ -136,11 +131,9 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/signout" {
-		redirectNotFound(w, r)
-		return
-	}
 	if r.Method == "GET" {
-
+		if r.URL.Path == "/signout" {
+			w.Header().Set("HX-Redirect", "/?signedout=true")
+		}
 	}
 }
