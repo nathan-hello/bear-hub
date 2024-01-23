@@ -34,7 +34,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
 
 const deleteTokensByUserId = `-- name: DeleteTokensByUserId :exec
 DELETE FROM tokens
-WHERE tokens.id = (
+WHERE tokens.id IN (
         SELECT token_id FROM users_tokens WHERE users_tokens.user_id = $1
     )
 `
@@ -85,17 +85,23 @@ func (q *Queries) InsertTodo(ctx context.Context, arg InsertTodoParams) (Todo, e
 }
 
 const insertToken = `-- name: InsertToken :one
-INSERT INTO tokens (jwt_type, jwt, valid) VALUES ($1, $2, $3) RETURNING id
+INSERT INTO tokens (jwt_type, jwt, valid, family) VALUES ($1, $2, $3, $4) RETURNING id
 `
 
 type InsertTokenParams struct {
 	JwtType string
 	Jwt     string
 	Valid   bool
+	Family  uuid.UUID
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, insertToken, arg.JwtType, arg.Jwt, arg.Valid)
+	row := q.db.QueryRowContext(ctx, insertToken,
+		arg.JwtType,
+		arg.Jwt,
+		arg.Valid,
+		arg.Family,
+	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -139,7 +145,7 @@ INSERT INTO users_tokens (user_id, token_id) VALUES ($1, $2)
 
 type InsertUsersTokensParams struct {
 	UserID  uuid.UUID
-	TokenID sql.NullInt64
+	TokenID int64
 }
 
 func (q *Queries) InsertUsersTokens(ctx context.Context, arg InsertUsersTokensParams) error {
@@ -175,11 +181,59 @@ func (q *Queries) SelectProfileById(ctx context.Context, id uuid.UUID) (Profile,
 	return i, err
 }
 
-const selectTokenFromJwtString = `-- name: SelectTokenFromJwtString :one
-SELECT id, jwt_type, jwt, valid FROM tokens WHERE jwt = $1
+const selectProfileByUsername = `-- name: SelectProfileByUsername :one
+SELECT profiles.id, todos, created_at, username, email, encrypted_password, password_created_at, users.id FROM profiles INNER JOIN users ON profiles.id = users.id WHERE users.username = $1
+`
+
+type SelectProfileByUsernameRow struct {
+	ID                uuid.UUID
+	Todos             []int64
+	CreatedAt         time.Time
+	Username          string
+	Email             sql.NullString
+	EncryptedPassword string
+	PasswordCreatedAt time.Time
+	ID_2              uuid.UUID
+}
+
+func (q *Queries) SelectProfileByUsername(ctx context.Context, username string) (SelectProfileByUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, selectProfileByUsername, username)
+	var i SelectProfileByUsernameRow
+	err := row.Scan(
+		&i.ID,
+		pq.Array(&i.Todos),
+		&i.CreatedAt,
+		&i.Username,
+		&i.Email,
+		&i.EncryptedPassword,
+		&i.PasswordCreatedAt,
+		&i.ID_2,
+	)
+	return i, err
+}
+
+const selectTokenFromId = `-- name: SelectTokenFromId :one
+SELECT id, jwt_type, jwt, valid, family FROM tokens WHERE id = $1
 `
 
 // table: tokens
+func (q *Queries) SelectTokenFromId(ctx context.Context, id int64) (Token, error) {
+	row := q.db.QueryRowContext(ctx, selectTokenFromId, id)
+	var i Token
+	err := row.Scan(
+		&i.ID,
+		&i.JwtType,
+		&i.Jwt,
+		&i.Valid,
+		&i.Family,
+	)
+	return i, err
+}
+
+const selectTokenFromJwtString = `-- name: SelectTokenFromJwtString :one
+SELECT id, jwt_type, jwt, valid, family FROM tokens WHERE jwt = $1
+`
+
 func (q *Queries) SelectTokenFromJwtString(ctx context.Context, jwt string) (Token, error) {
 	row := q.db.QueryRowContext(ctx, selectTokenFromJwtString, jwt)
 	var i Token
@@ -188,6 +242,7 @@ func (q *Queries) SelectTokenFromJwtString(ctx context.Context, jwt string) (Tok
 		&i.JwtType,
 		&i.Jwt,
 		&i.Valid,
+		&i.Family,
 	)
 	return i, err
 }
@@ -232,7 +287,7 @@ const selectUserIdFromToken = `-- name: SelectUserIdFromToken :one
 SELECT user_id FROM users_tokens WHERE token_id = $1 LIMIT 1
 `
 
-func (q *Queries) SelectUserIdFromToken(ctx context.Context, tokenID sql.NullInt64) (uuid.UUID, error) {
+func (q *Queries) SelectUserIdFromToken(ctx context.Context, tokenID int64) (uuid.UUID, error) {
 	row := q.db.QueryRowContext(ctx, selectUserIdFromToken, tokenID)
 	var user_id uuid.UUID
 	err := row.Scan(&user_id)
@@ -337,13 +392,22 @@ func (q *Queries) UpdateTokenValid(ctx context.Context, arg UpdateTokenValidPara
 	return id, err
 }
 
-const updateUserTokensToInvalid = `-- name: UpdateUserTokensToInvalid :exec
+const updateTokensFamilyInvalid = `-- name: UpdateTokensFamilyInvalid :exec
 UPDATE tokens 
 SET valid = FALSE 
-FROM users_tokens
+WHERE family = $1
+`
+
+func (q *Queries) UpdateTokensFamilyInvalid(ctx context.Context, family uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, updateTokensFamilyInvalid, family)
+	return err
+}
+
+const updateUserTokensToInvalid = `-- name: UpdateUserTokensToInvalid :exec
+UPDATE tokens SET valid = FALSE FROM users_tokens
 INNER JOIN tokens AS t ON users_tokens.token_id = t.id
-WHERE users_tokens.user_id = $1
-AND tokens.id = t.id
+    WHERE users_tokens.user_id = $1
+    AND tokens.id = t.id
 `
 
 func (q *Queries) UpdateUserTokensToInvalid(ctx context.Context, userID uuid.UUID) error {

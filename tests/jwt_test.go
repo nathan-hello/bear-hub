@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
@@ -12,60 +11,85 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-func TestCreateAccess(t *testing.T) {
-	access, err := utils.CreateAccess(uuid.New())
+func TestNewPairAndParse(t *testing.T) {
+	access, refresh, err := utils.NewTokenPair(
+		&utils.JwtParams{
+			UserId:   uuid.New(),
+			Username: "black-bear",
+			Family:   uuid.New(),
+		})
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	t.Logf("TestCreateAccess/access: %#v\n", access)
+	// t.Logf("TestNewPairAndParse/access: %v\n", access)
+	// t.Logf("TestNewPairAndParse/refresh: %v\n", refresh)
+
+	_, err = utils.ParseToken(access)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = utils.ParseToken(refresh)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// t.Logf("TestNewPairAndParse/ap: %v\n", ap)
+	// t.Logf("TestNewPairAndParse/rp: %v\n", rp)
+
 }
-func TestValidate(t *testing.T) {
-	access, err := utils.CreateAccess(uuid.New())
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("TestValidate/access: %#v\n", access)
-
-	err = utils.VerifyJWT(access)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-}
-
-func TestTokenExpires(t *testing.T) {
+func TestJwtExpiry(t *testing.T) {
 	c := utils.Env()
-	c.ACCESS_EXPIRY_TIME = time.Second * 1
+	c.ACCESS_EXPIRY_TIME = time.Second * 2
+	c.REFRESH_EXPIRY_TIME = time.Second * 6
 
-	access, err := utils.CreateAccess(uuid.New())
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Logf("TestTokenExpires/access: %#v\n", access)
-
-	err = utils.VerifyJWT(access)
+	access, refresh, err := utils.NewTokenPair(
+		&utils.JwtParams{
+			UserId:   uuid.New(),
+			Username: "black-bear",
+			Family:   uuid.New(),
+		})
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	time.Sleep(time.Second * 2)
+	// t.Logf("access: %#v\n", access)
+	// t.Logf("refresh: %#v\n", refresh)
 
-	err = utils.VerifyJWT(access)
+	_, err = utils.ParseToken(access)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	time.Sleep(time.Second * 3)
+
+	_, err = utils.ParseToken(access)
 
 	if err == nil {
-		t.Error("Token is still valid even after waiting past expiration time")
-		t.FailNow()
+		t.Error("access is still valid even after waiting past expiration time")
 	}
 
-	t.Logf("TestTokenExpires/msg: token successfully invalidated: %#v\n", err)
+	// t.Logf("token successfully invalidated: %#v\n", err)
+
+	_, err = utils.ParseToken(refresh)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	time.Sleep(time.Second * 4)
+
+	_, err = utils.ParseToken(refresh)
+
+	if err == nil {
+		t.Error("refresh is still valid even after waiting past expiration time")
+	}
+
+	// t.Logf("refresh successfully invalidated: %#v\n", err)
 }
 
 func TestDbJwt(t *testing.T) {
@@ -90,35 +114,64 @@ func TestDbJwt(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		fmt.Printf("deleted user: %#v\n", fullUser.ID.String())
+		// fmt.Printf("deleted user: %#v\n", fullUser.ID.String())
 	}()
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	access, err := utils.CreateAccess(fullUser.ID)
+	access, refresh, err := utils.NewTokenPair(
+		&utils.JwtParams{
+			Username: fullUser.Username,
+			UserId:   fullUser.ID,
+			Family:   uuid.New(),
+		})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = utils.VerifyJWT(access)
+	_, err = utils.ParseToken(access)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = utils.ParseToken(refresh)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = f.InsertToken(ctx, db.InsertTokenParams{JwtType: "access", Jwt: access, Valid: true})
+	err = utils.InsertNewToken(access, "access_token")
+	defer func() {
+		err := f.DeleteTokensByUserId(ctx, fullUser.ID)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+	if err != nil {
+		t.Error(err)
+	}
+	err = utils.InsertNewToken(refresh, "refresh_token")
 	if err != nil {
 		t.Error(err)
 	}
 
-	token, err := f.SelectUsersTokens(ctx, fullUser.ID)
+	tokens, err := f.SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(token) < 1 {
-		t.Error("Token length 0: %#v\n", token)
+	if len(tokens) == 0 {
+		t.Error("Token length 0\n")
+	}
+
+	err = f.UpdateUserTokensToInvalid(ctx, fullUser.ID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	tokens, err = f.SelectUsersTokens(ctx, fullUser.ID)
+	if err != nil {
+		t.Error(err)
 	}
 
 }

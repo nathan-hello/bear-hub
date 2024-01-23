@@ -127,7 +127,7 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 	ctx := context.Background()
 	d, err := sql.Open("postgres", Env().DB_URI)
 	if err != nil {
-		errs = append(errs, AuthError{Err: ErrDbConnection2})
+		errs = append(errs, AuthError{Err: ErrDbConnection})
 		return nil, &errs
 	}
 

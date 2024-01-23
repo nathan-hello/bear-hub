@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
@@ -47,7 +48,13 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		access, refresh, err := utils.NewTokenPair(*userId, username)
+		access, refresh, err := utils.NewTokenPair(
+			&utils.JwtParams{
+				Username: username,
+				UserId:   *userId,
+				Family:   uuid.New(),
+			})
+
 		if err != nil {
 			returnFormWithErrors(&[]utils.AuthError{
 				{Err: err},
@@ -61,8 +68,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		if ValidateOrRefreshPairFromCookies(w, r) {
-
+		if ValidateJwtOrDelete(w, r) {
 			access, err := r.Cookie("access_token")
 			if err != nil {
 				w.Header().Set("HX-Redirect", "500")
@@ -93,7 +99,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
 			returnFormWithErrors(&[]utils.AuthError{
-				{Err: utils.ErrParseForm2},
+				{Err: utils.ErrParseForm},
 			})
 			return
 		}
@@ -112,23 +118,29 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
 		return
-
 	}
+
 	if r.Method == "GET" {
-		if ValidateOrRefreshPairFromCookies(w, r) {
-
-			access, err := r.Cookie("access_token")
-			if err != nil {
-				w.Header().Set("HX-Redirect", "500")
+		access, ok := utils.ValidateJwtOrDelete(w, r)
+		if ok {
+			p, err := utils.ParseToken(access)
+			if err == nil {
+				w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", p.Username))
+				return
 			}
-
-			c, err := utils.ParseToken(access.Value)
-			if err != nil {
-				w.Header().Set("HX-Redirect", "500")
-			}
-
-			w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", c.Username))
+			utils.DeleteJwtCookies(w)
 		}
 		components.SignInForm(nil).Render(r.Context(), w)
+		return
+	}
+}
+
+func SignOut(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/signout" {
+		redirectNotFound(w, r)
+		return
+	}
+	if r.Method == "GET" {
+
 	}
 }
