@@ -77,12 +77,6 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-
-	if r.URL.Path != "/signin" {
-		Redirect404(w, r)
-		return
-	}
-
 	returnFormWithErrors := func(errs *[]utils.AuthError) {
 		components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 	}
@@ -126,17 +120,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		access, ok := utils.ValidateJwtOrDelete(w, r)
-		if ok {
-			p, err := utils.ParseToken(access)
-			if err == nil {
-				w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", p.Username))
-				return
-			}
-			// The delete case is on the outside
-			// So the components.SignIn() still executes
-			utils.DeleteJwtCookies(w)
-		}
 		components.SignIn().Render(r.Context(), w)
 		return
 	}

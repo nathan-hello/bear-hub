@@ -145,6 +145,9 @@ func ValidateJwt(t string) error {
 
 func InsertNewToken(t string, jwt_type string) error {
 	claims, err := ParseToken(t)
+	if err != nil {
+		return err
+	}
 	ctx := context.Background()
 	d, err := sql.Open("postgres", Env().DB_URI)
 	if err != nil {
@@ -181,8 +184,11 @@ func InvalidateJwtFamily(t string) error {
 		return err
 	}
 	err = f.UpdateTokensFamilyInvalid(ctx, claims.Family)
+	if err != nil {
+		return ErrDbUpdateTokensInvalid
+	}
 
-	return ErrJwtPairInvalid
+	return nil
 }
 
 func NewPairFromRefresh(r string) (string, string, error) {

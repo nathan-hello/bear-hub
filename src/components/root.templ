@@ -2,16 +2,16 @@ package components
 
 import "fmt"
 
+templ NotificationBox(s string) {
+	<div id="notification-container" class="hidden bg-blue-600 w-min whitespace-nowrap mx-auto p-10 rounded-md shadow-black z-90 cursor-pointer" onclick="this.remove();">
+		<span class="text-red-800 pr-6 font-bold">X</span>
+		<span id="notification"></span>
+	</div>
+}
 
 templ root() {
-	@AlertOnQueryParams()
 	<div class="bg-white dark:bg-gray-900 min-h-screen">
-  // Notifications
-		<div id="notification-container" class="hidden bg-blue-600 w-min whitespace-nowrap mx-auto p-10 rounded-md shadow-black z-90 cursor-pointer" onclick="this.remove();" >
-    <span class="text-red-800 pr-6 font-bold">X</span>
-			<span id="notification"></span>
-		</div>
-  // Big box
+		// Big box
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			<div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 mb-8">
 				<h1 class="text-gray-900 dark:text-white text-3xl md:text-5xl font-extrabold mb-2">
@@ -102,4 +102,3 @@ templ Profile(p *ProfileProps) {
 templ Root() {
 	@layout("Bear Hub", "Bear Hub", root())
 }
-
