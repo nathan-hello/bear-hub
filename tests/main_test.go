@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -41,31 +40,7 @@ func TestDatabaseConnection(t *testing.T) {
 
 	// fmt.Printf("full user %#v\n", fullUser)
 
-	newProfile, err := f.InsertProfile(ctx, fullUser.ID)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	defer func() {
-		err := f.DeleteProfile(ctx, newProfile)
-
-		if err != nil {
-			t.Error(err)
-		}
-		fmt.Printf("deleted profile: %#v\n", newProfile.String())
-
-		err = f.DeleteUser(ctx, fullUser.ID)
-
-		if err != nil {
-			t.Error(err)
-		}
-		fmt.Printf("deleted user: %#v\n", fullUser.ID.String())
-	}()
-
-	// fmt.Printf("newProfile: %#v\n", newProfile)
-
-	newTodo, err := f.InsertTodo(ctx, db.InsertTodoParams{Body: "eat honey", Author: fullUser.ID})
+	newTodo, err := f.InsertTodo(ctx, db.InsertTodoParams{Body: "eat honey", Username: fullUser.Username})
 
 	defer func() {
 		err = f.DeleteTodo(ctx, newTodo.ID)
@@ -81,7 +56,7 @@ func TestDatabaseConnection(t *testing.T) {
 
 	// fmt.Printf("newTodo: %#v\n", newTodo)
 
-	_, err = f.SelectUserTodos(ctx, fullUser.ID)
+	_, err = f.SelectTodosByUsername(ctx, fullUser.Username)
 
 	if err != nil {
 		t.Error(err)

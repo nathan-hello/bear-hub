@@ -7,22 +7,32 @@ package components
 
 import "github.com/a-h/templ"
 
-func AlertOnQueryParams(key string, value string, route string) templ.ComponentScript {
+func AlertOnQueryParams() templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_AlertOnQueryParams_46cd`,
-		Function: `function __templ_AlertOnQueryParams_46cd(key, value, route){window.onload = function() {
-    htmx.config.debug = true
-    const params = new URLSearchParams(window.location.search);
-    if (params.get(key) === value) {
+		Name: `__templ_AlertOnQueryParams_de5c`,
+		Function: `function __templ_AlertOnQueryParams_de5c(){window.onload = function() {
+  let potentials = {
+    "unauthorized": ["true", "/alert/signout"],
+    "signedout": ["true", "/alert/signout"],
+    "404": ["true", "/alert/404"],
+    "500": ["true", "/alert/500"],
+  }
+  const params = new URLSearchParams(window.location.search);
+
+  // Iterate through the potentials object
+  for (let key in potentials) {
+    // Check if the current URL parameter matches the key in the potentials object
+    if (params.has(key) && params.get(key) === potentials[key][0]) {
       window.history.replaceState({}, document.title, "/");
-      let element = document.getElementById("notification-container")
-      if (element) {
-        element.classList.remove("hidden")
-      }
-      htmx.ajax("GET", route, "#notification")
+      document.getElementById("notification-container").classList.remove("hidden")
+
+      let route = potentials[key][1];
+      htmx.ajax("GET", route, "#notification");
+      break
     }
-  };}`,
-		Call:       templ.SafeScript(`__templ_AlertOnQueryParams_46cd`, key, value, route),
-		CallInline: templ.SafeScriptInline(`__templ_AlertOnQueryParams_46cd`, key, value, route),
+  }
+};}`,
+		Call:       templ.SafeScript(`__templ_AlertOnQueryParams_de5c`),
+		CallInline: templ.SafeScriptInline(`__templ_AlertOnQueryParams_de5c`),
 	}
 }

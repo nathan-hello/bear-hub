@@ -1,8 +1,8 @@
 -- table: todos
--- name: SelectUserTodos :many
-SELECT * FROM todos WHERE author = $1;
+-- name: SelectTodosByUsername :many
+SELECT * FROM todos WHERE username = $1;
 -- name: InsertTodo :one
-INSERT INTO todos (body, author) VALUES ($1, $2) RETURNING *;
+INSERT INTO todos (body, username) VALUES ($1, $2) RETURNING *;
 -- name: UpdateTodo :one
 UPDATE todos SET body = $1 WHERE id = $2 RETURNING *;
 -- name: DeleteTodo :exec
@@ -22,17 +22,6 @@ SELECT * FROM users WHERE username = $1;
 SELECT email FROM users WHERE users.email = $1 OR users.username = $2;
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = $1; 
-
--- table: profiles
--- name: SelectProfileById :one
-SELECT * FROM profiles WHERE profiles.id = $1; 
--- name: SelectProfileByUsername :one
-SELECT * FROM profiles INNER JOIN users ON profiles.id = users.id WHERE users.username = $1;
--- name: InsertProfile :one
-INSERT INTO profiles (id) values ($1) returning (id);
--- name: DeleteProfile :exec
-DELETE from profiles where id = $1;
-
 
 -- table: tokens
 -- name: SelectTokenFromId :one

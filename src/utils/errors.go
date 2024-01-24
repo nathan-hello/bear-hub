@@ -32,6 +32,7 @@ var (
 	ErrDbConnection          = errors.New("internal Server Error - 12401")
 	ErrDbInsertUser          = errors.New("internal Server Error - 12405")
 	ErrDbInsertToken         = errors.New("internal Server Error - 12406")
+	ErrDbInsertProfile       = errors.New("internal Server Error - 12402")
 	ErrDbInsertUsersToken    = errors.New("internal Server Error - 12407")
 	ErrDbSelectJwt           = errors.New("internal Server Error - 12408")
 	ErrDbInvalidateJwts      = errors.New("internal Server Error - 12409")

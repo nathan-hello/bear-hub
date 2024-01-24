@@ -60,7 +60,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		row, err := conn.InsertTodo(ctx, db.InsertTodoParams{Body: body, Author: claims.UserId})
+		row, err := conn.InsertTodo(ctx, db.InsertTodoParams{Body: body, Username: claims.Username})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -84,16 +84,16 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		access, ok := utils.ValidateJwtOrDelete(w, r)
 		if !ok {
-			RedirectUnauthorized(w, r)
+			RedirectToSignIn(w, r)
 			return
 		}
 
 		claims, err := utils.ParseToken(access)
 		if err != nil {
-			InternalServerError(w, r)
+			RedirectToSignIn(w, r)
 			return
 		}
-		todos, err := conn.SelectUserTodos(ctx, claims.UserId)
+		todos, err := conn.SelectTodosByUsername(ctx, claims.Username)
 		components.Todo(&todos).Render(r.Context(), w)
 	}
 

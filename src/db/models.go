@@ -11,16 +11,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type Profile struct {
-	ID    uuid.UUID
-	Todos []int64
-}
-
 type Todo struct {
 	ID        int64
 	CreatedAt time.Time
 	Body      string
-	Author    uuid.UUID
+	Username  string
 }
 
 type Token struct {
