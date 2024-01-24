@@ -1,16 +1,26 @@
 package components
 
-script AlertOnQueryParams(key string, value string, route string) {
+script AlertOnQueryParams() {
   window.onload = function() {
-    htmx.config.debug = true
-    const params = new URLSearchParams(window.location.search);
-    if (params.get(key) === value) {
+  let potentials = {
+    "unauthorized": ["true", "/alert/signout"],
+    "signedout": ["true", "/alert/signout"],
+    "404": ["true", "/alert/404"],
+    "500": ["true", "/alert/500"],
+  }
+  const params = new URLSearchParams(window.location.search);
+
+  // Iterate through the potentials object
+  for (let key in potentials) {
+    // Check if the current URL parameter matches the key in the potentials object
+    if (params.has(key) && params.get(key) === potentials[key][0]) {
       window.history.replaceState({}, document.title, "/");
-      let element = document.getElementById("notification-container")
-      if (element) {
-        element.classList.remove("hidden")
-      }
-      htmx.ajax("GET", route, "#notification")
+      document.getElementById("notification-container").classList.remove("hidden")
+
+      let route = potentials[key][1];
+      htmx.ajax("GET", route, "#notification");
+      break
     }
-  };
+  }
+};
 }

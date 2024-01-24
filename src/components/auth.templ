@@ -3,7 +3,6 @@ package components
 import "fmt"
 import "github.com/nathan-hello/htmx-template/src/utils"
 
-
 templ user(borderColor string, value string) {
 	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
 	<div class="relative mb-6">
@@ -93,16 +92,18 @@ templ passwordConfirm(borderColor string, value string) {
 }
 
 templ SignUpForm(s map[string]FieldError) {
-	for _, v := range s {
-		@formError(v.Err)
-	}
+	<div id="errors-container">
+		for _, v := range s {
+			@formError(v.Err)
+		}
+	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
 		@email(s[utils.FieldEmail].BorderColor, s[utils.FieldEmail].Value)
 		@username(s[utils.FieldUsername].BorderColor, s[utils.FieldUsername].Value)
 		@password(s[utils.FieldPassword].BorderColor, "")
 		@passwordConfirm(s[utils.FieldPassConf].BorderColor, "")
-		<button class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
+		<button onclick="document.getElementById('errors-container').remove()" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
@@ -123,24 +124,26 @@ templ formError(s string) {
 }
 
 templ SignInForm(s map[string]FieldError) {
-	for _, v := range s {
-		@formError(v.Err)
-	}
+	<div id="errors-container">
+		for _, v := range s {
+			@formError(v.Err)
+		}
+	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
 		@user(s[utils.FieldUser].BorderColor, s[utils.FieldUser].Value)
 		@password(s[utils.FieldPassword].BorderColor, "")
-		<button class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
+		<button onclick="document.getElementById('errors-container').remove()" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
 templ SignInContainer() {
 	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 		@SignInForm(nil)
+    <a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>
 	</div>
 }
 
 templ SignIn() {
 	@layout("Bear Hub - Sign In", "Sign In", SignInContainer())
 }
-

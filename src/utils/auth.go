@@ -3,12 +3,14 @@ package utils
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	// "fmt"
 	"net/mail"
 	"time"
 
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,7 +49,7 @@ type SignInCredentials struct {
 	Pass string
 }
 
-func (c *SignUpCredentials) ValidateStrings() *[]AuthError {
+func (c *SignUpCredentials) validateStrings() *[]AuthError {
 	errs := []AuthError{}
 	ok := true
 
@@ -68,6 +70,7 @@ func (c *SignUpCredentials) ValidateStrings() *[]AuthError {
 	}
 
 	if c.Password != c.PassConf {
+		fmt.Printf("pass: %#v\npassconf: %#v\n", c.Password, c.PassConf)
 		errs = append(errs, AuthError{Field: FieldPassConf, Err: ErrPassNoMatch, Value: ""})
 		ok = false
 	}
@@ -80,12 +83,16 @@ func (c *SignUpCredentials) ValidateStrings() *[]AuthError {
 }
 
 func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
+	strErrs := c.validateStrings()
+	if strErrs != nil {
+		return "", nil, strErrs
+	}
 	ctx := context.Background()
 	errs := []AuthError{}
 
 	d, err := sql.Open("postgres", Env().DB_URI)
 	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: ErrDbConnection, Value: ""})
+		errs = append(errs, AuthError{Field: "", Err: err, Value: ""})
 		return "", nil, &errs
 	}
 

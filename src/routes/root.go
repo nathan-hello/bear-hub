@@ -2,18 +2,33 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-func Alert(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/alert/signout" {
-		w.Write([]byte("You've been signed out"))
+func MicroComponents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	if r.URL.Path == "/alert/unauthorized" {
-		w.Write([]byte("You're not signed in"))
+
+	if r.URL.Path == "/c/isloggedin" {
+		if token, ok := utils.ValidateJwtOrDelete(w, r); ok {
+			claims, err := utils.ParseToken(token)
+			if err != nil {
+				utils.DeleteJwtCookies(w)
+				Redirect500(w, r)
+				return
+			}
+			p := fmt.Sprintf("/profile/%v", claims.Username)
+			components.NavbarLink(templ.SafeURL(p), claims.Username).Render(r.Context(), w)
+			return
+		} else {
+			components.NavbarLink("/signin", "Sign In").Render(r.Context(), w)
+		}
 	}
 }
 

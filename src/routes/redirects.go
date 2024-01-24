@@ -1,48 +1,44 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
-
-	"github.com/nathan-hello/htmx-template/src/components"
 )
 
-func redirectNotFound(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Header().Set("HX-Redirect", "404")
-	fmt.Printf("%#v\n", r)
+func Redirect500(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/?500=true", http.StatusSeeOther)
 }
 
-func redirectServerError(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Header().Set("HX-Redirect", "500")
-	fmt.Printf("%#v\n", r)
+func Redirect404(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/?404=true", http.StatusSeeOther)
 }
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/404" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("HX-Redirect", "404")
-		return
-	}
-
-	if r.Method == "GET" {
-		components.Error("404 Not Found").Render(r.Context(), w)
-	}
-}
-
-func RedirectUnauthorized(w http.ResponseWriter, r *http.Request) {
+func Redirect401(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/?unauthorized=true", http.StatusSeeOther)
 }
 
-func InternalServerError(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/500" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("HX-Redirect", "404")
-		return
+func RedirectSignOut(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/?signedout=true", http.StatusSeeOther)
+}
+
+func RedirectToSignIn(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+}
+
+func Alert(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/alert/signout" {
+		w.Write([]byte("You've been signed out"))
 	}
 
-	if r.Method == "GET" {
-		components.Error("500 Internal Server Error").Render(r.Context(), w)
+	if r.URL.Path == "/alert/unauthorized" {
+		w.Write([]byte("You're not logged in"))
 	}
+
+	if r.URL.Path == "/alert/404" {
+		w.Write([]byte("404 Not Found"))
+	}
+
+	if r.URL.Path == "/alert/500" {
+		w.Write([]byte("500 Internal Server Error"))
+	}
+
 }
