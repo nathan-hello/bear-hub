@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -13,6 +12,22 @@ import (
 func MicroComponents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
+	if r.URL.Path == "/c/alert/signout" {
+		components.NotificationBox("You have been signed out").Render(r.Context(), w)
+	}
+
+	if r.URL.Path == "/c/alert/unauthorized" {
+		components.NotificationBox("You're not logged in").Render(r.Context(), w)
+	}
+
+	if r.URL.Path == "/c/alert/404" {
+		components.NotificationBox("404 Not Found").Render(r.Context(), w)
+	}
+
+	if r.URL.Path == "/c/alert/500" {
+		components.NotificationBox("500 Internal Server Error").Render(r.Context(), w)
 	}
 
 	if r.URL.Path == "/c/isloggedin" {
@@ -33,21 +48,5 @@ func MicroComponents(w http.ResponseWriter, r *http.Request) {
 }
 
 func Root(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		w.WriteHeader(http.StatusNotFound)
-	}
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
-
-	ctx := context.Background()
-
-	response, err := templ.ToGoHTML(ctx, components.Root())
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	w.Write([]byte(response))
-
+	components.Root().Render(r.Context(), w)
 }

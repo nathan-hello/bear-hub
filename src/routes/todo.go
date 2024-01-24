@@ -13,11 +13,6 @@ import (
 
 func Todo(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path != "/todo" {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
 	if r.Method != "POST" && r.Method != "DELETE" && r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

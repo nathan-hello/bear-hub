@@ -27,7 +27,7 @@ func SetTokenCookies(w http.ResponseWriter, a string, r string) {
 	})
 }
 
-func GetTokenFromCookie(r *http.Request) (string, string, error) {
+func GetJwtsFromCookie(r *http.Request) (string, string, error) {
 	access, err := r.Cookie("access_token")
 	if err != nil {
 		return "", "", err
@@ -81,9 +81,4 @@ func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) 
 
 	SetTokenCookies(w, vAccess, vRefresh)
 	return vAccess, true
-}
-
-func RedirectToUserProfile(w http.ResponseWriter, r *http.Request, access string) {
-	return
-
 }

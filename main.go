@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	src.Router()
+	src.HandlePublic()
+	src.HandleSites()
 }
