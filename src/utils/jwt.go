@@ -122,11 +122,10 @@ func ValidateJwt(t string) error {
 	}
 
 	ctx := context.Background()
-	d, err := sql.Open("postgres", Env().DB_URI)
+	f, err := Db()
 	if err != nil {
 		return ErrDbConnection
 	}
-	f := db.New(d)
 
 	token, err := f.SelectTokenFromJwtString(ctx, t)
 
@@ -149,11 +148,10 @@ func InsertNewToken(t string, jwt_type string) error {
 		return err
 	}
 	ctx := context.Background()
-	d, err := sql.Open("postgres", Env().DB_URI)
+	f, err := Db()
 	if err != nil {
 		return ErrDbConnection
 	}
-	f := db.New(d)
 
 	tokenId, err := f.InsertToken(ctx, db.InsertTokenParams{JwtType: jwt_type, Jwt: t, Valid: true, Family: claims.Family})
 	if err != nil {
@@ -170,19 +168,21 @@ func InsertNewToken(t string, jwt_type string) error {
 func InvalidateJwtFamily(t string) error {
 
 	ctx := context.Background()
-	d, err := sql.Open("postgres", Env().DB_URI)
+	f, err := Db()
 	if err != nil {
 		return ErrDbConnection
 	}
-	f := db.New(d)
+
 	token, err := f.SelectTokenFromJwtString(ctx, t)
 	if err != nil {
 		return ErrDbSelectJwt
 	}
+
 	claims, err := ParseToken(token.Jwt)
 	if err != nil {
 		return err
 	}
+
 	err = f.UpdateTokensFamilyInvalid(ctx, claims.Family)
 	if err != nil {
 		return ErrDbUpdateTokensInvalid

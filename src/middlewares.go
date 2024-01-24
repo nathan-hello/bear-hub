@@ -12,10 +12,6 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-type ContextClaimType string
-
-const ClaimsContextKey ContextClaimType = "claims"
-
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -80,7 +76,7 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 		// we have to do a type assertion whenever we use it anyways
 		// and that will check if the type is ok
 		var claimsObj *utils.CustomClaims = claims
-		newCtx := context.WithValue(r.Context(), ClaimsContextKey, claimsObj)
+		newCtx := context.WithValue(r.Context(), utils.ClaimsContextKey, claimsObj)
 
 		next.ServeHTTP(w, r.WithContext(newCtx))
 	})

@@ -2,10 +2,8 @@ package test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
-	_ "github.com/lib/pq"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
@@ -13,18 +11,22 @@ import (
 func TestDatabaseConnection(t *testing.T) {
 	ctx := context.Background()
 
-	d, err := sql.Open("postgres", utils.Env().DB_URI)
-
+	f, err := utils.Db()
 	if err != nil {
 		t.Error(err)
 	}
 
-	f := db.New(d)
-
 	user, err := f.InsertUser(ctx, db.InsertUserParams{
-		Username:          "black-bear-test-2",
+		Username:          "black-bear-test-22121231321",
 		EncryptedPassword: "honey",
 	})
+
+	defer func() {
+		err = f.DeleteUser(ctx, user.ID)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
 
 	if err != nil {
 		t.Error(err)

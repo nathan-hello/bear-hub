@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -42,8 +41,8 @@ func TestNewPairAndParse(t *testing.T) {
 }
 func TestJwtExpiry(t *testing.T) {
 	c := utils.Env()
-	c.ACCESS_EXPIRY_TIME = time.Second * 2
-	c.REFRESH_EXPIRY_TIME = time.Second * 6
+	c.ACCESS_EXPIRY_TIME = time.Second * 1
+	c.REFRESH_EXPIRY_TIME = time.Second * 2
 
 	access, refresh, err := utils.NewTokenPair(
 		&utils.JwtParams{
@@ -65,7 +64,7 @@ func TestJwtExpiry(t *testing.T) {
 		t.Error(err)
 	}
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Millisecond * 1100)
 
 	_, err = utils.ParseToken(access)
 
@@ -81,7 +80,7 @@ func TestJwtExpiry(t *testing.T) {
 		t.Error(err)
 	}
 
-	time.Sleep(time.Second * 4)
+	time.Sleep(time.Second * 1)
 
 	_, err = utils.ParseToken(refresh)
 
@@ -95,13 +94,10 @@ func TestJwtExpiry(t *testing.T) {
 func TestDbJwt(t *testing.T) {
 	ctx := context.Background()
 
-	d, err := sql.Open("postgres", utils.Env().DB_URI)
-
+	f, err := utils.Db()
 	if err != nil {
 		t.Error(err)
 	}
-
-	f := db.New(d)
 
 	fullUser, err := f.InsertUser(ctx, db.InsertUserParams{
 		Username:          "black-bear-test-1",
@@ -169,7 +165,7 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	tokens, err = f.SelectUsersTokens(ctx, fullUser.ID)
+	_, err = f.SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
