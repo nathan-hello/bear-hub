@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -22,4 +23,8 @@ func RedirectSignOut(w http.ResponseWriter, r *http.Request) {
 
 func RedirectToSignIn(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+}
+
+func RedirectToProfile(w http.ResponseWriter, r *http.Request, username string) {
+	http.Redirect(w, r, fmt.Sprintf("/profile/%v", username), http.StatusSeeOther)
 }

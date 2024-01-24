@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -12,37 +11,19 @@ import (
 )
 
 func Todo(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != "POST" && r.Method != "DELETE" && r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	ctx := r.Context()
+	claims, ok := r.Context().Value(utils.ClaimsContextKey).(*utils.CustomClaims)
+	if !ok {
+		Redirect401(w, r)
 		return
 	}
-
-	// var response template.HTML
-	ctx := context.Background()
-	d, err := sql.Open("postgres", utils.Env().DB_URI)
-
+	conn, err := utils.Db()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		Redirect500(w, r)
 		return
 	}
-
-	conn := db.New(d)
 
 	if r.Method == "POST" {
-
-		access, ok := utils.ValidateJwtOrDelete(w, r)
-		if !ok {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		claims, err := utils.ParseToken(access)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
 		if err := r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -73,22 +54,23 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		}
 		conn.DeleteTodo(ctx, parsedId)
 		w.WriteHeader(http.StatusOK)
-
+		return
 	}
 
 	if r.Method == "GET" {
-		access, ok := utils.ValidateJwtOrDelete(w, r)
+		claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
 		if !ok {
-			RedirectToSignIn(w, r)
+			Redirect500(w, r)
 			return
 		}
 
-		claims, err := utils.ParseToken(access)
-		if err != nil {
-			RedirectToSignIn(w, r)
-			return
-		}
 		todos, err := conn.SelectTodosByUsername(ctx, claims.Username)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				Redirect500(w, r)
+				return
+			}
+		}
 		components.Todo(&todos).Render(r.Context(), w)
 	}
 

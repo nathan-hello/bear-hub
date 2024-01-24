@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	_ "github.com/lib/pq"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -90,13 +89,11 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
-	d, err := sql.Open("postgres", Env().DB_URI)
+	conn, err := Db()
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: err, Value: ""})
 		return "", nil, &errs
 	}
-
-	conn := db.New(d)
 
 	email := sql.NullString{String: c.Email, Valid: c.Email != ""}
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
@@ -132,13 +129,11 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 
 	var user db.User
 	ctx := context.Background()
-	d, err := sql.Open("postgres", Env().DB_URI)
+	conn, err := Db()
 	if err != nil {
 		errs = append(errs, AuthError{Err: ErrDbConnection})
 		return nil, &errs
 	}
-
-	conn := db.New(d)
 
 	if _, err := mail.ParseAddress(c.User); err == nil {
 		user, err = conn.SelectUserByEmail(ctx, sql.NullString{String: c.User, Valid: err == nil})

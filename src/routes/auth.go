@@ -10,10 +10,9 @@ import (
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
-
-	if r.URL.Path != "/signup" {
-		Redirect404(w, r)
-		return
+	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+	if ok {
+		RedirectToProfile(w, r, claims.Username)
 	}
 
 	returnFormWithErrors := func(errs *[]utils.AuthError) {
@@ -63,29 +62,19 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		if access, ok := utils.ValidateJwtOrDelete(w, r); ok {
-			c, err := utils.ParseToken(access)
-			if err != nil {
-				Redirect401(w, r)
-				return
-			}
-
-			w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", c.Username))
-		}
 		components.SignUp().Render(r.Context(), w)
 	}
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	returnFormWithErrors := func(errs *[]utils.AuthError) {
-		components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
+	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+	if ok {
+		RedirectToProfile(w, r, claims.Username)
 	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			returnFormWithErrors(&[]utils.AuthError{
-				{Err: utils.ErrBadLogin},
-			})
+			components.SignInForm(components.RenderAuthError(&[]utils.AuthError{{Err: err}})).Render(r.Context(), w)
 			return
 		}
 
@@ -97,7 +86,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		user, errs := cred.SignIn()
 
 		if errs != nil {
-			returnFormWithErrors(errs)
+			components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 			return
 		}
 
@@ -109,13 +98,11 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			})
 
 		if err != nil {
-			returnFormWithErrors(&[]utils.AuthError{
-				{Err: utils.ErrBadLogin},
-			})
+			components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 		}
 
 		utils.SetTokenCookies(w, access, refresh)
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", user.Username))
+		RedirectToProfile(w, r, user.Username)
 		return
 	}
 
@@ -126,9 +113,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		if r.URL.Path == "/signout" {
-			RedirectSignOut(w, r)
-		}
-	}
+	utils.DeleteJwtCookies(w)
+	RedirectSignOut(w, r)
 }

@@ -1,12 +1,19 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"time"
+	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
+	"github.com/nathan-hello/htmx-template/src/db"
 )
+
+type ContextClaimType string
+
+const ClaimsContextKey ContextClaimType = "claims"
 
 type Dotenv struct {
 	DB_URI     string
@@ -74,4 +81,13 @@ var C = FullConfig{
 
 func Env() *FullConfig {
 	return &C
+}
+
+var d, err = sql.Open("postgres", Env().DB_URI)
+
+func Db() (*db.Queries, error) {
+	if err != nil {
+		return nil, err
+	}
+	return db.New(d), nil
 }
