@@ -16,7 +16,7 @@ func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		defer func() {
-			log.Printf("IP: %v, ROUTE REQUESTED: %v, RESPONSE TIME: %v\n", r.Host, r.URL.Path, time.Since(start))
+			log.Printf("IP: %v, ROUTE REQUESTED: %v, RESPONSE TIME: %v\n", r.URL.User, r.URL.Path, time.Since(start))
 		}()
 		next.ServeHTTP(w, r)
 	})
@@ -64,12 +64,15 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 
 		access, ok := utils.ValidateJwtOrDelete(w, r)
 		if !ok {
-			log.Print("ERR: invalid access token:", access)
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		claims, err := utils.ParseToken(access)
 		if err != nil {
-			log.Print("ERR: invalid access token:", access)
+			log.Print("ERR: parsetoken:", access, err)
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		// if claims is nil, it doesn't matter because

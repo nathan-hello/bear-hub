@@ -31,21 +31,30 @@ func HandlePublic() {
 			return nil
 		}
 
-		asdf := path[10:]
-		log.Printf("asdf: %v, path: %v\n", asdf, path)
+		staticRoute := path[10:]
 
 		if jsFile, err := filepath.Match("*.js", filepath.Base(path)); jsFile {
-			files = append(files, Static{route: asdf, filepath: path, contentType: "text/javascript"})
+			files = append(files, Static{route: staticRoute, filepath: path, contentType: "text/javascript"})
 			return err
 		}
 		if cssFile, err := filepath.Match("*.css", filepath.Base(path)); cssFile {
-			files = append(files, Static{route: asdf, filepath: path, contentType: "text/css"})
+			files = append(files, Static{route: staticRoute, filepath: path, contentType: "text/css"})
 			return err
 		}
-		if imgFile, err := filepath.Match("*.{png, ico, jpg, webm}", filepath.Base(path)); imgFile {
-			files = append(files, Static{route: asdf, filepath: path, contentType: ""})
+		imgExts := []string{".ico", ".png", ".jpg", ".webm"}
+
+		for _, v := range imgExts {
+			match, err := filepath.Match("*"+v, filepath.Base(path))
+			if err != nil {
+				return err
+			}
+			if !match {
+				continue
+			}
+			files = append(files, Static{route: staticRoute, filepath: path, contentType: ""})
 			return err
 		}
+
 		return err
 	})
 
@@ -55,6 +64,7 @@ func HandlePublic() {
 			defaultMiddleware.Append(CreateHeader("Content-Type", v.contentType))
 		}
 		http.Handle(v.route, defaultMiddleware.ThenFunc(staticGet(v.filepath)))
+		log.Printf("Creating route: %v, for file: %v, with Content-Type %v\n", v.route, v.filepath, v.contentType)
 	}
 
 }
