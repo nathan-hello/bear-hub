@@ -31,13 +31,8 @@ func MicroComponents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/c/isloggedin" {
-		if token, ok := utils.ValidateJwtOrDelete(w, r); ok {
-			claims, err := utils.ParseToken(token)
-			if err != nil {
-				utils.DeleteJwtCookies(w)
-				Redirect500(w, r)
-				return
-			}
+		claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+		if ok {
 			p := fmt.Sprintf("/profile/%v", claims.Username)
 			components.NavbarLink(templ.SafeURL(p), claims.Username).Render(r.Context(), w)
 			return
