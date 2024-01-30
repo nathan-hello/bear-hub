@@ -37,5 +37,5 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	p := components.ProfileProps{Username: requestedProfile, Todos: &todos}
 
-	components.Profile(&p).Render(r.Context(), w)
+	components.Profile(p).Render(r.Context(), w)
 }

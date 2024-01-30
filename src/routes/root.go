@@ -12,19 +12,19 @@ func MicroComponents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/c/alert/signout" {
-		components.NotificationBox("You have been signed out").Render(r.Context(), w)
+		components.AlertBox("You have been signed out").Render(r.Context(), w)
 	}
 
 	if r.URL.Path == "/c/alert/unauthorized" {
-		components.NotificationBox("You're not logged in").Render(r.Context(), w)
+		components.AlertBox("You're not logged in").Render(r.Context(), w)
 	}
 
 	if r.URL.Path == "/c/alert/404" {
-		components.NotificationBox("404 Not Found").Render(r.Context(), w)
+		components.AlertBox("404 Not Found").Render(r.Context(), w)
 	}
 
 	if r.URL.Path == "/c/alert/500" {
-		components.NotificationBox("500 Internal Server Error").Render(r.Context(), w)
+		components.AlertBox("500 Internal Server Error").Render(r.Context(), w)
 	}
 }
 
