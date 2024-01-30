@@ -13,6 +13,24 @@ import (
 	"github.com/google/uuid"
 )
 
+const deleteChatroom = `-- name: DeleteChatroom :exec
+DELETE FROM chatrooms WHERE id = $1
+`
+
+func (q *Queries) DeleteChatroom(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteChatroom, id)
+	return err
+}
+
+const deleteMessage = `-- name: DeleteMessage :exec
+DELETE FROM messages WHERE id = $1
+`
+
+func (q *Queries) DeleteMessage(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteMessage, id)
+	return err
+}
+
 const deleteTodo = `-- name: DeleteTodo :exec
 DELETE FROM todos WHERE id = $1
 `
@@ -41,6 +59,45 @@ DELETE FROM users WHERE id = $1
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const insertChatroom = `-- name: InsertChatroom :one
+INSERT INTO chatrooms (name, creator) VALUES ($1, $2) RETURNING id
+`
+
+type InsertChatroomParams struct {
+	Name    string
+	Creator string
+}
+
+func (q *Queries) InsertChatroom(ctx context.Context, arg InsertChatroomParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, insertChatroom, arg.Name, arg.Creator)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const insertMessage = `-- name: InsertMessage :one
+INSERT INTO messages (author, message, room_id) VALUES ($1, $2, $3) RETURNING id, created_at, author, message, room_id
+`
+
+type InsertMessageParams struct {
+	Author  string
+	Message string
+	RoomID  int64
+}
+
+func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) (Message, error) {
+	row := q.db.QueryRowContext(ctx, insertMessage, arg.Author, arg.Message, arg.RoomID)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Author,
+		&i.Message,
+		&i.RoomID,
+	)
+	return i, err
 }
 
 const insertTodo = `-- name: InsertTodo :one
@@ -133,6 +190,39 @@ func (q *Queries) InsertUsersTokens(ctx context.Context, arg InsertUsersTokensPa
 	return err
 }
 
+const selectChatrooms = `-- name: SelectChatrooms :many
+SELECT id, created_at, name, creator FROM chatrooms ORDER BY created_at DESC  LIMIT $1
+`
+
+// table: chatrooms
+func (q *Queries) SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom, error) {
+	rows, err := q.db.QueryContext(ctx, selectChatrooms, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Chatroom
+	for rows.Next() {
+		var i Chatroom
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Name,
+			&i.Creator,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
 SELECT email FROM users WHERE users.email = $1 OR users.username = $2
 `
@@ -147,6 +237,83 @@ func (q *Queries) SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg Se
 	var email sql.NullString
 	err := row.Scan(&email)
 	return email, err
+}
+
+const selectMessagesByChatroom = `-- name: SelectMessagesByChatroom :many
+SELECT id, created_at, author, message, room_id FROM messages WHERE room_id = $1 ORDER BY created_at DESC LIMIT $2
+`
+
+type SelectMessagesByChatroomParams struct {
+	RoomID int64
+	Limit  int64
+}
+
+// table: messages
+func (q *Queries) SelectMessagesByChatroom(ctx context.Context, arg SelectMessagesByChatroomParams) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, selectMessagesByChatroom, arg.RoomID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Message
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Author,
+			&i.Message,
+			&i.RoomID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const selectMessagesByUser = `-- name: SelectMessagesByUser :many
+SELECT id, created_at, author, message, room_id FROM messages WHERE author = $1 ORDER BY created_at DESC LIMIT $2
+`
+
+type SelectMessagesByUserParams struct {
+	Author string
+	Limit  int64
+}
+
+func (q *Queries) SelectMessagesByUser(ctx context.Context, arg SelectMessagesByUserParams) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, selectMessagesByUser, arg.Author, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Message
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.Author,
+			&i.Message,
+			&i.RoomID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const selectTodosByUsername = `-- name: SelectTodosByUsername :many
@@ -292,6 +459,49 @@ func (q *Queries) SelectUsersTokens(ctx context.Context, userID uuid.UUID) ([]Us
 	return items, nil
 }
 
+const updateChatroomName = `-- name: UpdateChatroomName :one
+UPDATE chatrooms SET name = $1 WHERE id = $2 RETURNING id, created_at, name, creator
+`
+
+type UpdateChatroomNameParams struct {
+	Name string
+	ID   int64
+}
+
+func (q *Queries) UpdateChatroomName(ctx context.Context, arg UpdateChatroomNameParams) (Chatroom, error) {
+	row := q.db.QueryRowContext(ctx, updateChatroomName, arg.Name, arg.ID)
+	var i Chatroom
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Creator,
+	)
+	return i, err
+}
+
+const updateMessage = `-- name: UpdateMessage :one
+UPDATE messages SET message = $1 WHERE id = $2 RETURNING id, created_at, author, message, room_id
+`
+
+type UpdateMessageParams struct {
+	Message string
+	ID      int64
+}
+
+func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error) {
+	row := q.db.QueryRowContext(ctx, updateMessage, arg.Message, arg.ID)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Author,
+		&i.Message,
+		&i.RoomID,
+	)
+	return i, err
+}
+
 const updateTodo = `-- name: UpdateTodo :one
 UPDATE todos SET body = $1 WHERE id = $2 RETURNING id, created_at, body, username
 `
@@ -330,9 +540,7 @@ func (q *Queries) UpdateTokenValid(ctx context.Context, arg UpdateTokenValidPara
 }
 
 const updateTokensFamilyInvalid = `-- name: UpdateTokensFamilyInvalid :exec
-UPDATE tokens 
-SET valid = FALSE 
-WHERE family = $1
+UPDATE tokens SET valid = FALSE WHERE family = $1
 `
 
 func (q *Queries) UpdateTokensFamilyInvalid(ctx context.Context, family uuid.UUID) error {

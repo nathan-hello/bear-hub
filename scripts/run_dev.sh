@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -euo pipefail
+
 dir=${0%/*}
 cd "$dir/.."
 
@@ -20,6 +23,10 @@ log_with_timestamp() {
     done &
     echo -e "$cmd @ PID: $!"
 }
+
+# bash -c "./scripts/pg_dump.sh"
+echo "Running sqlc"
+bash -c "./scripts/sqlc_gen.sh"
 
 log_with_timestamp "tailwindcss -i src/public/css/tw-base.css -o src/public/css/tw-output.css -w" "log/tailwind.log" "tailwindcss"
 log_with_timestamp "templ generate -path src/components --watch" "log/templ.log" "templ      "

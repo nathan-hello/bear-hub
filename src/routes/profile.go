@@ -19,7 +19,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
-		w.WriteHeader(http.StatusNotFound)
+		Redirect404(w, r)
 		return
 	}
 
