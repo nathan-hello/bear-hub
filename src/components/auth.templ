@@ -107,20 +107,12 @@ templ SignUpForm(s map[string]FieldError) {
 	</form>
 }
 
-templ SignUpContainer() {
-	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-		@SignUpForm(nil)
-	</div>
-}
-
 templ SignUp() {
-	@layout("Bear Hub - Sign Up", "Sign Up", SignUpContainer())
-}
-
-templ formError(s string) {
-	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-		{ s }
-	</div>
+	@layout("Bear Hub - Sign Up", "Sign Up") {
+		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+			@SignUpForm(nil)
+		</div>
+	}
 }
 
 templ SignInForm(s map[string]FieldError) {
@@ -133,17 +125,15 @@ templ SignInForm(s map[string]FieldError) {
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
 		@user(s[utils.FieldUser].BorderColor, s[utils.FieldUser].Value)
 		@password(s[utils.FieldPassword].BorderColor, "")
-		<button onclick="document.getElementById('errors-container').remove()" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
+		<button onclick="document.getElementById('errors-container').remove();" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignInContainer() {
-	<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-		@SignInForm(nil)
-    <a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>
-	</div>
-}
-
 templ SignIn() {
-	@layout("Bear Hub - Sign In", "Sign In", SignInContainer())
+	@layout("Bear Hub - Sign In", "Sign In") {
+		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+			@SignInForm(nil)
+			<a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>
+		</div>
+	}
 }

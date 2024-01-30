@@ -15,34 +15,6 @@ templ createTodo() {
 	</div>
 }
 
-templ todosTable(todos []db.Todo) {
-	<div id="todos-table-and-submitter">
-		<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">
-			<table class="w-full text-sm text-left rtl:text-right text-white min-w-0 break-words word-wrap">
-				<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-					<tr>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Task
-						</th>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Date
-						</th>
-						<th scope="col" class="px-6 py-3 max-w-xs">
-							Delete
-						</th>
-					</tr>
-				</thead>
-				<tbody id="todos-body">
-					for _, v := range todos {
-						@TodoRow(&v)
-					}
-				</tbody>
-			</table>
-		</div>
-		@createTodo()
-	</div>
-}
-
 templ TodoRow(v *db.Todo) {
 	<tr id={ fmt.Sprintf("todo-%v", v.ID) } class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
 		<td class="px-6 py-4 max-w-xs">
@@ -62,6 +34,32 @@ templ TodoRow(v *db.Todo) {
 	</tr>
 }
 
-templ Todo(t *[]db.Todo) {
-	@layout("Bear's Todos", "Bear's Todos", todosTable(*t))
+templ Todo(todos []db.Todo) {
+	@layout("Bear's Todos", "Bear's Todos") {
+		<div id="todos-table-and-submitter">
+			<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">
+				<table class="w-full text-sm text-left rtl:text-right text-white min-w-0 break-words word-wrap">
+					<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+						<tr>
+							<th scope="col" class="px-6 py-3 max-w-xs">
+								Task
+							</th>
+							<th scope="col" class="px-6 py-3 max-w-xs">
+								Date
+							</th>
+							<th scope="col" class="px-6 py-3 max-w-xs">
+								Delete
+							</th>
+						</tr>
+					</thead>
+					<tbody id="todos-body">
+						for _, v := range todos {
+							@TodoRow(&v)
+						}
+					</tbody>
+				</table>
+			</div>
+			@createTodo()
+		</div>
+	}
 }
