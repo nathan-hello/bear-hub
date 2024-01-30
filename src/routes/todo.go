@@ -71,7 +71,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		components.Todo(&todos).Render(r.Context(), w)
+		components.Todo(todos).Render(r.Context(), w)
 	}
 
 }

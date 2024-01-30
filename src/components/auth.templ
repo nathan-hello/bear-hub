@@ -94,7 +94,7 @@ templ passwordConfirm(borderColor string, value string) {
 templ SignUpForm(s map[string]FieldError) {
 	<div id="errors-container">
 		for _, v := range s {
-			@formError(v.Err)
+			@AlertBox(v.Err)
 		}
 	</div>
 	<div class="py-2"></div>
@@ -118,7 +118,7 @@ templ SignUp() {
 templ SignInForm(s map[string]FieldError) {
 	<div id="errors-container">
 		for _, v := range s {
-			@formError(v.Err)
+			@AlertBox(v.Err)
 		}
 	</div>
 	<div class="py-2"></div>
