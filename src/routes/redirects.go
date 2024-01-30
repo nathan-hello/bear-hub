@@ -28,3 +28,7 @@ func RedirectToSignIn(w http.ResponseWriter, r *http.Request) {
 func RedirectToProfile(w http.ResponseWriter, r *http.Request, username string) {
 	http.Redirect(w, r, fmt.Sprintf("/profile/%v", username), http.StatusSeeOther)
 }
+
+func RedirectToChatroom(w http.ResponseWriter, r *http.Request, id int64) {
+	http.Redirect(w, r, fmt.Sprintf("/chat/%v", id), http.StatusSeeOther)
+}

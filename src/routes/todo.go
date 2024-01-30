@@ -52,7 +52,11 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		conn.DeleteTodo(ctx, parsedId)
+		err = conn.DeleteTodo(ctx, parsedId)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		return
 	}

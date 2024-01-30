@@ -11,6 +11,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type Chatroom struct {
+	ID        int64
+	CreatedAt time.Time
+	Name      string
+	Creator   string
+}
+
+type Message struct {
+	ID        int64
+	CreatedAt time.Time
+	Author    string
+	Message   string
+	RoomID    int64
+}
+
 type Todo struct {
 	ID        int64
 	CreatedAt time.Time

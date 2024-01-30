@@ -120,6 +120,18 @@ func HandleSites() {
 				Logging,
 				AllowMethods("GET"),
 			)},
+		{route: "/chat",
+			hfunc: routes.ChatRoot,
+			middlewares: alice.New(
+				Logging,
+				AllowMethods("GET", "POST", "DELETE", "PUT"),
+			)},
+		{route: "/chat/",
+			hfunc: routes.ChatSubRouter,
+			middlewares: alice.New(
+				Logging,
+				AllowMethods("GET", "POST", "DELETE", "PUT"),
+			)},
 	}
 
 	for _, v := range sites {

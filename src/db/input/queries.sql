@@ -8,7 +8,6 @@ UPDATE todos SET body = $1 WHERE id = $2 RETURNING *;
 -- name: DeleteTodo :exec
 DELETE FROM todos WHERE id = $1;
 
-
 -- table: users
 -- name: InsertUser :one
 INSERT INTO users ( email, username, encrypted_password, password_created_at)
@@ -38,15 +37,12 @@ INNER JOIN tokens AS t ON users_tokens.token_id = t.id
     WHERE users_tokens.user_id = $1
     AND tokens.id = t.id;
 -- name: UpdateTokensFamilyInvalid :exec
-UPDATE tokens 
-SET valid = FALSE 
-WHERE family = $1;
+UPDATE tokens SET valid = FALSE WHERE family = $1;
 -- name: DeleteTokensByUserId :exec
 DELETE FROM tokens
 WHERE tokens.id IN (
         SELECT token_id FROM users_tokens WHERE users_tokens.user_id = $1
     );
-
 
 -- table: users_tokens
 -- name: SelectUsersTokens :many
@@ -55,3 +51,26 @@ SELECT * FROM users_tokens WHERE user_id = $1;
 SELECT user_id FROM users_tokens WHERE token_id = $1 LIMIT 1;
 -- name: InsertUsersTokens :exec
 INSERT INTO users_tokens (user_id, token_id) VALUES ($1, $2); 
+
+-- table: chatrooms
+-- name: SelectChatrooms :many
+SELECT * FROM chatrooms ORDER BY created_at DESC  LIMIT $1;
+-- name: InsertChatroom :one
+INSERT INTO chatrooms (name, creator) VALUES ($1, $2) RETURNING id;
+-- name: DeleteChatroom :exec
+DELETE FROM chatrooms WHERE id = $1;
+-- name: UpdateChatroomName :one
+UPDATE chatrooms SET name = $1 WHERE id = $2 RETURNING *;
+
+
+-- table: messages
+-- name: SelectMessagesByChatroom :many
+SELECT * FROM messages WHERE room_id = $1 ORDER BY created_at DESC LIMIT $2;
+-- name: SelectMessagesByUser :many
+SELECT * FROM messages WHERE author = $1 ORDER BY created_at DESC LIMIT $2;
+-- name: InsertMessage :one
+INSERT INTO messages (author, message, room_id) VALUES ($1, $2, $3) RETURNING *;
+-- name: DeleteMessage :exec
+DELETE FROM messages WHERE id = $1;
+-- name: UpdateMessage :one
+UPDATE messages SET message = $1 WHERE id = $2 RETURNING *;
