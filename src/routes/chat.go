@@ -1,80 +1,78 @@
 package routes
 
 import (
+	"log"
 	"net/http"
 
+	gws "github.com/gorilla/websocket"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/db"
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-func ChatSubRouter(w http.ResponseWriter, r *http.Request) {
+var upgrader = gws.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func Chat(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		components.ChatRoomRoot().Render(r.Context(), w)
 		return
 	}
+}
 
-	if r.Method == "POST" {
-		postChat(w, r)
-		return
+func ChatSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	log.Println("HIT!")
+	if err != nil {
+		panic(err)
 	}
+	defer conn.Close()
 
-	if r.Method == "DELETE" {
-
+	for {
+		log.Println("asdfasdfas!")
+		_, msg, err := conn.ReadMessage()
+		log.Printf("1: msg: %#v, err: %#v\n", string(msg), err)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if err := conn.WriteMessage(gws.TextMessage, msg); err != nil {
+			log.Println(err)
+			return
+		}
+		log.Printf("2: msg: %s, err: %#v\n", string(msg), err)
 	}
 
 }
 
-func postChat(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	conn, err := utils.Db()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	t, err := conn.InsertChatroom(
-		r.Context(),
-		db.InsertChatroomParams{
-			Name:    r.FormValue("name"),
-			Creator: claims.Username,
-		})
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	RedirectToChatroom(w, r, t)
-}
-
-func deleteChat(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	conn, err := utils.Db()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	
-
-}
+// func postChat(w http.ResponseWriter, r *http.Request) {
+// 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+// 	if !ok {
+// 		w.WriteHeader(http.StatusUnauthorized)
+// 		return
+// 	}
+//
+// 	if err := r.ParseForm(); err != nil {
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		return
+// 	}
+//
+// 	conn, err := utils.Db()
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		return
+// 	}
+//
+// 	t, err := conn.InsertChatroom(
+// 		r.Context(),
+// 		db.InsertChatroomParams{
+// 			Name:    r.FormValue("name"),
+// 			Creator: claims.Username,
+// 		})
+//
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 	}
+//
+// }
