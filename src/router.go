@@ -121,13 +121,13 @@ func HandleSites() {
 				AllowMethods("GET"),
 			)},
 		{route: "/chat",
-			hfunc: routes.ChatRoot,
+			hfunc: routes.Chat,
 			middlewares: alice.New(
 				Logging,
 				AllowMethods("GET", "POST", "DELETE", "PUT"),
 			)},
-		{route: "/chat/",
-			hfunc: routes.ChatSubRouter,
+		{route: "/ws-chat",
+			hfunc: routes.ChatSocket,
 			middlewares: alice.New(
 				Logging,
 				AllowMethods("GET", "POST", "DELETE", "PUT"),

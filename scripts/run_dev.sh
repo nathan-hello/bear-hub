@@ -24,10 +24,6 @@ log_with_timestamp() {
     echo -e "$cmd @ PID: $!"
 }
 
-# bash -c "./scripts/pg_dump.sh"
-echo "Running sqlc"
-bash -c "./scripts/sqlc_gen.sh"
-
 log_with_timestamp "tailwindcss -i src/public/css/tw-base.css -o src/public/css/tw-output.css -w" "log/tailwind.log" "tailwindcss"
 log_with_timestamp "templ generate -path src/components --watch" "log/templ.log" "templ      "
 log_with_timestamp "air" "log/air.log" "air        "  

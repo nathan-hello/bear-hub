@@ -1,7 +1,36 @@
 package components
 
 templ ChatRoomRoot() {
+	// <script src="/js/chat.js"></script>
 	@layout("Bear Chat", "Bear Chat") {
-		<div>A chat room for bears!</div>
+		<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+		<script>
+      htmx.logAll()
+    </script>
+		<div id="messages" class="h-96 w-48 bg-gray-200"></div>
+		<div ws-connect="/ws-chat" hx-ext="ws">
+			<form
+				id="chat-form"
+				hx-boost="true"
+				hx-target="#messages"
+				hx-swap="beforeend"
+				ws-send
+			>
+				<input id="msg-input" type="text" placeholder="Write a message..."/>
+				<button type="submit">Send</button>
+			</form>
+		</div>
 	}
+}
+
+templ ChatMessage(s string) {
+	<span>{ s }</span>
+}
+
+templ ChatBox() {
+	<div class="w-96">
+		<div class="h-52 w-96" id="message-container" hx-ext="ws" ws-connect="/chatroom">
+			<span>Message 1</span>
+		</div>
+	</div>
 }
