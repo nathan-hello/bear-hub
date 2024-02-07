@@ -130,7 +130,6 @@ func HandleSites() {
 			hfunc: routes.ChatSocket,
 			middlewares: alice.New(
 				Logging,
-				AllowMethods("GET", "POST", "DELETE", "PUT"),
 			)},
 	}
 

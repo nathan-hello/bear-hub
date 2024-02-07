@@ -14,25 +14,19 @@ var upgrader = gws.Upgrader{
 	},
 }
 
-func Chat(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		components.ChatRoomRoot().Render(r.Context(), w)
-		return
-	}
-}
-
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	log.Println("HIT!")
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return
 	}
 	defer conn.Close()
 
 	for {
-		log.Println("asdfasdfas!")
 		_, msg, err := conn.ReadMessage()
 		log.Printf("1: msg: %#v, err: %#v\n", string(msg), err)
+		msg = []byte("123123123123")
 		if err != nil {
 			log.Println(err)
 			return
@@ -44,6 +38,13 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("2: msg: %s, err: %#v\n", string(msg), err)
 	}
 
+}
+
+func Chat(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		components.ChatRoomRoot().Render(r.Context(), w)
+		return
+	}
 }
 
 // func postChat(w http.ResponseWriter, r *http.Request) {
