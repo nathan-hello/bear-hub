@@ -12,7 +12,8 @@ import (
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
 	if ok {
-		RedirectToProfile(w, r, claims.Username)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
+		return
 	}
 
 	returnFormWithErrors := func(errs *[]utils.AuthError) {
@@ -63,13 +64,15 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		components.SignUp().Render(r.Context(), w)
+		return
 	}
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
 	if ok {
-		RedirectToProfile(w, r, claims.Username)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
+		return
 	}
 
 	if r.Method == "POST" {
@@ -99,10 +102,11 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
+			return
 		}
 
 		utils.SetTokenCookies(w, access, refresh)
-		RedirectToProfile(w, r, user.Username)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
 		return
 	}
 
@@ -114,5 +118,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
 	utils.DeleteJwtCookies(w)
-	RedirectSignOut(w, r)
+	HandleRedirect(w, r, "/", http.StatusSeeOther, utils.ErrUserSignedOut)
+	return
 }

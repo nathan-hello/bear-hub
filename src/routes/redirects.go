@@ -1,34 +1,16 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/nathan-hello/htmx-template/src/components"
 )
 
-func Redirect500(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/?500=/", http.StatusSeeOther)
-}
+func HandleRedirect(w http.ResponseWriter, r *http.Request, route string, status int, err error) {
+	w.WriteHeader(status)
+	http.Redirect(w, r, route, http.StatusSeeOther)
+	if err != nil {
+		components.AlertBox(err.Error()).Render(r.Context(), w)
+	}
 
-func Redirect404(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/?404=/", http.StatusSeeOther)
-}
-
-func Redirect401(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/?unauthorized=/", http.StatusSeeOther)
-}
-
-func RedirectSignOut(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/?signedout=/", http.StatusSeeOther)
-}
-
-func RedirectToSignIn(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/signin", http.StatusSeeOther)
-}
-
-func RedirectToProfile(w http.ResponseWriter, r *http.Request, username string) {
-	http.Redirect(w, r, fmt.Sprintf("/profile/%v", username), http.StatusSeeOther)
-}
-
-func RedirectToChatroom(w http.ResponseWriter, r *http.Request, id int64) {
-	http.Redirect(w, r, fmt.Sprintf("/chat/%v", id), http.StatusSeeOther)
 }
