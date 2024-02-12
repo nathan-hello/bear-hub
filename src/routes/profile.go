@@ -2,7 +2,6 @@ package routes
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -13,13 +12,13 @@ import (
 func UserProfile(w http.ResponseWriter, r *http.Request) {
 	conn, err := utils.Db()
 	if err != nil {
-		Redirect500(w, r)
+		HandleRedirect(w, r, "/", http.StatusInternalServerError, utils.ErrDbConnection)
 		return
 	}
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
-		Redirect404(w, r)
+		HandleRedirect(w, r, "/profile", http.StatusNotFound, utils.ErrProfileNotFound)
 		return
 	}
 
@@ -29,9 +28,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err != sql.ErrNoRows {
-			fmt.Printf("err: %#v\n", err)
-			Redirect500(w, r)
-			return
+			HandleRedirect(w, r, "/", http.StatusInternalServerError, utils.ErrDbConnection)
 		}
 	}
 
