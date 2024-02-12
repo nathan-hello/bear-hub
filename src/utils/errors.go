@@ -13,6 +13,13 @@ var (
 )
 
 var (
+	ErrBadReqTodosBodyShort = errors.New("todos have a minimum length of 3 characters")
+	Err404                  = errors.New("page not found")
+	ErrProfileNotFound      = errors.New("profile not found")
+	ErrUserSignedOut        = errors.New("you have been signed out")
+)
+
+var (
 	ErrHashPassword = errors.New("internal Server Error - 19283")
 )
 
@@ -38,4 +45,5 @@ var (
 	ErrDbInvalidateJwts      = errors.New("internal Server Error - 12409")
 	ErrDbSelectUserFromToken = errors.New("internal Server Error - 12411")
 	ErrDbUpdateTokensInvalid = errors.New("internal Server Error - 12412")
+	ErrDbSelectTodosByUser   = errors.New("internal Server Error - 12413")
 )

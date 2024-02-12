@@ -14,25 +14,26 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(*utils.CustomClaims)
 	if !ok {
-		Redirect401(w, r)
+		HandleRedirect(w, r, "/signin", http.StatusUnauthorized, utils.ErrBadLogin)
 		return
 	}
 	conn, err := utils.Db()
 	if err != nil {
-		Redirect500(w, r)
+		HandleRedirect(w, r, "/?500=/", http.StatusInternalServerError, utils.ErrDbConnection)
 		return
 	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			HandleRedirect(w, r, "/?500=/", http.StatusInternalServerError, utils.ErrDbConnection)
 			return
 		}
 
 		body := r.FormValue("body")
 
 		if len(body) > 255 || len(body) < 3 {
-			w.WriteHeader(http.StatusBadRequest)
+			// this should be a send htmx div like in auth.go
+			HandleRedirect(w, r, "/?500=/", http.StatusBadRequest, utils.ErrBadReqTodosBodyShort)
 			return
 		}
 
@@ -62,16 +63,10 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
-		if !ok {
-			Redirect500(w, r)
-			return
-		}
-
 		todos, err := conn.SelectTodosByUsername(ctx, claims.Username)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				Redirect500(w, r)
+				HandleRedirect(w, r, "/?500=/", http.StatusInternalServerError, utils.ErrDbSelectTodosByUser)
 				return
 			}
 		}
