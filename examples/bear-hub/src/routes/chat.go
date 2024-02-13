@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"sync"
 
+	"bear-hub/examples/bear-hub/src/components"
+
 	gws "github.com/gorilla/websocket"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/components"
 )
 
 var upgrader = gws.Upgrader{

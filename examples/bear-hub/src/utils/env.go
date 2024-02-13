@@ -8,8 +8,9 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"bear-hub/examples/bear-hub/src/db"
+
 	"github.com/joho/godotenv"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/db"
 )
 
 type ContextClaimType string

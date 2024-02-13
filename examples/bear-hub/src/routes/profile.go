@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/components"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/utils"
+	"bear-hub/examples/bear-hub/src/components"
+	"bear-hub/examples/bear-hub/src/utils"
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {

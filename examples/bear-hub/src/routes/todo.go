@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/components"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/db"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
+	"bear-hub/src/components"
+	"bear-hub/src/db"
+	"bear-hub/src/utils"
 )
 
 func Todo(w http.ResponseWriter, r *http.Request) {

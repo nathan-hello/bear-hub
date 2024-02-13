@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"bear-hub/src/db"
+	"bear-hub/src/utils"
+
 	"github.com/google/uuid"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/db"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
 )
 
 func TestNewPairAndParse(t *testing.T) {

@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/components"
+	"bear-hub/examples/bear-hub/src/components"
 )
 
 func MicroComponents(w http.ResponseWriter, r *http.Request) {
