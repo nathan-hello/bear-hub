@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/db"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/utils"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/components"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -119,5 +119,4 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 func SignOut(w http.ResponseWriter, r *http.Request) {
 	utils.DeleteJwtCookies(w)
 	HandleRedirect(w, r, "/", http.StatusSeeOther, utils.ErrUserSignedOut)
-	return
 }

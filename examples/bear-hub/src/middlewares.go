@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/justinas/alice"
-	"github.com/nathan-hello/htmx-template/src/routes"
-	"github.com/nathan-hello/htmx-template/src/utils"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
 )
 
 func Logging(next http.Handler) http.Handler {

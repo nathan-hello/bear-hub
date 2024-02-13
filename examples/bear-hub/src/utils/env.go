@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
 	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
-	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/db"
 )
 
 type ContextClaimType string

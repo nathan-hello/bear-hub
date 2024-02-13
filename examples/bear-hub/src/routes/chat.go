@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	gws "github.com/gorilla/websocket"
-	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/components"
 )
 
 var upgrader = gws.Upgrader{
@@ -98,7 +98,7 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 
 		var buffMsg bytes.Buffer
 		components.ChatMessage(resp.Text).Render(r.Context(), &buffMsg)
-		log.Printf("buffMsg: %s, err: %#v\n", buffMsg, err)
+		log.Printf("buffMsg: %s, err: %#v\n", buffMsg.Bytes(), err)
 
 		manager.BroadcastMessage(buffMsg.Bytes())
 

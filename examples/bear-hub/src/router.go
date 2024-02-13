@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/justinas/alice"
-	"github.com/nathan-hello/htmx-template/src/routes"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/routes"
 )
 
 func HandleSites() {

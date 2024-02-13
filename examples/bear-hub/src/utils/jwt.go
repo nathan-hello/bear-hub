@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/src/db"
 )
 
 type JwtParams struct {
