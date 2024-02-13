@@ -3,8 +3,8 @@ package components
 import (
 	"time"
 
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/examples/bear-hub/src/db"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/examples/bear-hub/examples/bear-hub/src/utils"
+	"bear-hub/examples/bear-hub/examples/bear-hub/src/db"
+	"bear-hub/examples/bear-hub/examples/bear-hub/src/utils"
 )
 
 type ProfileProps struct {

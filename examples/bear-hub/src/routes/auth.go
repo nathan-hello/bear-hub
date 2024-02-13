@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"bear-hub/src/components"
+	"bear-hub/src/utils"
+
 	"github.com/google/uuid"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/components"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request) {

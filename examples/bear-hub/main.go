@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nathan-hello/htmx-template/bear-hub/src"
+	"github.com/nathan-hello/no-magic-stack/examples/bear-hub/src"
 )
 
 func main() {

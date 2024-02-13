@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/db"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/utils"
+	"bear-hub/src/db"
+	"bear-hub/src/utils"
 )
 
 func TestDatabaseConnection(t *testing.T) {

@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"bear-hub/src/routes"
+
 	"github.com/justinas/alice"
-	"github.com/nathan-hello/htmx-template/examples/bear-hub/src/routes"
 )
 
 func HandleSites() {
