@@ -134,7 +134,6 @@ func LoadStaticFiles() ([]Static, error) {
 		return nil, fmt.Errorf("No static files: %#v\n", files)
 	}
 
-	fmt.Printf("files in LoadStaticFiles()\n\n%#v\n\n", files)
 	return files, nil
 }
 
@@ -143,7 +142,7 @@ func StaticRouter(files []Static) error {
 		middles := alice.New(Logging, AllowMethods("GET"), CreateHeader("Content-Type", v.contentType))
 		file := v.filepath // closure shanigans
 		http.Handle(v.route, middles.ThenFunc(func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, file) }))
-		log.Printf("Creating route: %v, for file: %v, with Content-Type %v\n", v.route, v.filepath, v.contentType)
+		log.Printf("Creating route: %v, for file: %v, with Content-Type %v\n", v.route, file, v.contentType)
 	}
 	return nil
 
