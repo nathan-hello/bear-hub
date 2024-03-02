@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/nathan-hello/htmx-template/src"
@@ -12,6 +13,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	src.PublicRouter()
+	files, err := src.LoadStaticFiles()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%#v\n", files)
+	err = src.StaticRouter(files)
+	if err != nil {
+		log.Fatal(err)
+	}
 	src.SiteRouter()
 }
