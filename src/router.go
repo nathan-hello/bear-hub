@@ -91,7 +91,7 @@ func PublicRouter() {
 
 	files := []Static{}
 
-	filepath.Walk("src/public", func(path string, info fs.FileInfo, err error) error {
+	filepath.Walk("public/", func(path string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
