@@ -1,10 +1,13 @@
 package src
 
 import (
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/justinas/alice"
 	"github.com/nathan-hello/htmx-template/src/routes"
@@ -22,10 +25,10 @@ func SiteRouter() {
 		{route: "/",
 			hfunc: routes.Root,
 			middlewares: alice.New(
+				RejectSubroute("/"),
 				Logging,
 				InjectClaimsOnValidToken,
 				AllowMethods("GET"),
-				RejectSubroute("/"),
 			)},
 		{route: "/todo",
 			hfunc: routes.Todo,
@@ -87,55 +90,61 @@ type Static struct {
 	contentType string
 }
 
-func PublicRouter() {
+func LoadStaticFiles() ([]Static, error) {
 
 	files := []Static{}
+	publicDir := "public/"
+	images := []string{".ico", ".png", ".jpg", ".webm"}
+	plain := []string{".js", ".css"}
+	allowed := append(images, plain...)
 
-	filepath.Walk("public/", func(path string, info fs.FileInfo, err error) error {
+	err := filepath.Walk("public", func(path string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 
-		staticRoute := path[10:]
+		ext := filepath.Ext(info.Name())
+		match := slices.Contains[[]string](allowed, ext)
+		if !match {
+			fmt.Printf("file %v not in allow list", path)
+			return nil
+		}
 
-		if jsFile, err := filepath.Match("*.js", filepath.Base(path)); jsFile {
+		staticRoute := strings.TrimPrefix(path, publicDir)
+		staticRoute = "/" + staticRoute
+
+		jsFile, err := filepath.Match("*.js", filepath.Base(path))
+		if jsFile {
 			files = append(files, Static{route: staticRoute, filepath: path, contentType: "text/javascript"})
 			return err
 		}
-		if cssFile, err := filepath.Match("*.css", filepath.Base(path)); cssFile {
+		cssFile, err := filepath.Match("*.css", filepath.Base(path))
+		if cssFile {
 			files = append(files, Static{route: staticRoute, filepath: path, contentType: "text/css"})
 			return err
 		}
-
-		imgExts := []string{".ico", ".png", ".jpg", ".webm"}
-		for _, v := range imgExts {
-			match, err := filepath.Match("*"+v, filepath.Base(path))
-			if err != nil {
-				return err
-			}
-			if !match {
-				continue
-			}
-			files = append(files, Static{route: staticRoute, filepath: path, contentType: ""})
-			return err
-		}
-
+		files = append(files, Static{route: staticRoute, filepath: path, contentType: ""})
 		return err
 	})
 
-	middles := alice.New(Logging, AllowMethods("GET"))
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("No static files: %#v\n", files)
+	}
+
+	fmt.Printf("files in LoadStaticFiles()\n\n%#v\n\n", files)
+	return files, nil
+}
+
+func StaticRouter(files []Static) error {
 	for _, v := range files {
-		if v.contentType != "" {
-			middles.Append(CreateHeader("Content-Type", v.contentType))
-		}
-		http.Handle(
-			v.route,
-			middles.ThenFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					http.ServeFile(w, r, v.filepath)
-				}),
-		)
+		middles := alice.New(Logging, AllowMethods("GET"), CreateHeader("Content-Type", v.contentType))
+		file := v.filepath // closure shanigans
+		http.Handle(v.route, middles.ThenFunc(func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, file) }))
 		log.Printf("Creating route: %v, for file: %v, with Content-Type %v\n", v.route, v.filepath, v.contentType)
 	}
+	return nil
 
 }

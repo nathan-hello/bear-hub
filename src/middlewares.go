@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/justinas/alice"
-	"github.com/nathan-hello/htmx-template/src/routes"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
@@ -35,7 +34,7 @@ func AllowMethods(methods ...string) alice.Constructor {
 }
 
 // This returned an alice.Constructor instead of
-// being an alice.Constructor because it requires an argument (path string).
+// being an alice.Constructor because it requires an argument (key, value string).
 func CreateHeader(key string, value string) alice.Constructor {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +50,7 @@ func RejectSubroute(path string) alice.Constructor {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != path {
-				routes.HandleRedirect(w, r, "/", utils.Err404)
+				http.NotFound(w, r)
 				return
 			}
 			next.ServeHTTP(w, r)
