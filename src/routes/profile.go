@@ -12,13 +12,13 @@ import (
 func UserProfile(w http.ResponseWriter, r *http.Request) {
 	conn, err := utils.Db()
 	if err != nil {
-		HandleRedirect(w, r, "/", http.StatusInternalServerError, utils.ErrDbConnection)
+		HandleRedirect(w, r, "/", utils.ErrDbConnection)
 		return
 	}
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
-		HandleRedirect(w, r, "/profile", http.StatusNotFound, utils.ErrProfileNotFound)
+		HandleRedirect(w, r, "/profile", utils.ErrProfileNotFound)
 		return
 	}
 
@@ -28,7 +28,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err != sql.ErrNoRows {
-			HandleRedirect(w, r, "/", http.StatusInternalServerError, utils.ErrDbConnection)
+			HandleRedirect(w, r, "/", utils.ErrDbConnection)
 		}
 	}
 

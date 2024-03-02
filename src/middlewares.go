@@ -51,7 +51,7 @@ func RejectSubroute(path string) alice.Constructor {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != path {
-				routes.HandleRedirect(w, r, "/", http.StatusNotFound, utils.Err404)
+				routes.HandleRedirect(w, r, "/", utils.Err404)
 				return
 			}
 			next.ServeHTTP(w, r)

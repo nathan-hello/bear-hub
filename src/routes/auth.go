@@ -12,7 +12,7 @@ import (
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
 	if ok {
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
 
@@ -23,7 +23,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		if err := r.ParseForm(); err != nil {
+		err := r.ParseForm()
+		if err != nil {
 			returnFormWithErrors(&[]utils.AuthError{
 				{Err: utils.ErrParseForm},
 			})
@@ -71,7 +72,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
 	if ok {
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
 
@@ -106,7 +107,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		}
 
 		utils.SetTokenCookies(w, access, refresh)
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), http.StatusSeeOther, nil)
+		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
 
@@ -118,6 +119,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
 	utils.DeleteJwtCookies(w)
-	HandleRedirect(w, r, "/", http.StatusSeeOther, utils.ErrUserSignedOut)
+	HandleRedirect(w, r, "/", utils.ErrUserSignedOut)
 	return
 }
