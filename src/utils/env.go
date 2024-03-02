@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
 	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
@@ -59,19 +60,28 @@ func parseRequiredEnvVars(dotenv map[string]string, fields []string) Dotenv {
 
 }
 
-func NewEnv() Dotenv {
+func NewEnv() (Dotenv, error) {
 	requiredEnvVars := parseConfigStruct(Dotenv{})
 
 	dotenv, err := godotenv.Read(".env")
 	if err != nil {
-		panic(err)
+		return Dotenv{}, err
 	}
 
-	return parseRequiredEnvVars(dotenv, requiredEnvVars)
+	return parseRequiredEnvVars(dotenv, requiredEnvVars), nil
 
 }
 
-var g Dotenv = NewEnv()
+var g Dotenv
+
+func InitEnv() error {
+	g, err = NewEnv()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 var C = FullConfig{
 	DB_URI:              g.DB_URI,
 	JWT_SECRET:          g.JWT_SECRET,
@@ -91,3 +101,4 @@ func Db() (*db.Queries, error) {
 	}
 	return db.New(d), nil
 }
+

@@ -10,7 +10,7 @@ import (
 	"github.com/nathan-hello/htmx-template/src/routes"
 )
 
-func HandleSites() {
+func SiteRouter() {
 
 	type Site struct {
 		route       string
@@ -87,7 +87,7 @@ type Static struct {
 	contentType string
 }
 
-func HandlePublic() {
+func PublicRouter() {
 
 	files := []Static{}
 
@@ -106,8 +106,8 @@ func HandlePublic() {
 			files = append(files, Static{route: staticRoute, filepath: path, contentType: "text/css"})
 			return err
 		}
-		imgExts := []string{".ico", ".png", ".jpg", ".webm"}
 
+		imgExts := []string{".ico", ".png", ".jpg", ".webm"}
 		for _, v := range imgExts {
 			match, err := filepath.Match("*"+v, filepath.Base(path))
 			if err != nil {
