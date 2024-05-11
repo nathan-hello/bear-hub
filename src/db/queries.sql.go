@@ -77,27 +77,25 @@ func (q *Queries) InsertChatroom(ctx context.Context, arg InsertChatroomParams) 
 	return id, err
 }
 
-const insertMessage = `-- name: InsertMessage :one
-INSERT INTO messages (author, message, room_id) VALUES ($1, $2, $3) RETURNING id, created_at, author, message, room_id
+const insertMessage = `-- name: InsertMessage :exec
+INSERT INTO messages (author, message, room_id, created_at) VALUES ($1, $2, $3, $4)
 `
 
 type InsertMessageParams struct {
-	Author  string
-	Message string
-	RoomID  int64
+	Author    string
+	Message   string
+	RoomID    int64
+	CreatedAt time.Time
 }
 
-func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) (Message, error) {
-	row := q.db.QueryRowContext(ctx, insertMessage, arg.Author, arg.Message, arg.RoomID)
-	var i Message
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.Author,
-		&i.Message,
-		&i.RoomID,
+func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) error {
+	_, err := q.db.ExecContext(ctx, insertMessage,
+		arg.Author,
+		arg.Message,
+		arg.RoomID,
+		arg.CreatedAt,
 	)
-	return i, err
+	return err
 }
 
 const insertTodo = `-- name: InsertTodo :one
