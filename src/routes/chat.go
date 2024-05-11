@@ -6,9 +6,12 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	gws "github.com/gorilla/websocket"
 	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 var upgrader = gws.Upgrader{
@@ -54,17 +57,14 @@ var manager = Manager{
 	clients: make(map[*gws.Conn]bool),
 }
 
-type ChatParse struct {
-	Text string `json:"msg-input"`
-}
-
-type ChatResponse struct {
-	User  string
-	Color string
-	Text  string
-}
-
+// TODO: error handling to the client
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
+	d, err := utils.Db()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -82,64 +82,73 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("clientMsg: %s, err: %#v\n", clientMsg, err)
 
-		t := &ChatParse{}
-		json.Unmarshal(clientMsg, &t)
+		t := &utils.ChatMessage{}
+		err = json.Unmarshal(clientMsg, &t)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		log.Printf("unmarshal: %#v, err: %#v\n", t, err)
-
-		resp := ChatResponse{
-			User:  "rewq",
-			Color: "bg-blue-200",
-			Text:  t.Text,
+		if t.Text == "" {
+			continue
 		}
+		if t.Author == "" {
+			t.Author = "anon"
+		}
+		if t.Color == "" {
+			t.Color = "bg-blue-200"
+		}
+		t.CreatedAt = time.Now()
 
 		var buffMsg bytes.Buffer
-		components.ChatMessage(resp.Text).Render(r.Context(), &buffMsg)
-		log.Printf("buffMsg: %s, err: %#v\n", buffMsg, err)
+		components.ChatMessage(t).Render(r.Context(), &buffMsg)
+		log.Printf("buffMsg: %s, err: %#v\n", buffMsg.String(), err)
 
 		manager.BroadcastMessage(buffMsg.Bytes())
-
+		err = d.InsertMessage(r.Context(),
+			db.InsertMessageParams{
+				RoomID:    1,
+				Author:    t.Author,
+				Message:   t.Text,
+				CreatedAt: t.CreatedAt,
+			})
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		d, err := utils.Db()
+		if err != nil {
+			log.Println(err)
+		}
+
+		recents, err := d.SelectMessagesByChatroom(
+			r.Context(),
+			db.SelectMessagesByChatroomParams{
+				RoomID: 1,
+				Limit:  10,
+			})
+		if err != nil {
+			log.Println(err)
+		}
+
+		var buffer bytes.Buffer
+		for _, msg := range recents {
+			components.ChatMessage(&utils.ChatMessage{
+				Author:    msg.Author,
+				Text:      msg.Message,
+				Color:     "bg-blue-200",
+				CreatedAt: msg.CreatedAt,
+			}).Render(r.Context(), &buffer)
+		}
+
 		components.ChatRoomRoot().Render(r.Context(), w)
+		w.Write(buffer.Bytes())
+
 		return
 	}
 }
-
-// func postChat(w http.ResponseWriter, r *http.Request) {
-// 	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
-// 	if !ok {
-// 		w.WriteHeader(http.StatusUnauthorized)
-// 		return
-// 	}
-//
-// 	if err := r.ParseForm(); err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
-//
-// 	conn, err := utils.Db()
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-//
-// 	t, err := conn.InsertChatroom(
-// 		r.Context(),
-// 		db.InsertChatroomParams{
-// 			Name:    r.FormValue("name"),
-// 			Creator: claims.Username,
-// 		})
-//
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 	}
-//
-// }

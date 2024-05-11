@@ -68,8 +68,8 @@ UPDATE chatrooms SET name = $1 WHERE id = $2 RETURNING *;
 SELECT * FROM messages WHERE room_id = $1 ORDER BY created_at DESC LIMIT $2;
 -- name: SelectMessagesByUser :many
 SELECT * FROM messages WHERE author = $1 ORDER BY created_at DESC LIMIT $2;
--- name: InsertMessage :one
-INSERT INTO messages (author, message, room_id) VALUES ($1, $2, $3) RETURNING *;
+-- name: InsertMessage :exec
+INSERT INTO messages (author, message, room_id, created_at) VALUES ($1, $2, $3, $4);
 -- name: DeleteMessage :exec
 DELETE FROM messages WHERE id = $1;
 -- name: UpdateMessage :one

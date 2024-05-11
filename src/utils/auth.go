@@ -58,12 +58,12 @@ func (c *SignUpCredentials) validateStrings() *[]AuthError {
 		ok = false
 	}
 
-	if !(len(c.Username) > 3) {
+	if len(c.Username) < 3 {
 		errs = append(errs, AuthError{Field: FieldUsername, Err: ErrUsernameTooShort, Value: c.Username})
 		ok = false
 	}
 
-	if !(len(c.Password) > 7) {
+	if len(c.Password) < 7 {
 		errs = append(errs, AuthError{Field: FieldPassword, Err: ErrPasswordTooShort, Value: ""})
 		ok = false
 	}

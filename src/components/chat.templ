@@ -1,17 +1,31 @@
 package components
 
+import "github.com/nathan-hello/htmx-template/src/utils"
+import "fmt"
+
 templ ChatRoomRoot() {
 	// <script src="/js/chat.js"></script>
 	@layout("Bear Chat", "Bear Chat") {
 		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 		<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
 		<script> htmx.logAll() </script>
-		<div id="messages" class="flex flex-col h-96 w-48 bg-gray-700 mx-auto whitespace-break-spaces  "></div>
-		<div class="">
-			<form id="form" ws-send="true" ws-connect="/ws-chat" hx-ext="ws">
+		<script>
+                        let inputElement = document.getElementById("msg-input-id");
+                        document.addEventListener("htmx:wsAfterSend"), function(event) {
+                                inputElement.value = "";
+                        })
+                </script>
+		<div id="messages" class="h-96 w-80 bg-gray-700 whitespace-break-spaces gap-y-2 flex flex-col  "></div>
+		<div class="h-96 w-80 mx-auto">
+			<form
+				id="chat-form-id"
+				ws-send="true"
+				ws-connect="/ws-chat"
+				hx-ext="ws"
+			>
 				<input
 					class="w-min-0 mx-auto"
-					name="msg-input"
+					name="msg-text"
 					id="msg-input-id"
 					type="text"
 					placeholder="Write a message..."
@@ -22,10 +36,10 @@ templ ChatRoomRoot() {
 	}
 }
 
-templ ChatMessage(s string) {
+templ ChatMessage(chat *utils.ChatMessage) {
 	<div class="bg-blue-200" hx-swap-oob="beforeend:#messages">
-    <span class=""></span>
-		<span class="text-white">{ s }</span>
+		<span class={ fmt.Sprintf("%s ", chat.Color) }>{ chat.Author }</span>
+		<span class="text-white">{ chat.Text }</span>
 	</div>
 }
 
