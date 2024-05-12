@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/justinas/alice"
-	"github.com/nathan-hello/htmx-template/src/utils"
+	"github.com/nathan-hello/htmx-template/src/auth"
 )
 
 func Logging(next http.Handler) http.Handler {
@@ -61,13 +61,13 @@ func RejectSubroute(path string) alice.Constructor {
 func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		access, ok := utils.ValidateJwtOrDelete(w, r)
+		access, ok := auth.ValidateJwtOrDelete(w, r)
 		if !ok {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		claims, err := utils.ParseToken(access)
+		claims, err := auth.ParseToken(access)
 		if err != nil {
 			log.Print("ERR: parsetoken:", access, err)
 			next.ServeHTTP(w, r)
@@ -78,7 +78,7 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 		// we have to do a type assertion whenever we use it anyways
 		// and that will check if the type is ok
 		var claimsObj = claims
-		newCtx := context.WithValue(r.Context(), utils.ClaimsContextKey, claimsObj)
+		newCtx := context.WithValue(r.Context(), auth.ClaimsContextKey, claimsObj)
 
 		next.ServeHTTP(w, r.WithContext(newCtx))
 	})

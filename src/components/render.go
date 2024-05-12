@@ -3,8 +3,8 @@ package components
 import (
 	"time"
 
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/db"
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 type ProfileProps struct {
@@ -22,7 +22,7 @@ type FieldError struct {
 	Err         string
 }
 
-func RenderAuthError(s *[]utils.AuthError) map[string]FieldError {
+func RenderAuthError(s *[]auth.AuthError) map[string]FieldError {
 	if s == nil {
 		return nil
 	}

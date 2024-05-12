@@ -1,27 +1,34 @@
-package utils
+package auth
 
 import (
 	"net/http"
 	"time"
+
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func SetTokenCookies(w http.ResponseWriter, a string, r string) {
+        secure := true
+        if utils.Env().MODE == "dev" {
+                secure = false
+        }
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    a,
-		Expires:  time.Now().Add(Env().REFRESH_EXPIRY_TIME), // Access token expiry time
-		Secure:   true,
-		HttpOnly: true,
+		Expires:  time.Now().Add(utils.Env().REFRESH_EXPIRY_TIME),
+		Secure:   secure,
+		HttpOnly: secure,
 		Path:     "/",
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
+
 	})
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    r,
-		Expires:  time.Now().Add(Env().REFRESH_EXPIRY_TIME), // Refresh token expiry time, e.g., 7 days
-		Secure:   true,
-		HttpOnly: true,
+		Expires:  time.Now().Add(utils.Env().REFRESH_EXPIRY_TIME),
+		Secure:   secure,
+		HttpOnly: secure,
 		Path:     "/",
 		SameSite: http.SameSiteStrictMode,
 	})
@@ -59,15 +66,22 @@ func DeleteJwtCookies(w http.ResponseWriter) {
 }
 
 func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) {
-
 	access, err := r.Cookie("access_token")
 	if err != nil {
+                if err == http.ErrNoCookie {
+                        return "", false
+                }
+                utils.PrintlnOnDevMode("delete access because r.Cookie err", err) 
 		DeleteJwtCookies(w)
 		return "", false
 	}
 
 	refresh, err := r.Cookie("refresh_token")
 	if err != nil {
+                if err == http.ErrNoCookie {
+                        return "", false
+                }
+                utils.PrintlnOnDevMode("delete refresh because r.Cookie err", err) 
 		DeleteJwtCookies(w)
 		return "", false
 	}
@@ -75,6 +89,7 @@ func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) 
 	vAccess, vRefresh, err := ValidatePairOrRefresh(access.Value, refresh.Value)
 
 	if err != nil {
+                utils.PrintlnOnDevMode("delete vaccess/vrefresh", err) 
 		DeleteJwtCookies(w)
 		return "", false
 	}

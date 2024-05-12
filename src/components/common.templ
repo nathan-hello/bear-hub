@@ -52,7 +52,6 @@ templ layout(title string) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ title }</title>
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-			<script src="/js/alert.js"></script>
 			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
 			@navbar(title)
 		</head>
@@ -63,7 +62,6 @@ templ layout(title string) {
 	</html>
 }
 
-// perhaps change this to an oob swap with an empty element in the root template, then alert.js isn't necessary
 templ AlertBox(s string) {
 	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
 		{ s }

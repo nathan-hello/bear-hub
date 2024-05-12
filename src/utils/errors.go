@@ -31,6 +31,7 @@ var (
 	ErrJwtNotInDb       = errors.New("internal Server Error - 11004")
 	ErrJwtMethodBad     = errors.New("internal Server Error - 11005")
 	ErrJwtInvalidInDb   = errors.New("internal Server Error - 11007")
+	ErrJwtInsertInDb       = errors.New("internal Server Error - 11008")
 	ErrJwtPairInvalid   = errors.New("internal Server Error - 11008")
 	ErrJwtGoodAccBadRef = errors.New("internal Server Error - 11013")
 )

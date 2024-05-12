@@ -1,7 +1,7 @@
 package components
 
 import "fmt"
-import "github.com/nathan-hello/htmx-template/src/utils"
+import "github.com/nathan-hello/htmx-template/src/auth"
 
 templ user(borderColor string, value string) {
 	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
@@ -82,7 +82,7 @@ templ passwordConfirm(borderColor string, value string) {
 		<label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
 		<input
 			type="password"
-			name={ utils.FieldPassConf }
+			name={ auth.FieldPassConf }
 			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor) }
 			placeholder="•••••••••"
 			required
@@ -99,10 +99,10 @@ templ SignUpForm(s map[string]FieldError) {
 	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
-		@email(s[utils.FieldEmail].BorderColor, s[utils.FieldEmail].Value)
-		@username(s[utils.FieldUsername].BorderColor, s[utils.FieldUsername].Value)
-		@password(s[utils.FieldPassword].BorderColor, "")
-		@passwordConfirm(s[utils.FieldPassConf].BorderColor, "")
+		@email(s[auth.FieldEmail].BorderColor, s[auth.FieldEmail].Value)
+		@username(s[auth.FieldUsername].BorderColor, s[auth.FieldUsername].Value)
+		@password(s[auth.FieldPassword].BorderColor, "")
+		@passwordConfirm(s[auth.FieldPassConf].BorderColor, "")
 		<button onclick="document.getElementById('errors-container').remove()" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
@@ -123,8 +123,8 @@ templ SignInForm(s map[string]FieldError) {
 	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
-		@user(s[utils.FieldUser].BorderColor, s[utils.FieldUser].Value)
-		@password(s[utils.FieldPassword].BorderColor, "")
+		@user(s[auth.FieldUser].BorderColor, s[auth.FieldUser].Value)
+		@password(s[auth.FieldPassword].BorderColor, "")
 		<button onclick="document.getElementById('errors-container').remove();" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }

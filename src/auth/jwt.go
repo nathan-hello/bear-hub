@@ -1,13 +1,13 @@
-package utils
+package auth
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 type JwtParams struct {
@@ -15,6 +15,10 @@ type JwtParams struct {
 	UserId   uuid.UUID
 	Family   uuid.UUID
 }
+
+type ContextClaimType string
+
+const ClaimsContextKey ContextClaimType = "claims"
 
 type CustomClaims struct {
 	jwt.RegisteredClaims
@@ -26,7 +30,7 @@ type CustomClaims struct {
 
 func NewTokenPair(j *JwtParams) (string, string, error) {
 	ac := jwt.MapClaims{
-		"exp":      time.Now().Add(Env().ACCESS_EXPIRY_TIME).Unix(),
+		"exp":      time.Now().Add(utils.Env().ACCESS_EXPIRY_TIME).Unix(),
 		"iat":      time.Now().Unix(),
 		"iss":      "no-magic-stack-example",
 		"sub":      j.UserId,
@@ -37,13 +41,13 @@ func NewTokenPair(j *JwtParams) (string, string, error) {
 
 	access := jwt.NewWithClaims(jwt.SigningMethodHS256, &ac)
 
-	as, err := access.SignedString([]byte(Env().JWT_SECRET))
+	as, err := access.SignedString([]byte(utils.Env().JWT_SECRET))
 	if err != nil {
 		return "", "", err
 	}
 
 	rc := jwt.MapClaims{
-		"exp":      time.Now().Add(Env().REFRESH_EXPIRY_TIME).Unix(),
+		"exp":      time.Now().Add(utils.Env().REFRESH_EXPIRY_TIME).Unix(),
 		"iat":      time.Now().Unix(),
 		"iss":      "no-magic-stack-example",
 		"sub":      j.UserId,
@@ -53,7 +57,7 @@ func NewTokenPair(j *JwtParams) (string, string, error) {
 	}
 
 	refresh := jwt.NewWithClaims(jwt.SigningMethodHS256, &rc)
-	rs, err := refresh.SignedString([]byte(Env().JWT_SECRET))
+	rs, err := refresh.SignedString([]byte(utils.Env().JWT_SECRET))
 	if err != nil {
 		return "", "", err
 	}
@@ -70,9 +74,9 @@ func ParseToken(t string) (*CustomClaims, error) {
 			if !ok {
 				// this error will not show unless logged because
 				// the jwt library wraps this error
-				return nil, ErrJwtMethodBad
+				return nil, utils.ErrJwtMethodBad
 			}
-			return []byte(Env().JWT_SECRET), nil
+			return []byte(utils.Env().JWT_SECRET), nil
 		})
 
 	if err != nil {
@@ -85,7 +89,7 @@ func ParseToken(t string) (*CustomClaims, error) {
 
 	claims, ok := token.Claims.(*CustomClaims)
 	if !ok {
-		return nil, ErrParsingJwt
+		return nil, utils.ErrParsingJwt
 	}
 
 	return claims, nil
@@ -99,17 +103,17 @@ func jwtValidLocal(t string) error {
 			if !ok {
 				// this error will not show unless logged because
 				// the jwt library wraps this error
-				return nil, ErrJwtMethodBad
+				return nil, utils.ErrJwtMethodBad
 			}
-			return []byte(Env().JWT_SECRET), nil
+			return []byte(utils.Env().JWT_SECRET), nil
 		})
 
 	if err != nil {
-		return ErrParsingJwt
+		return utils.ErrParsingJwt
 	}
 
 	if !token.Valid {
-		return ErrInvalidToken
+		return utils.ErrInvalidToken
 	}
 
 	return nil
@@ -121,20 +125,21 @@ func ValidateJwt(t string) error {
 		return err
 	}
 
-	ctx := context.Background()
-	d := Db()
-
-	token, err := d.SelectTokenFromJwtString(ctx, t)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return ErrJwtNotInDb
-		}
-		return ErrDbSelectJwt
-	}
-	if !token.Valid {
-		return ErrJwtInvalidInDb
-	}
+        // TODO: validate jwt in database
+	// ctx := context.Background()
+	// d := Db()
+	//
+	// token, err := d.SelectTokenFromJwtString(ctx, t)
+	//
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		return ErrJwtNotInDb
+	// 	}
+	// 	return ErrDbSelectJwt
+	// }
+	// if !token.Valid {
+	// 	return ErrJwtInvalidInDb
+	// }
 
 	return nil
 }
@@ -145,16 +150,16 @@ func InsertNewToken(t string, jwt_type string) error {
 		return err
 	}
 	ctx := context.Background()
-	d := Db()
+	d := utils.Db()
 
 	tokenId, err := d.InsertToken(ctx, db.InsertTokenParams{JwtType: jwt_type, Jwt: t, Valid: true, Family: claims.Family})
 	if err != nil {
-		return ErrDbInsertToken
+		return utils.ErrDbInsertToken
 	}
 
 	err = d.InsertUsersTokens(ctx, db.InsertUsersTokensParams{UserID: claims.UserId, TokenID: tokenId})
 	if err != nil {
-		return ErrDbInsertUsersToken
+		return utils.ErrDbInsertUsersToken
 	}
 	return nil
 }
@@ -162,11 +167,11 @@ func InsertNewToken(t string, jwt_type string) error {
 func InvalidateJwtFamily(t string) error {
 
 	ctx := context.Background()
-	d := Db()
+	d := utils.Db()
 
 	token, err := d.SelectTokenFromJwtString(ctx, t)
 	if err != nil {
-		return ErrDbSelectJwt
+		return utils.ErrDbSelectJwt
 	}
 
 	claims, err := ParseToken(token.Jwt)
@@ -176,7 +181,7 @@ func InvalidateJwtFamily(t string) error {
 
 	err = d.UpdateTokensFamilyInvalid(ctx, claims.Family)
 	if err != nil {
-		return ErrDbUpdateTokensInvalid
+		return utils.ErrDbUpdateTokensInvalid
 	}
 
 	return nil
@@ -199,22 +204,29 @@ func NewPairFromRefresh(r string) (string, string, error) {
 func ValidatePairOrRefresh(a string, r string) (string, string, error) {
 
 	err := ValidateJwt(a)
+        // if access is good, let's just refresh
 	if err == nil {
 		err = ValidateJwt(r)
+                // if refresh and access are good, return to sender
 		if err == nil {
 			return a, r, nil
 		}
-		return "", "", ErrJwtGoodAccBadRef
+                // if access is good but refresh is bad, we don't refresh based off
+                // of access tokens, so it's better to just error and reauth
+                utils.PrintlnOnDevMode("errjwtgoodaccbadref:", err)
+		return "", "", utils.ErrJwtGoodAccBadRef
 	}
 
+        // even if access was bad, maybe the refresh is good
 	err = ValidateJwt(r)
 	if err != nil {
-		if err == ErrJwtInvalidInDb {
+		if err == utils.ErrJwtInvalidInDb {
 			return "", "", InvalidateJwtFamily(r)
 		}
 		return "", "", err
 	}
 
+        // sweet, a good refresh jwt. let's make a new pair
 	access, refresh, err := NewPairFromRefresh(r)
 	if err != nil {
 		return "", "", err
