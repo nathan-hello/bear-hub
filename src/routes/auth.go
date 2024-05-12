@@ -5,18 +5,20 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
 	if ok {
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
 
-	returnFormWithErrors := func(errs *[]utils.AuthError) {
+	returnFormWithErrors := func(errs *[]auth.AuthError) {
 		components.SignUpForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 		errs = nil
 	}
@@ -24,12 +26,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		err := r.ParseForm()
 		if err != nil {
-			returnFormWithErrors(&[]utils.AuthError{
+			returnFormWithErrors(&[]auth.AuthError{
 				{Err: utils.ErrParseForm},
 			})
 		}
 
-		cred := utils.SignUpCredentials{
+		cred := auth.SignUpCredentials{
 			Username: r.FormValue("username"),
 			Password: r.FormValue("password"),
 			PassConf: r.FormValue("password-confirmation"),
@@ -43,21 +45,36 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		access, refresh, err := utils.NewTokenPair(
-			&utils.JwtParams{
+                jwtFamily := uuid.New()
+		access, refresh, err := auth.NewTokenPair(
+			&auth.JwtParams{
 				Username: username,
 				UserId:   *userId,
-				Family:   uuid.New(),
+				Family:   jwtFamily,
 			})
-
+                utils.PrintlnOnDevMode("access, refresh", access, refresh)
 		if err != nil {
-			returnFormWithErrors(&[]utils.AuthError{
+			returnFormWithErrors(&[]auth.AuthError{
 				{Err: err},
 			})
 		}
 
-		utils.SetTokenCookies(w, access, refresh)
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/profile/%v", username))
+                d := utils.Db()
+                _, err = d.InsertToken(r.Context(), db.InsertTokenParams{
+                        JwtType: "access_token",
+                        Jwt: access,
+                        Valid: true,
+                        Family: jwtFamily,
+                })
+
+		if err != nil {
+			returnFormWithErrors(&[]auth.AuthError{
+				{Err: err},
+			})
+		}
+
+		auth.SetTokenCookies(w, access, refresh)
+		w.Header().Set("HX-Redirect", "/")
 		return
 
 	}
@@ -69,7 +86,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(utils.ClaimsContextKey).(utils.CustomClaims)
+	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
 	if ok {
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
@@ -77,11 +94,11 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			components.SignInForm(components.RenderAuthError(&[]utils.AuthError{{Err: err}})).Render(r.Context(), w)
+			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
 			return
 		}
 
-		cred := utils.SignInCredentials{
+		cred := auth.SignInCredentials{
 			User: r.FormValue("user"),
 			Pass: r.FormValue("password"),
 		}
@@ -93,11 +110,12 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		access, refresh, err := utils.NewTokenPair(
-			&utils.JwtParams{
+                jwtFamily := uuid.New()
+		access, refresh, err := auth.NewTokenPair(
+			&auth.JwtParams{
 				Username: user.Username,
 				UserId:   user.ID,
-				Family:   uuid.New(),
+				Family:   jwtFamily,
 			})
 
 		if err != nil {
@@ -105,7 +123,8 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		utils.SetTokenCookies(w, access, refresh)
+
+		auth.SetTokenCookies(w, access, refresh)
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
@@ -117,6 +136,6 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
-	utils.DeleteJwtCookies(w)
+	auth.DeleteJwtCookies(w)
 	HandleRedirect(w, r, "/", utils.ErrUserSignedOut)
 }

@@ -44,6 +44,13 @@ func SiteRouter() {
 				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST"),
 			)},
+		{route: "/signout",
+			hfunc: routes.SignOut,
+			middlewares: alice.New(
+				Logging,
+				InjectClaimsOnValidToken,
+				AllowMethods("GET", "POST"),
+			)},
 		{route: "/signin",
 			hfunc: routes.SignIn,
 			middlewares: alice.New(
@@ -58,16 +65,11 @@ func SiteRouter() {
 				InjectClaimsOnValidToken,
 				AllowMethods("GET"),
 			)},
-		{route: "/c",
-			hfunc: routes.MicroComponents,
-			middlewares: alice.New(
-				Logging,
-				AllowMethods("GET"),
-			)},
 		{route: "/chat",
 			hfunc: routes.Chat,
 			middlewares: alice.New(
 				Logging,
+				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST", "DELETE", "PUT"),
 			)},
 		{route: "/ws-chat",

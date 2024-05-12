@@ -12,9 +12,6 @@ import (
 	"github.com/nathan-hello/htmx-template/src/db"
 )
 
-type ContextClaimType string
-
-const ClaimsContextKey ContextClaimType = "claims"
 
 type Dotenv struct {
 	DB_URI     string
@@ -26,6 +23,7 @@ type FullConfig struct {
 	JWT_SECRET          string
 	REFRESH_EXPIRY_TIME time.Duration
 	ACCESS_EXPIRY_TIME  time.Duration
+        MODE string // "prod", "dev", "test"
 }
 
 func parseConfigStruct(s interface{}) []string {
@@ -79,7 +77,6 @@ var dbQueries *db.Queries
 
 func InitEnv(path string) error {
 	g, err := NewEnv(path)
-	fmt.Println("dotenv g", g)
 	if err != nil {
 		return err
 	}
@@ -93,6 +90,7 @@ func InitEnv(path string) error {
 			JWT_SECRET:          envFile.JWT_SECRET,
 			REFRESH_EXPIRY_TIME: time.Hour * 72,
 			ACCESS_EXPIRY_TIME:  time.Hour * 24,
+                        MODE: "dev",
 		}
 		initialized = true
 	}
@@ -104,7 +102,6 @@ func Env() *FullConfig {
 }
 
 func DbInit() error {
-	fmt.Println("env url", Env().DB_URI)
 	var d, err = sql.Open("postgres", Env().DB_URI)
 	if err != nil {
 		return err

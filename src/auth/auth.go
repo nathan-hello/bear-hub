@@ -1,4 +1,4 @@
-package utils
+package auth
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/src/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -54,23 +55,23 @@ func (c *SignUpCredentials) validateStrings() *[]AuthError {
 
 	_, emailErr := mail.ParseAddress(c.Email)
 	if c.Email != "" && emailErr != nil {
-		errs = append(errs, AuthError{Field: FieldEmail, Err: ErrEmailInvalid, Value: c.Email})
+		errs = append(errs, AuthError{Field: FieldEmail, Err: utils.ErrEmailInvalid, Value: c.Email})
 		ok = false
 	}
 
 	if len(c.Username) < 3 {
-		errs = append(errs, AuthError{Field: FieldUsername, Err: ErrUsernameTooShort, Value: c.Username})
+		errs = append(errs, AuthError{Field: FieldUsername, Err: utils.ErrUsernameTooShort, Value: c.Username})
 		ok = false
 	}
 
 	if len(c.Password) < 7 {
-		errs = append(errs, AuthError{Field: FieldPassword, Err: ErrPasswordTooShort, Value: ""})
+		errs = append(errs, AuthError{Field: FieldPassword, Err: utils.ErrPasswordTooShort, Value: ""})
 		ok = false
 	}
 
 	if c.Password != c.PassConf {
 		fmt.Printf("pass: %#v\npassconf: %#v\n", c.Password, c.PassConf)
-		errs = append(errs, AuthError{Field: FieldPassConf, Err: ErrPassNoMatch, Value: ""})
+		errs = append(errs, AuthError{Field: FieldPassConf, Err: utils.ErrPassNoMatch, Value: ""})
 		ok = false
 	}
 
@@ -89,12 +90,12 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
-	conn := Db()
+	conn := utils.Db()
 
 	email := sql.NullString{String: c.Email, Valid: c.Email != ""}
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
 	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: ErrHashPassword, Value: ""})
+		errs = append(errs, AuthError{Field: "", Err: utils.ErrHashPassword, Value: ""})
 		return "", nil, &errs
 	}
 
@@ -108,7 +109,9 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 		})
 
 	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: ErrDbInsertUser, Value: ""})
+                utils.PrintlnOnDevMode("insert user", err)
+                
+		errs = append(errs, AuthError{Field: "", Err: utils.ErrDbInsertUser, Value: ""})
 		return "", nil, &errs
 	}
 
@@ -119,24 +122,24 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 	errs := []AuthError{}
 	if c.User == "" || c.Pass == "" {
-		errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+		errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
 		return nil, &errs
 	}
 
 	var user db.User
 	ctx := context.Background()
-	conn := Db()
+	conn := utils.Db()
 
 	if _, err := mail.ParseAddress(c.User); err == nil {
 		user, err = conn.SelectUserByEmail(ctx, sql.NullString{String: c.User, Valid: err == nil})
 		if err != nil {
-			errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
 			return nil, &errs
 		}
 	} else {
 		user, err = conn.SelectUserByUsername(ctx, c.User)
 		if err != nil {
-			errs = append(errs, AuthError{Field: FieldUser, Err: ErrBadLogin, Value: c.User})
+			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
 			return nil, &errs
 		}
 	}
@@ -144,7 +147,7 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Pass))
 
 	if err != nil {
-		errs = append(errs, AuthError{Err: ErrHashPassword})
+		errs = append(errs, AuthError{Err: utils.ErrHashPassword})
 		return nil, &errs
 	}
 

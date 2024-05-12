@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
@@ -12,7 +13,7 @@ import (
 
 func Todo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims, ok := r.Context().Value(utils.ClaimsContextKey).(*utils.CustomClaims)
+	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
 	if !ok {
 		HandleRedirect(w, r, "/signin", utils.ErrBadLogin)
 		return
