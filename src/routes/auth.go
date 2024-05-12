@@ -86,9 +86,10 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
+	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+        fmt.Printf("claimscheck, %#v\n%#v, %#v", claims, ok, r.Context().Value(auth.ClaimsContextKey))
 	if ok {
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
+		w.Header().Set("HX-Redirect", "/")
 		return
 	}
 
