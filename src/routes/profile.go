@@ -10,11 +10,7 @@ import (
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {
-	conn, err := utils.Db()
-	if err != nil {
-		HandleRedirect(w, r, "/", utils.ErrDbConnection)
-		return
-	}
+	conn := utils.Db()
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {

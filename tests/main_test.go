@@ -9,20 +9,17 @@ import (
 )
 
 func TestDatabaseConnection(t *testing.T) {
+	initEnv(t)
 	ctx := context.Background()
+	d := utils.Db()
 
-	f, err := utils.Db()
-	if err != nil {
-		t.Error(err)
-	}
-
-	user, err := f.InsertUser(ctx, db.InsertUserParams{
+	user, err := d.InsertUser(ctx, db.InsertUserParams{
 		Username:          "black-bear-test-22121231321",
 		EncryptedPassword: "honey",
 	})
 
 	defer func() {
-		err = f.DeleteUser(ctx, user.ID)
+		err = d.DeleteUser(ctx, user.ID)
 		if err != nil {
 			t.Error(err)
 		}
@@ -34,7 +31,7 @@ func TestDatabaseConnection(t *testing.T) {
 
 	// fmt.Printf("New user: %#v\n", user)
 
-	fullUser, err := f.SelectUserByUsername(ctx, user.Username)
+	fullUser, err := d.SelectUserByUsername(ctx, user.Username)
 
 	if err != nil {
 		t.Error(err)
@@ -42,10 +39,10 @@ func TestDatabaseConnection(t *testing.T) {
 
 	// fmt.Printf("full user %#v\n", fullUser)
 
-	newTodo, err := f.InsertTodo(ctx, db.InsertTodoParams{Body: "eat honey", Username: fullUser.Username})
+	newTodo, err := d.InsertTodo(ctx, db.InsertTodoParams{Body: "eat honey", Username: fullUser.Username})
 
 	defer func() {
-		err = f.DeleteTodo(ctx, newTodo.ID)
+		err = d.DeleteTodo(ctx, newTodo.ID)
 
 		if err != nil {
 			t.Error(err)
@@ -58,7 +55,7 @@ func TestDatabaseConnection(t *testing.T) {
 
 	// fmt.Printf("newTodo: %#v\n", newTodo)
 
-	_, err = f.SelectTodosByUsername(ctx, fullUser.Username)
+	_, err = d.SelectTodosByUsername(ctx, fullUser.Username)
 
 	if err != nil {
 		t.Error(err)

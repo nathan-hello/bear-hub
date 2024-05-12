@@ -17,7 +17,6 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	returnFormWithErrors := func(errs *[]utils.AuthError) {
-		fmt.Printf("%#v\n", *errs)
 		components.SignUpForm(components.RenderAuthError(errs)).Render(r.Context(), w)
 		errs = nil
 	}
@@ -120,5 +119,4 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 func SignOut(w http.ResponseWriter, r *http.Request) {
 	utils.DeleteJwtCookies(w)
 	HandleRedirect(w, r, "/", utils.ErrUserSignedOut)
-	return
 }

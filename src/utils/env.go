@@ -60,10 +60,10 @@ func parseRequiredEnvVars(dotenv map[string]string, fields []string) Dotenv {
 
 }
 
-func NewEnv() (Dotenv, error) {
+func NewEnv(path string) (Dotenv, error) {
 	requiredEnvVars := parseConfigStruct(Dotenv{})
 
-	dotenv, err := godotenv.Read(".env")
+	dotenv, err := godotenv.Read(path)
 	if err != nil {
 		return Dotenv{}, err
 	}
@@ -72,33 +72,47 @@ func NewEnv() (Dotenv, error) {
 
 }
 
-var g Dotenv
+var envFile Dotenv
+var initialized bool
+var config FullConfig
+var dbQueries *db.Queries
 
-func InitEnv() error {
-	g, err = NewEnv()
+func InitEnv(path string) error {
+	g, err := NewEnv(path)
+	fmt.Println("dotenv g", g)
 	if err != nil {
 		return err
+	}
+	envFile = g
+	if envFile.DB_URI == "" || envFile.JWT_SECRET == "" {
+		panic("DB_URI or JWT_SECRET uninitiated")
+	}
+	if !initialized {
+		config = FullConfig{
+			DB_URI:              envFile.DB_URI,
+			JWT_SECRET:          envFile.JWT_SECRET,
+			REFRESH_EXPIRY_TIME: time.Hour * 72,
+			ACCESS_EXPIRY_TIME:  time.Hour * 24,
+		}
+		initialized = true
 	}
 	return nil
 }
 
-var C = FullConfig{
-	DB_URI:              g.DB_URI,
-	JWT_SECRET:          g.JWT_SECRET,
-	REFRESH_EXPIRY_TIME: time.Hour * 72,
-	ACCESS_EXPIRY_TIME:  time.Hour * 24,
-}
-
 func Env() *FullConfig {
-	return &C
+	return &config
 }
 
-var d, err = sql.Open("postgres", Env().DB_URI)
-
-func Db() (*db.Queries, error) {
+func DbInit() error {
+	fmt.Println("env url", Env().DB_URI)
+	var d, err = sql.Open("postgres", Env().DB_URI)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return db.New(d), nil
+	dbQueries = db.New(d)
+	return nil
 }
 
+func Db() *db.Queries {
+	return dbQueries
+}

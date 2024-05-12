@@ -108,7 +108,7 @@ templ SignUpForm(s map[string]FieldError) {
 }
 
 templ SignUp() {
-	@layout("Bear Hub - Sign Up", "Sign Up") {
+	@layout("Bear Hub - Sign Up") {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignUpForm(nil)
 		</div>
@@ -130,7 +130,7 @@ templ SignInForm(s map[string]FieldError) {
 }
 
 templ SignIn() {
-	@layout("Bear Hub - Sign In", "Sign In") {
+	@layout("Bear Hub - Sign In") {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignInForm(nil)
 			<a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>
