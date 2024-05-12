@@ -17,11 +17,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		HandleRedirect(w, r, "/signin", utils.ErrBadLogin)
 		return
 	}
-	conn, err := utils.Db()
-	if err != nil {
-		HandleRedirect(w, r, "/?500=/", utils.ErrDbConnection)
-		return
-	}
+	conn := utils.Db()
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {

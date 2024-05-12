@@ -89,11 +89,7 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
-	conn, err := Db()
-	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: err, Value: ""})
-		return "", nil, &errs
-	}
+	conn := Db()
 
 	email := sql.NullString{String: c.Email, Valid: c.Email != ""}
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
@@ -129,11 +125,7 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 
 	var user db.User
 	ctx := context.Background()
-	conn, err := Db()
-	if err != nil {
-		errs = append(errs, AuthError{Err: ErrDbConnection})
-		return nil, &errs
-	}
+	conn := Db()
 
 	if _, err := mail.ParseAddress(c.User); err == nil {
 		user, err = conn.SelectUserByEmail(ctx, sql.NullString{String: c.User, Valid: err == nil})
@@ -149,7 +141,7 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 		}
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Pass))
+	err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Pass))
 
 	if err != nil {
 		errs = append(errs, AuthError{Err: ErrHashPassword})

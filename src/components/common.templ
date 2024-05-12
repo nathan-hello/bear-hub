@@ -1,6 +1,15 @@
 package components
 
 templ navbar(title string) {
+	<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                if (document.cookie.indexOf("access_token") !== -1) {
+                        document.getElementById("user-nav-actions").removeAttribute("hidden");
+                } else {
+                        document.getElementById("guest-nav-actions").removeAttribute("hidden");
+                }
+                })
+        </script>
 	<nav class="bg-white border-gray-200 dark:bg-gray-900">
 		<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
 			<a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -13,29 +22,29 @@ templ navbar(title string) {
 					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"></path>
 				</svg>
 			</button>
-			<div class="hidden w-full md:block md:w-auto" id="navbar-default">
-				<ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-					@navbarLink("/", "Home")
+			<div class="invisible w-full md:visible md:flex md:flex-col md:w-auto md:" id="navbar-default">
+				<ul id="user-nav-actions" hidden="true" class="font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
 					@navbarLink("/chat", "Chat")
 					@navbarLink("/todo", "Todo")
+					@navbarLink("/credits", "Credits")
 				</ul>
+				<div id="guest-nav-actions" hidden="true" class="font-medium text-lg w-full flex space-x-5">
+					@navbarLink("/signup", "Sign Up")
+					@navbarLink("/login", "Login")
+					@navbarLink("/credits", "Credits")
+				</div>
 			</div>
 		</div>
 	</nav>
 }
 
-templ navbarLink(href templ.SafeURL, text string, ) {
-	<li>
-		<a
-			href={ href }
-			class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
-		>
-			{ text }
-		</a>
-	</li>
+templ navbarLink(href templ.SafeURL, text string) {
+        <a href={ href } class="py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+        	{ text }
+        </a>
 }
 
-templ layout(name string, title string) {
+templ layout(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>

@@ -11,6 +11,7 @@ import (
 )
 
 func TestNewPairAndParse(t *testing.T) {
+	initEnv(t)
 	access, refresh, err := utils.NewTokenPair(
 		&utils.JwtParams{
 			UserId:   uuid.New(),
@@ -40,6 +41,7 @@ func TestNewPairAndParse(t *testing.T) {
 
 }
 func TestJwtExpiry(t *testing.T) {
+	initEnv(t)
 	c := utils.Env()
 	c.ACCESS_EXPIRY_TIME = time.Second * 1
 	c.REFRESH_EXPIRY_TIME = time.Second * 2
@@ -92,20 +94,17 @@ func TestJwtExpiry(t *testing.T) {
 }
 
 func TestDbJwt(t *testing.T) {
+	initEnv(t)
 	ctx := context.Background()
+	d := utils.Db()
 
-	f, err := utils.Db()
-	if err != nil {
-		t.Error(err)
-	}
-
-	fullUser, err := f.InsertUser(ctx, db.InsertUserParams{
+	fullUser, err := d.InsertUser(ctx, db.InsertUserParams{
 		Username:          "black-bear-test-1",
 		EncryptedPassword: "honey",
 	})
 
 	defer func() {
-		err = f.DeleteUser(ctx, fullUser.ID)
+		err = d.DeleteUser(ctx, fullUser.ID)
 
 		if err != nil {
 			t.Error(err)
@@ -138,7 +137,7 @@ func TestDbJwt(t *testing.T) {
 
 	err = utils.InsertNewToken(access, "access_token")
 	defer func() {
-		err := f.DeleteTokensByUserId(ctx, fullUser.ID)
+		err := d.DeleteTokensByUserId(ctx, fullUser.ID)
 		if err != nil {
 			t.Error(err)
 		}
@@ -151,7 +150,7 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	tokens, err := f.SelectUsersTokens(ctx, fullUser.ID)
+	tokens, err := d.SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -160,12 +159,12 @@ func TestDbJwt(t *testing.T) {
 		t.Error("Token length 0\n")
 	}
 
-	err = f.UpdateUserTokensToInvalid(ctx, fullUser.ID)
+	err = d.UpdateUserTokensToInvalid(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = f.SelectUsersTokens(ctx, fullUser.ID)
+	_, err = d.SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}

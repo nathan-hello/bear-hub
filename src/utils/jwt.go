@@ -122,12 +122,9 @@ func ValidateJwt(t string) error {
 	}
 
 	ctx := context.Background()
-	f, err := Db()
-	if err != nil {
-		return ErrDbConnection
-	}
+	d := Db()
 
-	token, err := f.SelectTokenFromJwtString(ctx, t)
+	token, err := d.SelectTokenFromJwtString(ctx, t)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -148,17 +145,14 @@ func InsertNewToken(t string, jwt_type string) error {
 		return err
 	}
 	ctx := context.Background()
-	f, err := Db()
-	if err != nil {
-		return ErrDbConnection
-	}
+	d := Db()
 
-	tokenId, err := f.InsertToken(ctx, db.InsertTokenParams{JwtType: jwt_type, Jwt: t, Valid: true, Family: claims.Family})
+	tokenId, err := d.InsertToken(ctx, db.InsertTokenParams{JwtType: jwt_type, Jwt: t, Valid: true, Family: claims.Family})
 	if err != nil {
 		return ErrDbInsertToken
 	}
 
-	err = f.InsertUsersTokens(ctx, db.InsertUsersTokensParams{UserID: claims.UserId, TokenID: tokenId})
+	err = d.InsertUsersTokens(ctx, db.InsertUsersTokensParams{UserID: claims.UserId, TokenID: tokenId})
 	if err != nil {
 		return ErrDbInsertUsersToken
 	}
@@ -168,12 +162,9 @@ func InsertNewToken(t string, jwt_type string) error {
 func InvalidateJwtFamily(t string) error {
 
 	ctx := context.Background()
-	f, err := Db()
-	if err != nil {
-		return ErrDbConnection
-	}
+	d := Db()
 
-	token, err := f.SelectTokenFromJwtString(ctx, t)
+	token, err := d.SelectTokenFromJwtString(ctx, t)
 	if err != nil {
 		return ErrDbSelectJwt
 	}
@@ -183,7 +174,7 @@ func InvalidateJwtFamily(t string) error {
 		return err
 	}
 
-	err = f.UpdateTokensFamilyInvalid(ctx, claims.Family)
+	err = d.UpdateTokensFamilyInvalid(ctx, claims.Family)
 	if err != nil {
 		return ErrDbUpdateTokensInvalid
 	}

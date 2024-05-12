@@ -8,10 +8,17 @@ import (
 )
 
 func main() {
-	err := utils.InitEnv()
+	err := utils.InitEnv(".env")
 	if err != nil {
 		log.Fatal(err)
 	}
+	_ = utils.Env()
+
+	err = utils.DbInit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	files, err := src.LoadStaticFiles()
 	if err != nil {
 		log.Fatal(err)
@@ -20,5 +27,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	src.SiteRouter()
 }

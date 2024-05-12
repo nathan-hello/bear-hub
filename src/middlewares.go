@@ -77,7 +77,7 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 		// if claims is nil, it doesn't matter because
 		// we have to do a type assertion whenever we use it anyways
 		// and that will check if the type is ok
-		var claimsObj *utils.CustomClaims = claims
+		var claimsObj = claims
 		newCtx := context.WithValue(r.Context(), utils.ClaimsContextKey, claimsObj)
 
 		next.ServeHTTP(w, r.WithContext(newCtx))

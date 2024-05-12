@@ -99,12 +99,17 @@ func LoadStaticFiles() ([]Static, error) {
 	allowed := append(images, plain...)
 
 	err := filepath.Walk("public", func(path string, info fs.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+		}
+
 		if info.IsDir() {
 			return nil
 		}
 
 		ext := filepath.Ext(info.Name())
-		match := slices.Contains[[]string](allowed, ext)
+		match := slices.Contains(allowed, ext)
 		if !match {
 			fmt.Printf("file %v not in allow list", path)
 			return nil
@@ -131,7 +136,7 @@ func LoadStaticFiles() ([]Static, error) {
 		return nil, err
 	}
 	if len(files) == 0 {
-		return nil, fmt.Errorf("No static files: %#v\n", files)
+		return nil, fmt.Errorf("no static files: %#v", files)
 	}
 
 	return files, nil

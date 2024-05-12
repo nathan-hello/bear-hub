@@ -35,7 +35,7 @@ templ TodoRow(v *db.Todo) {
 }
 
 templ Todo(todos []db.Todo) {
-	@layout("Bear's Todos", "Bear's Todos") {
+	@layout("Bear's Todos") {
 		<div id="todos-table-and-submitter">
 			<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">
 				<table class="w-full text-sm text-left rtl:text-right text-white min-w-0 break-words word-wrap">

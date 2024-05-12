@@ -44,7 +44,7 @@ func (m *Manager) RemoveClient(c *gws.Conn) {
 func (m *Manager) BroadcastMessage(message []byte) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	for c, _ := range m.clients {
+	for c := range m.clients {
 		if err := c.WriteMessage(gws.TextMessage, message); err != nil {
 			log.Println(err)
 			delete(m.clients, c)
@@ -59,11 +59,7 @@ var manager = Manager{
 
 // TODO: error handling to the client
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
-	d, err := utils.Db()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	d := utils.Db()
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -121,10 +117,7 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 
 func Chat(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		d, err := utils.Db()
-		if err != nil {
-			log.Println(err)
-		}
+		d := utils.Db()
 
 		recents, err := d.SelectMessagesByChatroom(
 			r.Context(),
