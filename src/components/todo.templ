@@ -34,8 +34,8 @@ templ TodoRow(v *db.Todo) {
 	</tr>
 }
 
-templ Todo(todos []db.Todo) {
-	@layout("Bear's Todos") {
+templ Todo(s ClientState, todos []db.Todo) {
+	@layout(LayoutParams{TabTitle: "Todos", NavTitle: "Todos"}, s) {
 		<div id="todos-table-and-submitter">
 			<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">
 				<table class="w-full text-sm text-left rtl:text-right text-white min-w-0 break-words word-wrap">

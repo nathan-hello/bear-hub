@@ -9,6 +9,7 @@ import (
 	"time"
 
 	gws "github.com/gorilla/websocket"
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
@@ -116,6 +117,15 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {
+	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+	if ok {
+		w.Header().Set("HX-Redirect", "/")
+		return
+	}
+        state := components.ClientState{
+                IsAuthed: ok,
+        }
+
 	if r.Method == "GET" {
 		d := utils.Db()
 
@@ -139,7 +149,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 			}).Render(r.Context(), &buffer)
 		}
 
-		components.ChatRoomRoot().Render(r.Context(), w)
+		components.ChatRoomRoot(state).Render(r.Context(), w)
 		w.Write(buffer.Bytes())
 
 		return

@@ -3,9 +3,9 @@ package components
 import "github.com/nathan-hello/htmx-template/src/utils"
 import "fmt"
 
-templ ChatRoomRoot() {
+templ ChatRoomRoot(s ClientState) {
 	// <script src="/js/chat.js"></script>
-	@layout("Bear Chat") {
+	@layout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}, s) {
 		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 		<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
 		<script> htmx.logAll() </script>

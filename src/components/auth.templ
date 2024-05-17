@@ -107,8 +107,8 @@ templ SignUpForm(s map[string]FieldError) {
 	</form>
 }
 
-templ SignUp() {
-	@layout("Bear Hub - Sign Up") {
+templ SignUp(s ClientState) {
+	@layout(LayoutParams{TabTitle: "Bear Hub - Sign Up"}, s) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignUpForm(nil)
 		</div>
@@ -129,8 +129,8 @@ templ SignInForm(s map[string]FieldError) {
 	</form>
 }
 
-templ SignIn() {
-	@layout("Bear Hub - Sign In") {
+templ SignIn(s ClientState) {
+	@layout(LayoutParams{TabTitle: "Bear Hub - Sign In", NavTitle: "Sign In"}, s) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignInForm(nil)
 			<a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>

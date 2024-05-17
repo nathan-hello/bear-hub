@@ -17,6 +17,9 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
+        state := components.ClientState{
+                IsAuthed: ok,
+        }
 
 	returnFormWithErrors := func(errs *[]auth.AuthError) {
 		components.SignUpForm(components.RenderAuthError(errs)).Render(r.Context(), w)
@@ -80,18 +83,20 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		components.SignUp().Render(r.Context(), w)
+		components.SignUp(state).Render(r.Context(), w)
 		return
 	}
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
-        fmt.Printf("claimscheck, %#v\n%#v, %#v", claims, ok, r.Context().Value(auth.ClaimsContextKey))
 	if ok {
 		w.Header().Set("HX-Redirect", "/")
 		return
 	}
+        state := components.ClientState{
+                IsAuthed: ok,
+        }
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
@@ -131,7 +136,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		components.SignIn().Render(r.Context(), w)
+		components.SignIn(state).Render(r.Context(), w)
 		return
 	}
 }

@@ -18,6 +18,10 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		HandleRedirect(w, r, "/signin", utils.ErrBadLogin)
 		return
 	}
+        state := components.ClientState{
+                IsAuthed: ok,
+        }
+
 	conn := utils.Db()
 
 	if r.Method == "POST" {
@@ -67,7 +71,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		components.Todo(todos).Render(r.Context(), w)
+		components.Todo(state, todos).Render(r.Context(), w)
 	}
 
 }

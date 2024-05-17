@@ -1,20 +1,10 @@
 package components
 
-import "fmt"
-
-templ Profile(p ProfileProps) {
-	@layout("profile") {
-		{ fmt.Sprintf("%#v\n", p) }
-	}
-}
-
-templ credit() {
-	<li class="">Bear icon (white and black): <a href="https://www.iconsdb.com/white-icons/bear-4-icon.html">iconsdb</a></li>
-	<li class="">All of the fancy css: <a href="https://flowbite.com/docs">flowbite</a></li>
-}
-
-templ Root() {
-	@layout("Bear Hub") {
+templ Root(s ClientState) {
+	@layout(
+		LayoutParams{TabTitle: "Bear Hub", NavTitle: "Bear Hub"},
+		s,
+	) {
 		<div class="bg-white dark:bg-gray-900 min-h-screen">
 			// Big box
 			<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">

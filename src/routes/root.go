@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 )
 
@@ -29,5 +30,9 @@ func MicroComponents(w http.ResponseWriter, r *http.Request) {
 }
 
 func Root(w http.ResponseWriter, r *http.Request) {
-	components.Root().Render(r.Context(), w)
+	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+        state := components.ClientState{
+                IsAuthed: ok,
+        }
+	components.Root(state).Render(r.Context(), w)
 }

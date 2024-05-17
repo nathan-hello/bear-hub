@@ -37,3 +37,12 @@ func RenderAuthError(s *[]auth.AuthError) map[string]FieldError {
 	s = nil
 	return e
 }
+
+type ClientState struct {
+        IsAuthed bool
+}
+
+type LayoutParams struct {
+        TabTitle string
+        NavTitle string
+}
