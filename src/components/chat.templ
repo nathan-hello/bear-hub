@@ -3,26 +3,33 @@ package components
 import "github.com/nathan-hello/htmx-template/src/utils"
 import "fmt"
 
-templ ChatRoomRoot(s ClientState) {
-	// <script src="/js/chat.js"></script>
-	@layout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}, s) {
-		<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-		<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-		<script> htmx.logAll() </script>
-		<script>
-                        let inputElement = document.getElementById("msg-input-id");
-                        document.addEventListener("htmx:wsAfterSend"), function(event) {
-                                inputElement.value = "";
-                        })
-                </script>
-		<div id="messages" class="h-96 w-80 bg-gray-700 whitespace-break-spaces gap-y-2 flex flex-col  "></div>
-		<div class="h-96 w-80 mx-auto">
-			<form
-				id="chat-form-id"
-				ws-send="true"
-				ws-connect="/ws-chat"
-				hx-ext="ws"
-			>
+templ ChatRoot(s ClientState, embed bool) {
+	<!-- <script src="/js/chat.js"></script> -->
+	if (embed) {
+		@minLayout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}) {
+			@ChatBox()
+		}
+	} else {
+		@layout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}, s) {
+			@ChatBox()
+		}
+	}
+}
+
+templ ChatBox() {
+	<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+	<script> htmx.logAll() </script>
+	<script>
+        let inputElement = document.getElementById("msg-input-id");
+        document.addEventListener("htmx:wsAfterSend"), function (event) {
+                inputElement.value = "";
+        })
+</script>
+	<div class="bg-gray-700 min-h-screen min-w-screen grid grid-rows-2">
+		<div id="messages" class="bg-gray-800 w-full whitespace-break-spaces gap-y-2 flex flex-col">asdf</div>
+		<div class="">
+			<form id="chat-form-id" ws-send="true" ws-connect="/ws-chat" hx-ext="ws">
 				<input
 					class="w-min-0 mx-auto"
 					name="msg-text"
@@ -33,20 +40,12 @@ templ ChatRoomRoot(s ClientState) {
 				<button class="" type="submit">Send</button>
 			</form>
 		</div>
-	}
+	</div>
 }
 
 templ ChatMessage(chat *utils.ChatMessage) {
 	<div class="bg-blue-200" hx-swap-oob="beforeend:#messages">
 		<span class={ fmt.Sprintf("%s ", chat.Color) }>{ chat.Author }</span>
-		<span class="text-white">{ chat.Text }</span>
-	</div>
-}
-
-templ ChatBox() {
-	<div class="w-96">
-		<div class="h-52 w-96" id="message-container" hx-ext="ws" ws-connect="/chatroom">
-			<span>Message 1</span>
-		</div>
+		<span class=" text-white">{ chat.Text }</span>
 	</div>
 }
