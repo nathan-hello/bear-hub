@@ -122,9 +122,10 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("HX-Redirect", "/")
 		return
 	}
-        state := components.ClientState{
-                IsAuthed: ok,
-        }
+	state := components.ClientState{
+		IsAuthed: ok,
+	}
+	embed := r.URL.Query().Get("embed") == "true"
 
 	if r.Method == "GET" {
 		d := utils.Db()
@@ -149,7 +150,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 			}).Render(r.Context(), &buffer)
 		}
 
-		components.ChatRoomRoot(state).Render(r.Context(), w)
+		components.ChatRoot(state, embed).Render(r.Context(), w)
 		w.Write(buffer.Bytes())
 
 		return

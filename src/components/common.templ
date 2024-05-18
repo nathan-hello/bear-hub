@@ -49,6 +49,23 @@ templ layout(p LayoutParams, s ClientState) {
 	</html>
 }
 
+templ minLayout(p LayoutParams) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ p.TabTitle }</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+        
+}
+
 templ AlertBox(s string) {
 	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
 		{ s }
