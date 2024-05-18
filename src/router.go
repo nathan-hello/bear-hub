@@ -77,6 +77,12 @@ func SiteRouter() {
 			middlewares: alice.New(
 				Logging,
 			)},
+		{route: "/api/v1/chat/message",
+			hfunc: routes.ApiChat,
+			middlewares: alice.New(
+				Logging,
+				AllowMethods("POST"),
+			)},
 	}
 
 	for _, v := range sites {

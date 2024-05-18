@@ -97,7 +97,7 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 		t.CreatedAt = time.Now()
 
 		var buffMsg bytes.Buffer
-		components.ChatMessage(t).Render(r.Context(), &buffMsg)
+		components.ChatMessage(t).Render(r.Context(), &buffMsg) // write component to buffMsg
 		log.Printf("buffMsg: %s, err: %#v\n", buffMsg.String(), err)
 
 		manager.BroadcastMessage(buffMsg.Bytes())
@@ -113,7 +113,32 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
 
+func ApiChat(w http.ResponseWriter, r *http.Request) {
+        if r.Method == "POST" {
+                t := utils.ChatMessage{}
+                err := json.NewDecoder(r.Body).Decode(&t)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if t.Text == "" {
+			log.Println("no text")
+			return
+		}
+		if t.Author == "" {
+			t.Author = "anon"
+		}
+		if t.Color == "" {
+			t.Color = "bg-blue-200"
+		}
+		t.CreatedAt = time.Now()
+
+                 var buffMsg bytes.Buffer
+		components.ChatMessage(&t).Render(r.Context(), &buffMsg) // write component to buffMsg
+                manager.BroadcastMessage(buffMsg.Bytes())
+        }
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {

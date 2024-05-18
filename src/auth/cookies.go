@@ -8,10 +8,8 @@ import (
 )
 
 func SetTokenCookies(w http.ResponseWriter, a string, r string) {
-        secure := true
-        if utils.Env().MODE == "dev" {
-                secure = false
-        }
+        secure := utils.Env().MODE == "prod" 
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    a,
