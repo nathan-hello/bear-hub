@@ -3,6 +3,10 @@ package utils
 import "errors"
 
 var (
+        ErrNoTextInChatMsg = errors.New("illegal message - no text in chat message")
+)
+
+var (
 	ErrUsernameTooShort = errors.New("username too short")
 	ErrPasswordTooShort = errors.New("password too short")
 	ErrEmailInvalid     = errors.New("invalid email")
