@@ -1,51 +1,84 @@
 package components
 
 import "github.com/nathan-hello/htmx-template/src/utils"
-import "fmt"
 
 templ ChatRoot(s ClientState, embed bool) {
 	<!-- <script src="/js/chat.js"></script> -->
 	if (embed) {
 		@minLayout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}) {
-			@ChatBox()
+			@chatScripts()
+			@embedChatBox()
 		}
 	} else {
 		@layout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}, s) {
-			@ChatBox()
+			@chatScripts()
+			@siteChatBox()
 		}
 	}
 }
 
-templ ChatBox() {
-	<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-	<script> htmx.logAll() </script>
-	<script>
-        let inputElement = document.getElementById("msg-input-id");
-        document.addEventListener("htmx:wsAfterSend"), function (event) {
-                inputElement.value = "";
-        })
-</script>
-	<div class="bg-gray-700 min-h-screen min-w-screen grid grid-rows-2">
-		<div id="messages" class="bg-gray-800 w-full whitespace-break-spaces gap-y-2 flex flex-col">asdf</div>
+templ ChatMessage(chat *utils.ChatMessage) {
+	<div hx-swap-oob="beforeend:#messages">
 		<div class="">
-			<form id="chat-form-id" ws-send="true" ws-connect="/ws-chat" hx-ext="ws">
-				<input
-					class="w-min-0 mx-auto"
-					name="msg-text"
-					id="msg-input-id"
-					type="text"
-					placeholder="Write a message..."
-				/>
-				<button class="" type="submit">Send</button>
-			</form>
+			<span class={ "  " + " " + chat.Color }>{ chat.Author }</span>
+			<span class=" text-white">{ chat.Text }</span>
 		</div>
 	</div>
 }
 
-templ ChatMessage(chat *utils.ChatMessage) {
-	<div class="bg-blue-200" hx-swap-oob="beforeend:#messages">
-		<span class={ fmt.Sprintf("%s ", chat.Color) }>{ chat.Author }</span>
-		<span class=" text-white">{ chat.Text }</span>
+templ embedChatBox() {
+	<div class="flex flex-col h-screen">
+		<div class="bg-gray-700 flex-1 grid grid-cols-1" style="grid-template-rows: auto 5%">
+			@chatMessages()
+			<div class="">
+				@chatForm()
+			</div>
+		</div>
 	</div>
+}
+
+templ siteChatBox() {
+	<div class="flex flex-col relative" style="height: calc(100vh - 64px);">
+		<button
+			hidden
+			id="scroll-bottom-button"
+			onclick="controlScroll(true)"
+			style="position: absolute; top: -1px; left: 0; right: 0;"
+			class="h-8 mx-20 min-w-0 min-h-0 mt-4 bg-gray-950 text-white z-10 rounded-xl flex justify-center opacity-85"
+		>
+			<span hidden id="scroll-bottom-span" class=" mx-auto my-auto">Scroll to bottom</span>
+		</button>
+		<div class="bg-gray-700 flex-1 grid" style="grid-template-rows: auto 5%">
+			<div id="message-container" class="bg-offsetHeightgray-900 max-h-[90vh] overflow-auto gap-y-1">
+				@chatMessages()
+			</div>
+			<div class="">
+				@chatForm()
+			</div>
+		</div>
+	</div>
+}
+
+templ chatMessages() {
+	<div id="messages"></div>
+}
+
+templ chatForm() {
+	<form id="chat-form-id" ws-send="true" ws-connect="/ws-chat" hx-ext="ws">
+		<input
+			class="w-min-0 mx-auto"
+			name="msg-text"
+			id="msg-input-id"
+			type="text"
+			placeholder="Write a message..."
+		/>
+		<button class="" type="submit">Send</button>
+	</form>
+}
+
+templ chatScripts() {
+	<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+	//<script> htmx.logAll() </script>
+	<script src="/js/chat.js"></script>
 }

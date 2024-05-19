@@ -3,7 +3,7 @@ package components
 import "fmt"
 
 templ navbar(p LayoutParams, s ClientState) {
-	<nav class="bg-white border-gray-200 dark:bg-gray-900">
+	<nav class="h-16 bg-white border-gray-200 dark:bg-gray-900">
 		<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
 			<a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
 				<img src="/white-bear.ico" class="h-8" alt="bear !"/>
@@ -42,7 +42,7 @@ templ layout(p LayoutParams, s ClientState) {
 			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
 			@navbar(p, s)
 		</head>
-		<body class="bg-gray-500">
+		<body class="bg-gray-500 h-screen w-full">
 			<div id="notification-target"></div>
 			{ children... }
 		</body>
@@ -59,7 +59,7 @@ templ minLayout(p LayoutParams) {
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
 		</head>
-		<body>
+		<body class="h-full w-full">
 			{ children... }
 		</body>
 	</html>

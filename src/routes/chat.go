@@ -58,7 +58,6 @@ var manager = Manager{
 	clients: make(map[*gws.Conn]bool),
 }
 
-// TODO: error handling to the client
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
 	d := utils.Db()
 
@@ -138,6 +137,7 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
                  var buffMsg bytes.Buffer
 		components.ChatMessage(&t).Render(r.Context(), &buffMsg) // write component to buffMsg
                 manager.BroadcastMessage(buffMsg.Bytes())
+                w.Write([]byte("sent message\n"))
         }
 }
 
@@ -170,7 +170,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 			components.ChatMessage(&utils.ChatMessage{
 				Author:    msg.Author,
 				Text:      msg.Message,
-				Color:     "bg-blue-200",
+				// Color:     "bg-blue-200",
 				CreatedAt: msg.CreatedAt,
 			}).Render(r.Context(), &buffer)
 		}
