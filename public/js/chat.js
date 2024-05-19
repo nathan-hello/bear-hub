@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function(_) {
                 }
         })
 })
+
 function controlScroll(stick) {
         if (stick === true) {
                 messageContainerDiv.scrollTop = messageContainerDiv.scrollHeight

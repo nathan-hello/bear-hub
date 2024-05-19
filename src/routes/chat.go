@@ -59,8 +59,6 @@ var manager = Manager{
 }
 
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
-	d := utils.Db()
-
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -76,41 +74,17 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		log.Printf("clientMsg: %s, err: %#v\n", clientMsg, err)
-
-		t := &utils.ChatMessage{}
-		err = json.Unmarshal(clientMsg, &t)
+                
+                msg, err := utils.NewChatMsg(clientMsg)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		if t.Text == "" {
-			continue
-		}
-		if t.Author == "" {
-			t.Author = "anon"
-		}
-		if t.Color == "" {
-			t.Color = "bg-blue-200"
-		}
-		t.CreatedAt = time.Now()
 
-		var buffMsg bytes.Buffer
-		components.ChatMessage(t).Render(r.Context(), &buffMsg) // write component to buffMsg
-		log.Printf("buffMsg: %s, err: %#v\n", buffMsg.String(), err)
-
+                buffMsg := &bytes.Buffer{}
+		components.ChatMessage(msg).Render(r.Context(), buffMsg) // write component to buffMsg
 		manager.BroadcastMessage(buffMsg.Bytes())
-		err = d.InsertMessage(r.Context(),
-			db.InsertMessageParams{
-				RoomID:    1,
-				Author:    t.Author,
-				Message:   t.Text,
-				CreatedAt: t.CreatedAt,
-			})
-		if err != nil {
-			log.Println(err)
-			return
-		}
+
 	}
 }
 
