@@ -82,6 +82,7 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 		}
 
 		buffMsg := &bytes.Buffer{}
+
 		components.ChatMessage(msg).Render(r.Context(), buffMsg) // write component to buffMsg
 		manager.BroadcastMessage(buffMsg.Bytes())
 
@@ -106,19 +107,24 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(err.Error()))
 		}
 
-		var buffMsg bytes.Buffer
+                var resp []byte
+
+                // We need to send html to subscribers no matter what
+                var htmlMsg bytes.Buffer
+		components.ChatMessage(&c).Render(r.Context(), &htmlMsg)
+		manager.BroadcastMessage(htmlMsg.Bytes())
+
 		if htmlResponse {
-			components.ChatMessage(&c).Render(r.Context(), &buffMsg) // write component to buffMsg
+                        resp = htmlMsg.Bytes()
 		}
 		if jsonResponse {
-			resp, err := json.Marshal(c)
+			jason, err := json.Marshal(c)
 			if err != nil {
-				fmt.Fprintf(w, fmt.Sprintf("{error: \"%v\"}", err))
+				fmt.Fprintf(w, "{error: \"%v\"}", err)
 			}
-			w.Write(resp)
+                        resp = jason 
 		}
-		manager.BroadcastMessage(buffMsg.Bytes())
-		w.Write([]byte("sent message\n"))
+		w.Write(resp)
 	}
 }
 
