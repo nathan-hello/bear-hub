@@ -72,7 +72,7 @@ func SiteRouter() {
 				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST", "DELETE", "PUT"),
 			)},
-		{route: "/ws-chat",
+		{route: "/ws/v1/chat/html",
 			hfunc: routes.ChatSocket,
 			middlewares: alice.New(
 				Logging,
@@ -80,7 +80,6 @@ func SiteRouter() {
 		{route: "/api/v1/chat/message",
 			hfunc: routes.ApiChat,
 			middlewares: alice.New(
-				Logging,
 				AllowMethods("POST"),
 			)},
 	}

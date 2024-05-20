@@ -16,20 +16,20 @@ document.addEventListener("DOMContentLoaded", function(_) {
                 inputElement.value = "";
         })
 
+        messageContainerDiv.addEventListener("wheel", function(_) {
+                if (messageContainerDiv.scrollHeight === undefined) {
+                        return
+                }
+                const { offsetHeight, scrollHeight, scrollTop } = messageContainerDiv
+                if ((scrollHeight <= scrollTop + offsetHeight + 100)) {
+                        controlScroll(true)
+                } else {
+                        controlScroll(false)
+                }
+        })
+
         document.addEventListener("htmx:oobAfterSwap", function(event) {
                 if (event.detail.target.id === "messages") {
-
-                        messageContainerDiv.addEventListener("wheel", function(_) {
-                                if (messageContainerDiv.scrollHeight === undefined) {
-                                        return
-                                }
-                                const { offsetHeight, scrollHeight, scrollTop } = messageContainerDiv
-                                if ((scrollHeight <= scrollTop + offsetHeight + 100)) {
-                                        controlScroll(true)
-                                } else {
-                                        controlScroll(false)
-                                }
-                        })
                         if (lockToBottom) {
                                 controlScroll(true)
                         }

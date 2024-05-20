@@ -22,7 +22,6 @@ func NewChatMsgFromBytes(bits []byte) (*ChatMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.insertDbAsync()
 	return t, nil
 }
 
@@ -36,23 +35,9 @@ func (c *ChatMessage) Validate() error {
 	if c.Color == "" {
 		c.Color = "bg-blue-200"
 	}
-	c.insertTimeNow()
-	return nil
-
-}
-
-func (c *ChatMessage) insertTimeNow() {
 	if c.CreatedAt == "" {
 		c.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	}
-}
-
-var dbChan = make(chan *ChatMessage)
-
-func (c *ChatMessage) insertDbAsync() {
-	dbChan <- c
-}
-
-func dbQueue() {
+	return nil
 
 }

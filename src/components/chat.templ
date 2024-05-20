@@ -50,7 +50,7 @@ templ chatBox() {
 }
 
 templ chatForm() {
-	<form id="chat-form-id" ws-send="true" ws-connect="/ws-chat" hx-ext="ws">
+	<form id="chat-form-id" ws-send="true" ws-connect="/ws/v1/chat/html" hx-ext="ws">
 		<div class="flex">
 			<button
 				id="dropdownTopButton"
@@ -100,6 +100,6 @@ templ chatScripts() {
 	<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 	<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
-	//<script> htmx.logAll() </script>
+	<script> htmx.logAll() </script>
 	<script src="/js/chat.js"></script>
 }
