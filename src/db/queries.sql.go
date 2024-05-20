@@ -85,7 +85,7 @@ type InsertMessageParams struct {
 	Author    string
 	Message   string
 	RoomID    int64
-	CreatedAt time.Time
+	CreatedAt string
 }
 
 func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) error {

@@ -3,10 +3,10 @@ package routes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	gws "github.com/gorilla/websocket"
 	"github.com/nathan-hello/htmx-template/src/auth"
@@ -74,14 +74,14 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-                
-                msg, err := utils.NewChatMsg(clientMsg)
+
+		msg, err := utils.NewChatMsgFromBytes(clientMsg)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-                buffMsg := &bytes.Buffer{}
+		buffMsg := &bytes.Buffer{}
 		components.ChatMessage(msg).Render(r.Context(), buffMsg) // write component to buffMsg
 		manager.BroadcastMessage(buffMsg.Bytes())
 
@@ -89,30 +89,37 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiChat(w http.ResponseWriter, r *http.Request) {
-        if r.Method == "POST" {
-                t := utils.ChatMessage{}
-                err := json.NewDecoder(r.Body).Decode(&t)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		if t.Text == "" {
-			log.Println("no text")
-			return
-		}
-		if t.Author == "" {
-			t.Author = "anon"
-		}
-		if t.Color == "" {
-			t.Color = "bg-blue-200"
-		}
-		t.CreatedAt = time.Now()
+	htmlResponse := r.Header.Get("Content-Type") == "text/html"
+	jsonResponse := r.Header.Get("Content-Type") == "application/json"
+	if !htmlResponse && !jsonResponse {
+		htmlResponse = true
+	}
 
-                 var buffMsg bytes.Buffer
-		components.ChatMessage(&t).Render(r.Context(), &buffMsg) // write component to buffMsg
-                manager.BroadcastMessage(buffMsg.Bytes())
-                w.Write([]byte("sent message\n"))
-        }
+	if r.Method == "POST" {
+		c := utils.ChatMessage{}
+		err := json.NewDecoder(r.Body).Decode(&c)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+		err = c.Validate()
+		if err != nil {
+			w.Write([]byte(err.Error()))
+		}
+
+		var buffMsg bytes.Buffer
+		if htmlResponse {
+			components.ChatMessage(&c).Render(r.Context(), &buffMsg) // write component to buffMsg
+		}
+		if jsonResponse {
+			resp, err := json.Marshal(c)
+			if err != nil {
+				fmt.Fprintf(w, fmt.Sprintf("{error: \"%v\"}", err))
+			}
+			w.Write(resp)
+		}
+		manager.BroadcastMessage(buffMsg.Bytes())
+		w.Write([]byte("sent message\n"))
+	}
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {
@@ -142,8 +149,8 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 		var buffer bytes.Buffer
 		for _, msg := range recents {
 			components.ChatMessage(&utils.ChatMessage{
-				Author:    msg.Author,
-				Text:      msg.Message,
+				Author: msg.Author,
+				Text:   msg.Message,
 				// Color:     "bg-blue-200",
 				CreatedAt: msg.CreatedAt,
 			}).Render(r.Context(), &buffer)

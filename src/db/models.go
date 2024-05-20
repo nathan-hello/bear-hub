@@ -20,7 +20,7 @@ type Chatroom struct {
 
 type Message struct {
 	ID        int64
-	CreatedAt time.Time
+	CreatedAt string
 	Author    string
 	Message   string
 	RoomID    int64
