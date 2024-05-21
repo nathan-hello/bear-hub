@@ -33,7 +33,7 @@ func (c *ChatMessage) Validate() error {
 		c.Author = "anon"
 	}
 	if c.Color == "" {
-		c.Color = "bg-blue-200"
+		c.Color = "text-gray-500"
 	}
 	if c.CreatedAt == "" {
 		c.CreatedAt = time.Now().UTC().Format(time.RFC3339)

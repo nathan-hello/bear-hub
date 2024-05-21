@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func TestNewPairAndParse(t *testing.T) {
 	initEnv(t)
-	access, refresh, err := utils.NewTokenPair(
-		&utils.JwtParams{
+	access, refresh, err := auth.NewTokenPair(
+		&auth.JwtParams{
 			UserId:   uuid.New(),
 			Username: "black-bear",
 			Family:   uuid.New(),
@@ -26,12 +27,12 @@ func TestNewPairAndParse(t *testing.T) {
 	// t.Logf("TestNewPairAndParse/access: %v\n", access)
 	// t.Logf("TestNewPairAndParse/refresh: %v\n", refresh)
 
-	_, err = utils.ParseToken(access)
+	_, err = auth.ParseToken(access)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = utils.ParseToken(refresh)
+	_, err = auth.ParseToken(refresh)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,8 +47,8 @@ func TestJwtExpiry(t *testing.T) {
 	c.ACCESS_EXPIRY_TIME = time.Second * 1
 	c.REFRESH_EXPIRY_TIME = time.Second * 2
 
-	access, refresh, err := utils.NewTokenPair(
-		&utils.JwtParams{
+	access, refresh, err := auth.NewTokenPair(
+		&auth.JwtParams{
 			UserId:   uuid.New(),
 			Username: "black-bear",
 			Family:   uuid.New(),
@@ -60,7 +61,7 @@ func TestJwtExpiry(t *testing.T) {
 	// t.Logf("access: %#v\n", access)
 	// t.Logf("refresh: %#v\n", refresh)
 
-	_, err = utils.ParseToken(access)
+	_, err = auth.ParseToken(access)
 
 	if err != nil {
 		t.Error(err)
@@ -68,7 +69,7 @@ func TestJwtExpiry(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 1100)
 
-	_, err = utils.ParseToken(access)
+	_, err = auth.ParseToken(access)
 
 	if err == nil {
 		t.Error("access is still valid even after waiting past expiration time")
@@ -76,7 +77,7 @@ func TestJwtExpiry(t *testing.T) {
 
 	// t.Logf("token successfully invalidated: %#v\n", err)
 
-	_, err = utils.ParseToken(refresh)
+	_, err = auth.ParseToken(refresh)
 
 	if err != nil {
 		t.Error(err)
@@ -84,7 +85,7 @@ func TestJwtExpiry(t *testing.T) {
 
 	time.Sleep(time.Second * 1)
 
-	_, err = utils.ParseToken(refresh)
+	_, err = auth.ParseToken(refresh)
 
 	if err == nil {
 		t.Error("refresh is still valid even after waiting past expiration time")
@@ -116,8 +117,8 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	access, refresh, err := utils.NewTokenPair(
-		&utils.JwtParams{
+	access, refresh, err := auth.NewTokenPair(
+		&auth.JwtParams{
 			Username: fullUser.Username,
 			UserId:   fullUser.ID,
 			Family:   uuid.New(),
@@ -126,16 +127,16 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err = utils.ParseToken(access)
+	_, err = auth.ParseToken(access)
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = utils.ParseToken(refresh)
+	_, err = auth.ParseToken(refresh)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = utils.InsertNewToken(access, "access_token")
+	err = auth.InsertNewToken(access, "access_token")
 	defer func() {
 		err := d.DeleteTokensByUserId(ctx, fullUser.ID)
 		if err != nil {
@@ -145,7 +146,7 @@ func TestDbJwt(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = utils.InsertNewToken(refresh, "refresh_token")
+	err = auth.InsertNewToken(refresh, "refresh_token")
 	if err != nil {
 		t.Error(err)
 	}
