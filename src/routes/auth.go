@@ -89,8 +89,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
-	if ok {
+	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+	if  ok {
 		w.Header().Set("HX-Redirect", "/")
 		return
 	}
@@ -125,10 +125,15 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 			})
 
 		if err != nil {
-			components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
+			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
 			return
 		}
 
+                claims, err := auth.ParseToken(access)
+		if err != nil {
+			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
+			return
+		}
 
 		auth.SetTokenCookies(w, access, refresh)
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)

@@ -23,7 +23,7 @@ templ ChatRoot(s ClientState, embed bool) {
 templ ChatMessage(chat *utils.ChatMessage) {
 	<div hx-swap-oob="beforeend:#messages">
 		<div id={ chat.CreatedAt } class="">
-			<span class={ "  " + " " + chat.Color }>{ chat.Author }</span>
+			<span class={ "  " + " " + chat.Color }>&lt;{ chat.Author }&gt;</span>
 			<span class=" text-white">{ chat.Text }</span>
 		</div>
 	</div>
@@ -43,7 +43,7 @@ templ chatBox() {
 		<div id="message-container" class="flex-grow bg-gray-900 overflow-auto gap-y-1">
 			<div class="min-h-0" id="messages"></div>
 		</div>
-		<div class="bg-gray-800" >
+		<div class="bg-gray-800 p-1" >
 			@chatForm()
 		</div>
 	</div>
