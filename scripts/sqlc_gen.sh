@@ -5,4 +5,4 @@ cd "$dir/.."
 
 source .env
 
-DB_URI=$DB_URI sqlc generate 
+PG_DB_URI=$PG_DB_URI SQLITE_DB_URI=$SQLITE_DB_URI sqlc generate 

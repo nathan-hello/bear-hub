@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"database/sql"
 	"fmt"
 	"reflect"
 	"time"
@@ -9,35 +8,36 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
-	"github.com/nathan-hello/htmx-template/src/db"
 )
 
-
 type Dotenv struct {
-	DB_URI     string
-	JWT_SECRET string
+	PG_DB_URI     string
+	SQLITE_DB_URI string
+	JWT_SECRET    string
+	DB_TYPE       string // "postgres", "sqlite"
+	MODE          string // "prod", "dev", "test"
 }
 
 type FullConfig struct {
-	DB_URI              string
+	PG_DB_URI           string
+	SQLITE_DB_URI       string
 	JWT_SECRET          string
+	DB_TYPE             string // "postgres", "sqlite"
+	MODE                string // "prod", "dev", "test"
 	REFRESH_EXPIRY_TIME time.Duration
 	ACCESS_EXPIRY_TIME  time.Duration
-        MODE string // "prod", "dev", "test"
 }
 
-func parseConfigStruct(s interface{}) []string {
+func parseConfigStruct(s any) []string {
 	var fieldNames []string
 	v := reflect.ValueOf(s)
-	if v.Kind() == reflect.Struct {
-		t := v.Type()
-		for i := 0; i < v.NumField(); i++ {
-			if t.Field(i).Type.Kind() != reflect.String {
-				panic(fmt.Sprintf("%v must instead be of type string", t.Field(i).Name))
-			}
-			if t.Field(i).Type.Kind() == reflect.String {
-				fieldNames = append(fieldNames, t.Field(i).Name)
-			}
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		if t.Field(i).Type.Kind() != reflect.String {
+			panic(fmt.Sprintf("%v must instead be of type string", t.Field(i).Name))
+		}
+		if t.Field(i).Type.Kind() == reflect.String {
+			fieldNames = append(fieldNames, t.Field(i).Name)
 		}
 	}
 	return fieldNames
@@ -73,7 +73,6 @@ func NewEnv(path string) (Dotenv, error) {
 var envFile Dotenv
 var initialized bool
 var config FullConfig
-var dbQueries *db.Queries
 
 func InitEnv(path string) error {
 	g, err := NewEnv(path)
@@ -81,16 +80,17 @@ func InitEnv(path string) error {
 		return err
 	}
 	envFile = g
-	if envFile.DB_URI == "" || envFile.JWT_SECRET == "" {
-		panic("DB_URI or JWT_SECRET uninitiated")
+	if envFile.PG_DB_URI == "" && envFile.SQLITE_DB_URI == "" {
+		panic("Neither Postgres or Sqlite3 database URI available")
 	}
 	if !initialized {
 		config = FullConfig{
-			DB_URI:              envFile.DB_URI,
+			PG_DB_URI:           envFile.PG_DB_URI,
+			SQLITE_DB_URI:       envFile.SQLITE_DB_URI,
 			JWT_SECRET:          envFile.JWT_SECRET,
 			REFRESH_EXPIRY_TIME: time.Hour * 72,
 			ACCESS_EXPIRY_TIME:  time.Hour * 24,
-                        MODE: "dev",
+			MODE:                "dev",
 		}
 		initialized = true
 	}
@@ -99,17 +99,4 @@ func InitEnv(path string) error {
 
 func Env() *FullConfig {
 	return &config
-}
-
-func DbInit() error {
-	var d, err = sql.Open("postgres", Env().DB_URI)
-	if err != nil {
-		return err
-	}
-	dbQueries = db.New(d)
-	return nil
-}
-
-func Db() *db.Queries {
-	return dbQueries
 }

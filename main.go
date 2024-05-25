@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/nathan-hello/htmx-template/src"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
@@ -14,7 +15,12 @@ func main() {
 	}
 	_ = utils.Env()
 
-	err = utils.DbInit()
+	err = db.InitDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.DbSanityCheck()
 	if err != nil {
 		log.Fatal(err)
 	}
