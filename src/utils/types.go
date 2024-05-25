@@ -41,3 +41,7 @@ func (c *ChatMessage) Validate() error {
 	return nil
 
 }
+
+func RenderTime(t *time.Time) string {
+	return t.UTC().Format(time.RFC3339)
+}

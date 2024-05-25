@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/nathan-hello/htmx-template/src/components"
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {
-	conn := utils.Db()
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
@@ -20,7 +20,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	requestedProfile := pathSegments[2]
 
-	todos, err := conn.SelectTodosByUsername(r.Context(), requestedProfile)
+	todos, err := db.Db().SelectTodosByUsername(r.Context(), requestedProfile)
 
 	if err != nil {
 		if err != sql.ErrNoRows {

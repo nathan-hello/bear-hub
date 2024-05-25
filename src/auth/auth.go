@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	// "fmt"
@@ -90,32 +89,35 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
-	conn := utils.Db()
-
-	email := sql.NullString{String: c.Email, Valid: c.Email != ""}
 	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: utils.ErrHashPassword, Value: ""})
 		return "", nil, &errs
 	}
 
-	newUser, err := conn.InsertUser(
+	newUser, err := db.Db().InsertUser(
 		ctx,
 		db.InsertUserParams{
-			Email:             email,
+			Email:             c.Email,
 			Username:          c.Username,
 			EncryptedPassword: string(pass),
 			PasswordCreatedAt: time.Now(),
 		})
 
 	if err != nil {
-                utils.PrintlnOnDevMode("insert user", err)
-                
 		errs = append(errs, AuthError{Field: "", Err: utils.ErrDbInsertUser, Value: ""})
 		return "", nil, &errs
 	}
 
-	return newUser.Username, &newUser.ID, nil
+	parsedId, err := uuid.Parse(newUser.ID)
+	if err != nil {
+		utils.PrintlnOnDevMode("insert user", err)
+
+		errs = append(errs, AuthError{Field: "", Err: utils.ErrDbInsertUser, Value: ""})
+		return "", nil, &errs
+	}
+
+	return newUser.Username, &parsedId, nil
 
 }
 
@@ -128,16 +130,15 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 
 	var user db.User
 	ctx := context.Background()
-	conn := utils.Db()
 
 	if _, err := mail.ParseAddress(c.User); err == nil {
-		user, err = conn.SelectUserByEmail(ctx, sql.NullString{String: c.User, Valid: err == nil})
+		user, err = db.Db().SelectUserByEmail(ctx, c.User)
 		if err != nil {
 			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
 			return nil, &errs
 		}
 	} else {
-		user, err = conn.SelectUserByUsername(ctx, c.User)
+		user, err = db.Db().SelectUserByUsername(ctx, c.User)
 		if err != nil {
 			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
 			return nil, &errs

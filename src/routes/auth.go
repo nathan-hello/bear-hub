@@ -1,15 +1,32 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
+
+func signUpErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http.ResponseWriter) {
+	if err != nil {
+		components.SignUpForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(ctx, w)
+	}
+	if errs != nil {
+		components.SignUpForm(components.RenderAuthError(errs)).Render(ctx, w)
+	}
+}
+
+func signInErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http.ResponseWriter) {
+	if err != nil {
+		components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(ctx, w)
+	}
+	if errs != nil {
+		components.SignInForm(components.RenderAuthError(errs)).Render(ctx, w)
+	}
+}
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
@@ -17,21 +34,14 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
 		return
 	}
-        state := components.ClientState{
-                IsAuthed: ok,
-        }
-
-	returnFormWithErrors := func(errs *[]auth.AuthError) {
-		components.SignUpForm(components.RenderAuthError(errs)).Render(r.Context(), w)
-		errs = nil
+	state := components.ClientState{
+		IsAuthed: ok,
 	}
 
 	if r.Method == "POST" {
 		err := r.ParseForm()
 		if err != nil {
-			returnFormWithErrors(&[]auth.AuthError{
-				{Err: utils.ErrParseForm},
-			})
+			signUpErrMsg(utils.ErrParseForm, nil, r.Context(), w)
 		}
 
 		cred := auth.SignUpCredentials{
@@ -44,36 +54,19 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		username, userId, errs := cred.SignUp()
 
 		if errs != nil {
-			returnFormWithErrors(errs)
+			signUpErrMsg(nil, errs, r.Context(), w)
 			return
 		}
 
-                jwtFamily := uuid.New()
 		access, refresh, err := auth.NewTokenPair(
 			&auth.JwtParams{
 				Username: username,
-				UserId:   *userId,
-				Family:   jwtFamily,
+				UserId:   userId.String(),
 			})
-                utils.PrintlnOnDevMode("access, refresh", access, refresh)
-		if err != nil {
-			returnFormWithErrors(&[]auth.AuthError{
-				{Err: err},
-			})
-		}
-
-                d := utils.Db()
-                _, err = d.InsertToken(r.Context(), db.InsertTokenParams{
-                        JwtType: "access_token",
-                        Jwt: access,
-                        Valid: true,
-                        Family: jwtFamily,
-                })
 
 		if err != nil {
-			returnFormWithErrors(&[]auth.AuthError{
-				{Err: err},
-			})
+			signUpErrMsg(err, nil, r.Context(), w)
+			return
 		}
 
 		auth.SetTokenCookies(w, access, refresh)
@@ -90,17 +83,17 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
-	if  ok {
+	if ok {
 		w.Header().Set("HX-Redirect", "/")
 		return
 	}
-        state := components.ClientState{
-                IsAuthed: ok,
-        }
+	state := components.ClientState{
+		IsAuthed: ok,
+	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
+			signInErrMsg(err, nil, r.Context(), w)
 			return
 		}
 
@@ -112,26 +105,24 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		user, errs := cred.SignIn()
 
 		if errs != nil {
-			components.SignInForm(components.RenderAuthError(errs)).Render(r.Context(), w)
+			signInErrMsg(nil, errs, r.Context(), w)
 			return
 		}
 
-                jwtFamily := uuid.New()
 		access, refresh, err := auth.NewTokenPair(
 			&auth.JwtParams{
 				Username: user.Username,
 				UserId:   user.ID,
-				Family:   jwtFamily,
 			})
 
 		if err != nil {
-			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
+			signInErrMsg(err, nil, r.Context(), w)
 			return
 		}
 
-                claims, err := auth.ParseToken(access)
+		claims, err := auth.ParseToken(access)
 		if err != nil {
-			components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(r.Context(), w)
+			signInErrMsg(err, nil, r.Context(), w)
 			return
 		}
 

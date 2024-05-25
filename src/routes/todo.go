@@ -18,11 +18,9 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		HandleRedirect(w, r, "/signin", utils.ErrBadLogin)
 		return
 	}
-        state := components.ClientState{
-                IsAuthed: ok,
-        }
-
-	conn := utils.Db()
+	state := components.ClientState{
+		IsAuthed: ok,
+	}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
@@ -38,7 +36,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		row, err := conn.InsertTodo(ctx, db.InsertTodoParams{Body: body, Username: claims.Username})
+		row, err := db.Db().InsertTodo(ctx, db.InsertTodoParams{Body: body, Username: claims.Username})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -54,7 +52,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		err = conn.DeleteTodo(ctx, parsedId)
+		err = db.Db().DeleteTodo(ctx, parsedId)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -64,7 +62,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		todos, err := conn.SelectTodosByUsername(ctx, claims.Username)
+		todos, err := db.Db().SelectTodosByUsername(ctx, claims.Username)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				HandleRedirect(w, r, "/?500=/", utils.ErrDbSelectTodosByUser)

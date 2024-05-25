@@ -15,9 +15,9 @@ func TestNewPairAndParse(t *testing.T) {
 	initEnv(t)
 	access, refresh, err := auth.NewTokenPair(
 		&auth.JwtParams{
-			UserId:   uuid.New(),
+			UserId:   uuid.New().String(),
 			Username: "black-bear",
-			Family:   uuid.New(),
+			Family:   uuid.New().String(),
 		})
 
 	if err != nil {
@@ -49,9 +49,9 @@ func TestJwtExpiry(t *testing.T) {
 
 	access, refresh, err := auth.NewTokenPair(
 		&auth.JwtParams{
-			UserId:   uuid.New(),
+			UserId:   uuid.New().String(),
 			Username: "black-bear",
-			Family:   uuid.New(),
+			Family:   uuid.New().String(),
 		})
 
 	if err != nil {
@@ -97,15 +97,14 @@ func TestJwtExpiry(t *testing.T) {
 func TestDbJwt(t *testing.T) {
 	initEnv(t)
 	ctx := context.Background()
-	d := utils.Db()
 
-	fullUser, err := d.InsertUser(ctx, db.InsertUserParams{
+	fullUser, err := db.Db().InsertUser(ctx, db.InsertUserParams{
 		Username:          "black-bear-test-1",
 		EncryptedPassword: "honey",
 	})
 
 	defer func() {
-		err = d.DeleteUser(ctx, fullUser.ID)
+		err = db.Db().DeleteUser(ctx, fullUser.ID)
 
 		if err != nil {
 			t.Error(err)
@@ -121,7 +120,6 @@ func TestDbJwt(t *testing.T) {
 		&auth.JwtParams{
 			Username: fullUser.Username,
 			UserId:   fullUser.ID,
-			Family:   uuid.New(),
 		})
 	if err != nil {
 		t.Error(err)
@@ -136,9 +134,9 @@ func TestDbJwt(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = auth.InsertNewToken(access, "access_token")
+	err = auth.DbInsertNewToken(access, "access_token")
 	defer func() {
-		err := d.DeleteTokensByUserId(ctx, fullUser.ID)
+		err := db.Db().DeleteTokensByUserId(ctx, fullUser.ID)
 		if err != nil {
 			t.Error(err)
 		}
@@ -146,12 +144,12 @@ func TestDbJwt(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = auth.InsertNewToken(refresh, "refresh_token")
+	err = auth.DbInsertNewToken(refresh, "refresh_token")
 	if err != nil {
 		t.Error(err)
 	}
 
-	tokens, err := d.SelectUsersTokens(ctx, fullUser.ID)
+	tokens, err := db.Db().SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -160,12 +158,12 @@ func TestDbJwt(t *testing.T) {
 		t.Error("Token length 0\n")
 	}
 
-	err = d.UpdateUserTokensToInvalid(ctx, fullUser.ID)
+	err = db.Db().UpdateUserTokensToInvalid(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = d.SelectUsersTokens(ctx, fullUser.ID)
+	_, err = db.Db().SelectUsersTokens(ctx, fullUser.ID)
 	if err != nil {
 		t.Error(err)
 	}

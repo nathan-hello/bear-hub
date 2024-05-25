@@ -1,11 +1,16 @@
 version: '2'
 sql:
-- schema: src/db/input/remote-schema.sql
-  queries: src/db/input/queries.sql
-  engine: postgresql
+- engine: sqlite
+  schema: src/db/schema.sql
+  queries: src/db/queries.sql
   database:
-    uri: ${DB_URI}
+      uri: ${DB_URI}
   gen:
     go:
+      sql_package: database/sql
       package: db
-      out: src/db/
+      out: src/db
+      emit_interface: true
+      emit_pointers_for_null_types: true
+      emit_sql_as_comment: true
+

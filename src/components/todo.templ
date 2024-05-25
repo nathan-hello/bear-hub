@@ -21,7 +21,7 @@ templ TodoRow(v *db.Todo) {
 			{ v.Body }
 		</td>
 		<th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-xs">
-			{ formatTime(&v.CreatedAt) }
+			{ formatTime(v.CreatedAt) }
 		</th>
 		<td class="px-6 py-4 max-w-xs">
 			<button
