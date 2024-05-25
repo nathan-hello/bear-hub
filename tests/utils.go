@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 
+	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
@@ -13,13 +14,12 @@ func initEnv(t *testing.T) {
 	}
 	_ = utils.Env()
 
-	err = utils.DbInit()
+	err = db.DbInit()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	conn := utils.Db()
-	if conn == nil {
+	if db.Db() == nil {
 		t.Fatal("Db() returned a nil *db.Queries")
 	}
 }

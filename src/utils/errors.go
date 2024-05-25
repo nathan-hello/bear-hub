@@ -3,7 +3,7 @@ package utils
 import "errors"
 
 var (
-        ErrNoTextInChatMsg = errors.New("illegal message - no text in chat message")
+	ErrNoTextInChatMsg = errors.New("illegal message - no text in chat message")
 )
 
 var (
@@ -35,9 +35,13 @@ var (
 	ErrJwtNotInDb       = errors.New("internal Server Error - 11004")
 	ErrJwtMethodBad     = errors.New("internal Server Error - 11005")
 	ErrJwtInvalidInDb   = errors.New("internal Server Error - 11007")
-	ErrJwtInsertInDb       = errors.New("internal Server Error - 11008")
+	ErrJwtInsertInDb    = errors.New("internal Server Error - 11008")
 	ErrJwtPairInvalid   = errors.New("internal Server Error - 11008")
 	ErrJwtGoodAccBadRef = errors.New("internal Server Error - 11013")
+)
+
+var (
+	ErrJwtInvalidType = errors.New("internal Server Error - 21013")
 )
 
 var (

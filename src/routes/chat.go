@@ -107,22 +107,22 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(err.Error()))
 		}
 
-                var resp []byte
+		var resp []byte
 
-                // We need to send html to subscribers no matter what
-                var htmlMsg bytes.Buffer
+		// We need to send html to subscribers no matter what
+		var htmlMsg bytes.Buffer
 		components.ChatMessage(&c).Render(r.Context(), &htmlMsg)
 		manager.BroadcastMessage(htmlMsg.Bytes())
 
 		if htmlResponse {
-                        resp = htmlMsg.Bytes()
+			resp = htmlMsg.Bytes()
 		}
 		if jsonResponse {
 			jason, err := json.Marshal(c)
 			if err != nil {
 				fmt.Fprintf(w, "{error: \"%v\"}", err)
 			}
-                        resp = jason 
+			resp = jason
 		}
 		w.Write(resp)
 	}
@@ -140,9 +140,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 	embed := r.URL.Query().Get("embed") == "true"
 
 	if r.Method == "GET" {
-		d := utils.Db()
-
-		recents, err := d.SelectMessagesByChatroom(
+		recents, err := db.Db().SelectMessagesByChatroom(
 			r.Context(),
 			db.SelectMessagesByChatroomParams{
 				RoomID: 1,
@@ -154,12 +152,17 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 
 		var buffer bytes.Buffer
 		for _, msg := range recents {
-			components.ChatMessage(&utils.ChatMessage{
-				Author: msg.Author,
-				Text:   msg.Message,
-				// Color:     "bg-blue-200",
-				CreatedAt: msg.CreatedAt,
-			}).Render(r.Context(), &buffer)
+			m := &utils.ChatMessage{
+				Author:    msg.Author,
+				Text:      msg.Message,
+				Color:     msg.Color,
+				CreatedAt: utils.RenderTime(msg.CreatedAt),
+			}
+			err := m.Validate()
+			if err != nil {
+				continue
+			}
+			components.ChatMessage(m).Render(r.Context(), &buffer)
 		}
 
 		components.ChatRoot(state, embed).Render(r.Context(), w)

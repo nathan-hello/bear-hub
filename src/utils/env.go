@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"database/sql"
 	"fmt"
 	"reflect"
 	"time"
@@ -9,9 +8,11 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/joho/godotenv"
-	"github.com/nathan-hello/htmx-template/src/db"
 )
 
+var envFile Dotenv
+var initialized bool
+var config FullConfig
 
 type Dotenv struct {
 	DB_URI     string
@@ -23,7 +24,33 @@ type FullConfig struct {
 	JWT_SECRET          string
 	REFRESH_EXPIRY_TIME time.Duration
 	ACCESS_EXPIRY_TIME  time.Duration
-        MODE string // "prod", "dev", "test"
+	MODE                string // "prod", "dev", "test"
+}
+
+func InitEnv(path string) error {
+	g, err := NewEnv(path)
+	if err != nil {
+		return err
+	}
+	envFile = g
+	if envFile.DB_URI == "" || envFile.JWT_SECRET == "" {
+		panic("DB_URI or JWT_SECRET uninitiated")
+	}
+	if !initialized {
+		config = FullConfig{
+			DB_URI:              envFile.DB_URI,
+			JWT_SECRET:          envFile.JWT_SECRET,
+			REFRESH_EXPIRY_TIME: time.Hour * 72,
+			ACCESS_EXPIRY_TIME:  time.Hour * 24,
+			MODE:                "dev",
+		}
+		initialized = true
+	}
+	return nil
+}
+
+func Env() *FullConfig {
+	return &config
 }
 
 func parseConfigStruct(s interface{}) []string {
@@ -68,48 +95,4 @@ func NewEnv(path string) (Dotenv, error) {
 
 	return parseRequiredEnvVars(dotenv, requiredEnvVars), nil
 
-}
-
-var envFile Dotenv
-var initialized bool
-var config FullConfig
-var dbQueries *db.Queries
-
-func InitEnv(path string) error {
-	g, err := NewEnv(path)
-	if err != nil {
-		return err
-	}
-	envFile = g
-	if envFile.DB_URI == "" || envFile.JWT_SECRET == "" {
-		panic("DB_URI or JWT_SECRET uninitiated")
-	}
-	if !initialized {
-		config = FullConfig{
-			DB_URI:              envFile.DB_URI,
-			JWT_SECRET:          envFile.JWT_SECRET,
-			REFRESH_EXPIRY_TIME: time.Hour * 72,
-			ACCESS_EXPIRY_TIME:  time.Hour * 24,
-                        MODE: "dev",
-		}
-		initialized = true
-	}
-	return nil
-}
-
-func Env() *FullConfig {
-	return &config
-}
-
-func DbInit() error {
-	var d, err = sql.Open("postgres", Env().DB_URI)
-	if err != nil {
-		return err
-	}
-	dbQueries = db.New(d)
-	return nil
-}
-
-func Db() *db.Queries {
-	return dbQueries
 }
