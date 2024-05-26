@@ -267,25 +267,6 @@ func (q *Queries) SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom,
 	return items, nil
 }
 
-const selectEmailOrUsernameAlreadyExists = `-- name: SelectEmailOrUsernameAlreadyExists :one
-SELECT email FROM users WHERE email = ? OR username = ?
-`
-
-type SelectEmailOrUsernameAlreadyExistsParams struct {
-	Email    string
-	Username string
-}
-
-// SelectEmailOrUsernameAlreadyExists
-//
-//	SELECT email FROM users WHERE email = ? OR username = ?
-func (q *Queries) SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg SelectEmailOrUsernameAlreadyExistsParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, selectEmailOrUsernameAlreadyExists, arg.Email, arg.Username)
-	var email string
-	err := row.Scan(&email)
-	return email, err
-}
-
 const selectMessagesByChatroom = `-- name: SelectMessagesByChatroom :many
 SELECT id, author, message, color, room_id, created_at FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
 `
@@ -446,14 +427,34 @@ func (q *Queries) SelectTokenFromJwtString(ctx context.Context, jwt string) (Tok
 }
 
 const selectUserByEmail = `-- name: SelectUserByEmail :one
-SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+SELECT id, email, username FROM users WHERE email = ?
 `
+
+type SelectUserByEmailRow struct {
+	ID       string
+	Email    string
+	Username string
+}
 
 // SelectUserByEmail
 //
-//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
-func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (User, error) {
+//	SELECT id, email, username FROM users WHERE email = ?
+func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (SelectUserByEmailRow, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByEmail, email)
+	var i SelectUserByEmailRow
+	err := row.Scan(&i.ID, &i.Email, &i.Username)
+	return i, err
+}
+
+const selectUserByEmailWithPassword = `-- name: SelectUserByEmailWithPassword :one
+SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+`
+
+// SelectUserByEmailWithPassword
+//
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+func (q *Queries) SelectUserByEmailWithPassword(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, selectUserByEmailWithPassword, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -467,14 +468,34 @@ func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (User, er
 }
 
 const selectUserByUsername = `-- name: SelectUserByUsername :one
-SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+SELECT id, email, username FROM users WHERE username = ?
 `
+
+type SelectUserByUsernameRow struct {
+	ID       string
+	Email    string
+	Username string
+}
 
 // SelectUserByUsername
 //
-//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
-func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (User, error) {
+//	SELECT id, email, username FROM users WHERE username = ?
+func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (SelectUserByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByUsername, username)
+	var i SelectUserByUsernameRow
+	err := row.Scan(&i.ID, &i.Email, &i.Username)
+	return i, err
+}
+
+const selectUserByUsernameWithPassword = `-- name: SelectUserByUsernameWithPassword :one
+SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+`
+
+// SelectUserByUsernameWithPassword
+//
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+func (q *Queries) SelectUserByUsernameWithPassword(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, selectUserByUsernameWithPassword, username)
 	var i User
 	err := row.Scan(
 		&i.ID,

@@ -2,7 +2,8 @@ package auth
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"slices"
 
 	// "fmt"
 	"net/mail"
@@ -14,149 +15,177 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	FieldUsername = "username"
-	FieldPassword = "password"
-	FieldEmail    = "email"
-	FieldPassConf = "password-confirmation"
-	FieldUser     = "user"
-)
-
-var AllFields = []string{
-	FieldUsername,
-	FieldEmail,
-	FieldPassConf,
-	FieldPassword,
-	FieldUser,
+type AuthSignUp struct {
+	Username    string
+	UsernameErr string
+	Email       string
+	EmailErr    string
+	Password    string
+	PassErr     string
+	PassConf    string
+	PassConfErr string
+	MiscErrs    []string
 }
 
-type AuthError struct {
-	Field string
-	Value string
-	Err   error
+func (a *AuthSignUp) RenderErrs() []string {
+	errs := []string{a.UsernameErr, a.EmailErr, a.PassErr, a.PassConfErr}
+	errs = append(errs, a.MiscErrs...)
+	for i, v := range errs {
+		if v == "" {
+			errs = slices.Delete(errs, i, i+1)
+		}
+	}
+	return errs
 }
 
-type SignUpCredentials struct {
-	Username string
-	Password string
-	PassConf string
-	Email    string
+
+func (a *AuthSignUp) FlushPasswords() {
+	a.Password = ""
+	a.PassConf = ""
 }
 
-type SignInCredentials struct {
-	User string
-	Pass string
-}
+func (a *AuthSignUp) validateStrings() bool {
+	_, emailErr := mail.ParseAddress(a.Email)
+	if emailErr != nil {
+		if utils.AuthConfig.EmailRequired {
+			a.EmailErr = utils.ErrEmailInvalid.Error()
+		}
+	}
+	if len(a.Username) < 3 {
+		if utils.AuthConfig.UsernameRequired {
+			a.UsernameErr = utils.ErrUsernameTooShort.Error()
 
-func (c *SignUpCredentials) validateStrings() *[]AuthError {
-	errs := []AuthError{}
-	ok := true
-
-	_, emailErr := mail.ParseAddress(c.Email)
-	if c.Email != "" && emailErr != nil {
-		errs = append(errs, AuthError{Field: FieldEmail, Err: utils.ErrEmailInvalid, Value: c.Email})
-		ok = false
+		}
 	}
 
-	if len(c.Username) < 3 {
-		errs = append(errs, AuthError{Field: FieldUsername, Err: utils.ErrUsernameTooShort, Value: c.Username})
-		ok = false
+	if a.Username == "" && a.Email == "" {
+		a.MiscErrs = append(a.MiscErrs, utils.ErrEmailOrUsernameReq.Error())
 	}
 
-	if len(c.Password) < 7 {
-		errs = append(errs, AuthError{Field: FieldPassword, Err: utils.ErrPasswordTooShort, Value: ""})
-		ok = false
+	if len(a.Password) < 7 {
+		a.PassErr = utils.ErrPasswordInvalid.Error()
+	}
+	if a.Password != a.PassConf {
+		a.PassConfErr = utils.ErrPassNoMatch.Error()
 	}
 
-	if c.Password != c.PassConf {
-		fmt.Printf("pass: %#v\npassconf: %#v\n", c.Password, c.PassConf)
-		errs = append(errs, AuthError{Field: FieldPassConf, Err: utils.ErrPassNoMatch, Value: ""})
-		ok = false
-	}
-
+	ok := len(a.RenderErrs()) == 0
 	if !ok {
-		return &errs
-	} else {
+		a.FlushPasswords()
+		return false
+	}
+
+	return true
+}
+
+func (a *AuthSignUp) SignUp() *db.InsertUserRow {
+	ok := a.validateStrings()
+	if !ok {
 		return nil
 	}
-}
-
-func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
-	strErrs := c.validateStrings()
-	if strErrs != nil {
-		return "", nil, strErrs
-	}
 	ctx := context.Background()
-	errs := []AuthError{}
 
-        salt := uuid.NewString()
-
-	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password + salt), bcrypt.DefaultCost)
-	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: utils.ErrHashPassword, Value: ""})
-		return "", nil, &errs
+	if a.Email != "" {
+		_, err := db.Db().SelectUserByEmail(ctx, a.Email)
+		if err != sql.ErrNoRows {
+			a.EmailErr = utils.ErrEmailTaken.Error()
+		}
+	}
+	if a.Username != "" {
+		_, err := db.Db().SelectUserByUsername(ctx, a.Username)
+		if err != sql.ErrNoRows {
+			a.UsernameErr = utils.ErrUsernameTaken.Error()
+		}
 	}
 
+	userId := uuid.NewString()
+	salt := uuid.NewString()[:8]
+	pass, err := bcrypt.GenerateFromPassword([]byte(a.Password+salt), bcrypt.DefaultCost)
+
+	if err != nil {
+		a.MiscErrs = append(a.MiscErrs, utils.ErrHashPassword.Error())
+		return nil
+	}
 
 	newUser, err := db.Db().InsertUser(
 		ctx,
 		db.InsertUserParams{
-			Email:             c.Email,
-			Username:          c.Username,
+			ID:                userId,
+			Email:             a.Email,
+			Username:          a.Username,
 			EncryptedPassword: string(pass),
-                        PasswordSalt: salt,
+			PasswordSalt:      salt,
 			PasswordCreatedAt: time.Now(),
 		})
 
 	if err != nil {
-		errs = append(errs, AuthError{Field: "", Err: utils.ErrDbInsertUser, Value: ""})
-		return "", nil, &errs
+		a.MiscErrs = append(a.MiscErrs, utils.ErrDbInsertUser.Error())
+		return nil
 	}
 
-	parsedId, err := uuid.Parse(newUser.ID)
-	if err != nil {
-		utils.PrintlnOnDevMode("insert user", err)
-
-		errs = append(errs, AuthError{Field: "", Err: utils.ErrDbInsertUser, Value: ""})
-		return "", nil, &errs
-	}
-
-	return newUser.Username, &parsedId, nil
-
+	return &newUser
 }
 
-func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
-	errs := []AuthError{}
-	if c.User == "" || c.Pass == "" {
-		errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
-		return nil, &errs
+type AuthSignIn struct {
+	UserOrEmail    string
+	UserOrEmailErr string
+	Password       string
+	PassErr        string
+	MiscErrs       []string
+}
+func (a *AuthSignIn) RenderErrs() []string {
+	errs := []string{a.UserOrEmailErr,a.PassErr}
+	errs = append(errs, a.MiscErrs...)
+	for i, v := range errs {
+		if v == "" {
+			errs = slices.Delete(errs, i, i+1)
+		}
+	}
+	return errs
+}
+func (a *AuthSignIn) FlushPassword() {
+	a.Password = ""
+}
+
+func (a *AuthSignIn) SignIn() *db.InsertUserRow {
+	if a.UserOrEmail == "" || a.Password == "" {
+		a.MiscErrs = append(a.MiscErrs, utils.ErrBadLogin.Error())
+		a.FlushPassword()
+		return nil
 	}
 
 	var user db.User
 	ctx := context.Background()
 
-	if _, err := mail.ParseAddress(c.User); err == nil {
-		user, err = db.Db().SelectUserByEmail(ctx, c.User)
+	_, err := mail.ParseAddress(a.UserOrEmail)
+	if err == nil {
+		user, err = db.Db().SelectUserByEmailWithPassword(ctx, a.UserOrEmail)
 		if err != nil {
-			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
-			return nil, &errs
+			a.MiscErrs = append(a.MiscErrs, utils.ErrBadLogin.Error())
+			a.FlushPassword()
+			return nil
 		}
 	} else {
-		user, err = db.Db().SelectUserByUsername(ctx, c.User)
+		user, err = db.Db().SelectUserByUsernameWithPassword(ctx, a.UserOrEmail)
 		if err != nil {
-			errs = append(errs, AuthError{Field: FieldUser, Err: utils.ErrBadLogin, Value: c.User})
-			return nil, &errs
+			a.MiscErrs = append(a.MiscErrs, utils.ErrBadLogin.Error())
+			a.FlushPassword()
+			return nil
 		}
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword + user.PasswordSalt), []byte(c.Pass))
-
+	err = bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(a.Password+user.PasswordSalt))
 	if err != nil {
-		errs = append(errs, AuthError{Err: utils.ErrHashPassword})
-		return nil, &errs
+		a.MiscErrs = append(a.MiscErrs, utils.ErrBadLogin.Error())
+		a.FlushPassword()
+		return nil
 	}
 
 	user.EncryptedPassword = ""
 
-	return &user, nil
+	return &db.InsertUserRow{
+		ID:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+	}
 }

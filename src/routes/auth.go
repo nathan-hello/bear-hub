@@ -9,23 +9,7 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-
-func signUpErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http.ResponseWriter) {
-	if err != nil {
-		components.SignUpForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(ctx, w)
-	}
-	if errs != nil {
-		components.SignUpForm(components.RenderAuthError(errs)).Render(ctx, w)
-	}
-}
-
-func signInErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http.ResponseWriter) {
-	if err != nil {
-		components.SignInForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(ctx, w)
-	}
-	if errs != nil {
-		components.SignInForm(components.RenderAuthError(errs)).Render(ctx, w)
-	}
+func sendArbitraryError(err error, ctx context.Context, w http.ResponseWriter) {
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -34,34 +18,31 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
 	}
-	state := components.AuthState{
+	state := components.AuthSignUpState{
 		ClientState: components.ClientState{IsAuthed: ok},
 	}
 
 	if r.Method == "POST" {
 		err := r.ParseForm()
 		if err != nil {
-			signUpErrMsg(utils.ErrParseForm, nil, r.Context(), w)
+			sendArbitraryError(utils.ErrParseForm, r.Context(), w)
 		}
 
-		cred := auth.SignUpCredentials{
-			Username: r.FormValue("username"),
-			Password: r.FormValue("password"),
-			PassConf: r.FormValue("password-confirmation"),
-			Email:    r.FormValue("email"),
+		state.Username = r.FormValue("username")
+		state.Password = r.FormValue("password")
+		state.PassConf = r.FormValue("password-confirmation")
+		state.Email = r.FormValue("email")
+
+		var signInAction = auth.AuthSignUp{
+			State: &state,
 		}
 
-		username, userId, errs := cred.SignUp()
-
-		if errs != nil {
-			signUpErrMsg(nil, errs, r.Context(), w)
-			return
-		}
+                user := signInAction.SignUp()
 
 		access, refresh, err := auth.NewTokenPair(
 			&auth.JwtParams{
-				Username: username,
-				UserId:   userId.String(),
+				Username: user.Username,
+				UserId:   user.ID,
 			})
 
 		if err != nil {

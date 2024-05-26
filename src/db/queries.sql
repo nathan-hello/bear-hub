@@ -13,11 +13,13 @@ DELETE FROM todos WHERE id = ?;
 INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
 VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username;
 -- name: SelectUserByEmail :one
-SELECT * FROM users WHERE email = ?;
+SELECT id, email, username FROM users WHERE email = ?;
 -- name: SelectUserByUsername :one
+SELECT id, email, username FROM users WHERE username = ?;
+-- name: SelectUserByEmailWithPassword :one
+SELECT * FROM users WHERE email = ?;
+-- name: SelectUserByUsernameWithPassword :one
 SELECT * FROM users WHERE username = ?;
--- name: SelectEmailOrUsernameAlreadyExists :one
-SELECT email FROM users WHERE email = ? OR username = ?;
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = ?;
 

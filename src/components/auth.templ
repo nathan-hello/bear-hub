@@ -1,7 +1,6 @@
 package components
 
 import "fmt"
-import "github.com/nathan-hello/htmx-template/src/auth"
 
 func borderColor(t bool) string {
 	if t == true {
@@ -88,7 +87,7 @@ templ passwordConfirm(errorBorder bool) {
 		<label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
 		<input
 			type="password"
-			name={ auth.FieldPassConf }
+			name={ "password-confirmation" }
 			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="•••••••••"
 			required
@@ -96,13 +95,10 @@ templ passwordConfirm(errorBorder bool) {
 	</div>
 }
 
-templ SignUpForm(s AuthState) {
+templ SignUpForm(s *AuthSignUpState) {
 	<div id="errors-container">
-		if s.UsernameErr != "" {
-			@AlertBox(s.UsernameErr)
-		}
-		if s.EmailErr != "" {
-			@AlertBox(s.UsernameErr)
+		for _, v := range s.RenderErrs() {
+			@AlertBox(v)
 		}
 	</div>
 	<div class="py-2"></div>
@@ -115,7 +111,7 @@ templ SignUpForm(s AuthState) {
 	</form>
 }
 
-templ SignUp(s AuthState) {
+templ SignUp(s *AuthSignUpState) {
 	@layout(LayoutParams{TabTitle: "Bear Hub - Sign Up"}, s.ClientState) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignUpForm(s)
@@ -123,7 +119,7 @@ templ SignUp(s AuthState) {
 	}
 }
 
-templ SignInForm(s AuthState) {
+templ SignInForm(s *AuthSignInState) {
 	<div id="errors-container">
 		for _, v := range s.RenderErrs() {
 			@AlertBox(v)
@@ -131,13 +127,13 @@ templ SignInForm(s AuthState) {
 	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
-		@user(s.UsernameErr != "", s.Username)
+		@user(s.UserOrEmailErr != "", s.UserOrEmail)
 		@password(s.PassErr != "")
 		<button onclick="document.getElementById('errors-container').remove();" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignIn(s AuthState) {
+templ SignIn(s *AuthSignInState) {
 	@layout(LayoutParams{TabTitle: "Bear Hub - Sign In", NavTitle: "Sign In"}, s.ClientState) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
 			@SignInForm(s)
