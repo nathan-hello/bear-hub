@@ -1,15 +1,20 @@
 package routes
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-func sendArbitraryError(err error, ctx context.Context, w http.ResponseWriter) {
+func Auth(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
+	if ok {
+		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
+		return
+	}
+	state := components.ClientState{IsAuthed: ok}
+       components.SignUp(state, auth.SignUp{}).Render(r.Context(), w)
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -18,26 +23,28 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
 	}
-	state := components.AuthSignUpState{
-		ClientState: components.ClientState{IsAuthed: ok},
-	}
+	state := components.ClientState{IsAuthed: ok}
+        action := auth.SignUp{}
 
 	if r.Method == "POST" {
 		err := r.ParseForm()
+
 		if err != nil {
-			sendArbitraryError(utils.ErrParseForm, r.Context(), w)
+                        action.MiscErrs = append(action.MiscErrs, err.Error())
+                        components.SignUpForm(action).Render(r.Context(), w)
+                        return
 		}
 
-		state.Username = r.FormValue("username")
-		state.Password = r.FormValue("password")
-		state.PassConf = r.FormValue("password-confirmation")
-		state.Email = r.FormValue("email")
+                action.Username = r.FormValue("username")
+		action.Password = r.FormValue("password")
+		action.PassConf = r.FormValue("password-confirmation")
+		action.Email = r.FormValue("email")
+                user := action.SignUp()
 
-		var signInAction = auth.AuthSignUp{
-			State: &state,
-		}
-
-                user := signInAction.SignUp()
+                if user == nil {
+                        components.SignUpForm(action).Render(r.Context(), w) // There will be errors in action.RenderErrs() if user == nil
+                        return
+                }
 
 		access, refresh, err := auth.NewTokenPair(
 			&auth.JwtParams{
@@ -45,10 +52,11 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 				UserId:   user.ID,
 			})
 
-		if err != nil {
-			signUpErrMsg(err, nil, r.Context(), w)
-			return
-		}
+                if err != nil {
+                        action.MiscErrs = append(action.MiscErrs, err.Error())
+                        components.SignUpForm(action).Render(r.Context(), w)
+                        return
+                }
 
 		auth.SetTokenCookies(w, access, refresh)
 		w.Header().Set("HX-Redirect", "/")
@@ -57,7 +65,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		components.SignUp(state).Render(r.Context(), w)
+		components.SignUp(state, action).Render(r.Context(), w)
 		return
 	}
 }
@@ -68,27 +76,25 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("HX-Redirect", "/")
 		return
 	}
-	state := components.ClientState{
-		IsAuthed: ok,
-	}
+	state := components.ClientState{ IsAuthed: ok, }
+        action := auth.SignIn{}
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			signInErrMsg(err, nil, r.Context(), w)
-			return
+                        action.MiscErrs = append(action.MiscErrs, err.Error())
+                        components.SignInForm(action).Render(r.Context(), w)
+                        return
 		}
 
-		cred := auth.SignInCredentials{
-			User: r.FormValue("user"),
-			Pass: r.FormValue("password"),
-		}
+			action.UserOrEmail= r.FormValue("user")
+			action.Password= r.FormValue("password")
 
-		user, errs := cred.SignIn()
+                user := action.SignIn()
 
-		if errs != nil {
-			signInErrMsg(nil, errs, r.Context(), w)
-			return
-		}
+                if user == nil {
+                        components.SignInForm(action).Render(r.Context(), w)
+                        return
+                }
 
 		access, refresh, err := auth.NewTokenPair(
 			&auth.JwtParams{
@@ -96,24 +102,20 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 				UserId:   user.ID,
 			})
 
-		if err != nil {
-			signInErrMsg(err, nil, r.Context(), w)
-			return
-		}
+                if err != nil {
+                        action.MiscErrs = append(action.MiscErrs, err.Error())
+                        components.SignInForm(action).Render(r.Context(), w)
+                        return
+                }
 
-		claims, err := auth.ParseToken(access)
-		if err != nil {
-			signInErrMsg(err, nil, r.Context(), w)
-			return
-		}
 
 		auth.SetTokenCookies(w, access, refresh)
-		http.Redirect(w, r, "/profile/%s"+claims.Username, http.StatusSeeOther)
+		http.Redirect(w, r, "/profile/%s"+user.Username, http.StatusSeeOther)
 		return
 	}
 
 	if r.Method == "GET" {
-		components.SignIn(state).Render(r.Context(), w)
+		components.SignIn(state, action).Render(r.Context(), w)
 		return
 	}
 }

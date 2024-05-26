@@ -3,9 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
-	"slices"
 
-	// "fmt"
 	"net/mail"
 	"time"
 
@@ -15,36 +13,41 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthSignUp struct {
-	Username    string
-	UsernameErr string
+type AuthHandler interface {
+        RenderErrs() []string
+}
+
+type SignUp struct {
 	Email       string
-	EmailErr    string
+	Username    string
 	Password    string
-	PassErr     string
 	PassConf    string
+	UsernameErr string
+	EmailErr    string
+	PassErr     string
 	PassConfErr string
 	MiscErrs    []string
 }
 
-func (a *AuthSignUp) RenderErrs() []string {
+func (a *SignUp) RenderErrs() []string {
 	errs := []string{a.UsernameErr, a.EmailErr, a.PassErr, a.PassConfErr}
 	errs = append(errs, a.MiscErrs...)
-	for i, v := range errs {
-		if v == "" {
-			errs = slices.Delete(errs, i, i+1)
-		}
+        rendered := []string{}
+	for _, v := range errs {
+                if v != "" {
+                        rendered = append(rendered, v)
+                }
 	}
-	return errs
+	return rendered
 }
 
 
-func (a *AuthSignUp) FlushPasswords() {
+func (a *SignUp) FlushPasswords() {
 	a.Password = ""
 	a.PassConf = ""
 }
 
-func (a *AuthSignUp) validateStrings() bool {
+func (a *SignUp) validateStrings() bool {
 	_, emailErr := mail.ParseAddress(a.Email)
 	if emailErr != nil {
 		if utils.AuthConfig.EmailRequired {
@@ -78,7 +81,7 @@ func (a *AuthSignUp) validateStrings() bool {
 	return true
 }
 
-func (a *AuthSignUp) SignUp() *db.InsertUserRow {
+func (a *SignUp) SignUp() *db.InsertUserRow {
 	ok := a.validateStrings()
 	if !ok {
 		return nil
@@ -96,6 +99,11 @@ func (a *AuthSignUp) SignUp() *db.InsertUserRow {
 		if err != sql.ErrNoRows {
 			a.UsernameErr = utils.ErrUsernameTaken.Error()
 		}
+	}
+	ok = len(a.RenderErrs()) == 0
+	if !ok {
+		a.FlushPasswords()
+		return nil
 	}
 
 	userId := uuid.NewString()
@@ -126,28 +134,29 @@ func (a *AuthSignUp) SignUp() *db.InsertUserRow {
 	return &newUser
 }
 
-type AuthSignIn struct {
+type SignIn struct {
 	UserOrEmail    string
 	UserOrEmailErr string
 	Password       string
 	PassErr        string
 	MiscErrs       []string
 }
-func (a *AuthSignIn) RenderErrs() []string {
+func (a *SignIn) RenderErrs() []string {
 	errs := []string{a.UserOrEmailErr,a.PassErr}
 	errs = append(errs, a.MiscErrs...)
-	for i, v := range errs {
-		if v == "" {
-			errs = slices.Delete(errs, i, i+1)
-		}
+        rendered := []string{}
+	for _, v := range errs {
+                if v != "" {
+                        rendered = append(rendered, v)
+                }
 	}
-	return errs
+	return rendered
 }
-func (a *AuthSignIn) FlushPassword() {
+func (a *SignIn) FlushPassword() {
 	a.Password = ""
 }
 
-func (a *AuthSignIn) SignIn() *db.InsertUserRow {
+func (a *SignIn) SignIn() *db.InsertUserRow {
 	if a.UserOrEmail == "" || a.Password == "" {
 		a.MiscErrs = append(a.MiscErrs, utils.ErrBadLogin.Error())
 		a.FlushPassword()

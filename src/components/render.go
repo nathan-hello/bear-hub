@@ -2,6 +2,7 @@ package components
 
 import (
 	"time"
+	"unicode"
 
 	"github.com/nathan-hello/htmx-template/src/db"
 )
@@ -21,4 +22,14 @@ func formatTime(t *time.Time) string {
 
 type ClientState struct {
 	IsAuthed bool
+}
+
+func sentenceizeString(s string) string {
+	if s == "" {
+		return ""
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+        runes = append(runes, '.')
+	return string(runes)
 }
