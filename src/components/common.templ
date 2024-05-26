@@ -18,11 +18,12 @@ templ navbar(p LayoutParams, s ClientState) {
 						@navbarLink("/chat", "Chat")
 						@navbarLink("/todo", "Todo")
 						@navbarLink("/credits", "Credits")
+						@navbarLink("/signout", "Sign Out")
 					</ul>
 				} else {
 					<div id="guest-nav-actions" hidden="true" class="font-medium text-lg w-full flex space-x-5">
-						@navbarLink("/signup",  "Sign Up")
-						@navbarLink("/signin",  "Sign In")
+						@navbarLink("/auth/signup",  "Sign Up")
+						@navbarLink("/auth/signin",  "Sign In")
 						@navbarLink("/credits", "Credits")
 					</div>
 				}
@@ -39,6 +40,7 @@ templ layout(p LayoutParams, s ClientState) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ p.TabTitle }</title>
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+                        <script>htmx.logAll()</script>
 			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
 			@navbar(p, s)
 		</head>
@@ -67,8 +69,8 @@ templ minLayout(p LayoutParams) {
 }
 
 templ AlertBox(s string) {
-	<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-		{ s }
+	<div class="p-4 mb-4 text-sm rounded-lg bg-gray-800 text-red-400" role="alert">
+		{ sentenceizeString(s) }
 	</div>
 }
 

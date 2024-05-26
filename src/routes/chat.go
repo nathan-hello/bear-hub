@@ -130,10 +130,6 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 
 func Chat(w http.ResponseWriter, r *http.Request) {
 	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
-	if ok {
-		w.Header().Set("HX-Redirect", "/")
-		return
-	}
 	state := components.ClientState{
 		IsAuthed: ok,
 	}
