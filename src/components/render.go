@@ -1,9 +1,9 @@
 package components
 
 import (
+	"slices"
 	"time"
 
-	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/db"
 )
 
@@ -16,33 +16,31 @@ func formatTime(t *time.Time) string {
 	return t.Format(time.RFC822)
 }
 
-type FieldError struct {
-	BorderColor string
-	Value       string
-	Err         string
+type ClientState struct {
+	IsAuthed bool
 }
 
-func RenderAuthError(s *[]auth.AuthError) map[string]FieldError {
-	if s == nil {
-		return nil
-	}
-	e := map[string]FieldError{}
-	for _, v := range *s {
-		e[v.Field] = FieldError{
-			BorderColor: "bg-red-500",
-			Value:       v.Value,
-			Err:         v.Err.Error(),
+type AuthState struct {
+	ClientState
+	Username    string
+	UsernameErr string
+	Email       string
+	EmailErr    string
+	PassErr     string
+	PassConfErr string
+}
+
+func (a *AuthState) RenderErrs() []string {
+	errs := []string{a.UsernameErr, a.EmailErr, a.PassErr, a.PassConfErr}
+	for i, v := range errs {
+		if v == "" {
+			errs = slices.Delete(errs, i, i+1)
 		}
 	}
-	s = nil
-	return e
-}
-
-type ClientState struct {
-        IsAuthed bool
+	return errs
 }
 
 type LayoutParams struct {
-        TabTitle string
-        NavTitle string
+	TabTitle string
+	NavTitle string
 }
