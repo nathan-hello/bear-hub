@@ -10,8 +10,8 @@ DELETE FROM todos WHERE id = ?;
 
 -- table: users
 -- name: InsertUser :one
-INSERT INTO users (id, email, username, encrypted_password, password_created_at)
-VALUES (?, ?, ?, ?, ?) RETURNING id, email, username;
+INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
+VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username;
 -- name: SelectUserByEmail :one
 SELECT * FROM users WHERE email = ?;
 -- name: SelectUserByUsername :one

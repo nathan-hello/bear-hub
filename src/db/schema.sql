@@ -1,19 +1,20 @@
-CREATE TABLE todos (
+CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     body TEXT NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY NOT NULL,
-    email TEXT NOT NULL,
-    username TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password_salt TEXT NOT NULL,
     encrypted_password TEXT NOT NULL,
     password_created_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE tokens (
+CREATE TABLE IF NOT EXISTS tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     jwt_type TEXT NOT NULL,
     jwt TEXT NOT NULL,
@@ -21,7 +22,7 @@ CREATE TABLE tokens (
     family TEXT NOT NULL
 );
 
-CREATE TABLE users_tokens (
+CREATE TABLE IF NOT EXISTS users_tokens (
     user_id TEXT NOT NULL,
     token_id INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -29,14 +30,14 @@ CREATE TABLE users_tokens (
     PRIMARY KEY (user_id, token_id)
 );
 
-CREATE TABLE chatrooms (
+CREATE TABLE IF NOT EXISTS chatrooms (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     creator TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     author TEXT NOT NULL,
     message TEXT NOT NULL,

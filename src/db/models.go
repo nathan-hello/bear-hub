@@ -43,6 +43,7 @@ type User struct {
 	ID                string
 	Email             string
 	Username          string
+	PasswordSalt      string
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
 }

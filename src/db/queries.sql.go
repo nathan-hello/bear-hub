@@ -178,14 +178,15 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) (Token
 }
 
 const insertUser = `-- name: InsertUser :one
-INSERT INTO users (id, email, username, encrypted_password, password_created_at)
-VALUES (?, ?, ?, ?, ?) RETURNING id, email, username
+INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
+VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
 `
 
 type InsertUserParams struct {
 	ID                string
 	Email             string
 	Username          string
+	PasswordSalt      string
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
 }
@@ -198,13 +199,14 @@ type InsertUserRow struct {
 
 // table: users
 //
-//	INSERT INTO users (id, email, username, encrypted_password, password_created_at)
-//	VALUES (?, ?, ?, ?, ?) RETURNING id, email, username
+//	INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
+//	VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error) {
 	row := q.db.QueryRowContext(ctx, insertUser,
 		arg.ID,
 		arg.Email,
 		arg.Username,
+		arg.PasswordSalt,
 		arg.EncryptedPassword,
 		arg.PasswordCreatedAt,
 	)
@@ -444,12 +446,12 @@ func (q *Queries) SelectTokenFromJwtString(ctx context.Context, jwt string) (Tok
 }
 
 const selectUserByEmail = `-- name: SelectUserByEmail :one
-SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE email = ?
+SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
 `
 
 // SelectUserByEmail
 //
-//	SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE email = ?
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
 func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByEmail, email)
 	var i User
@@ -457,6 +459,7 @@ func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (User, er
 		&i.ID,
 		&i.Email,
 		&i.Username,
+		&i.PasswordSalt,
 		&i.EncryptedPassword,
 		&i.PasswordCreatedAt,
 	)
@@ -464,12 +467,12 @@ func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (User, er
 }
 
 const selectUserByUsername = `-- name: SelectUserByUsername :one
-SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE username = ?
+SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
 `
 
 // SelectUserByUsername
 //
-//	SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE username = ?
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
 func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (User, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByUsername, username)
 	var i User
@@ -477,6 +480,7 @@ func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (Us
 		&i.ID,
 		&i.Email,
 		&i.Username,
+		&i.PasswordSalt,
 		&i.EncryptedPassword,
 		&i.PasswordCreatedAt,
 	)

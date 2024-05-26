@@ -7,14 +7,14 @@ import (
 
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
-		HandleRedirect(w, r, "/profile", utils.ErrProfileNotFound)
+		http.Redirect(w, r, "/profile", http.StatusSeeOther)
+
 		return
 	}
 
@@ -24,7 +24,7 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if err != sql.ErrNoRows {
-			HandleRedirect(w, r, "/", utils.ErrDbConnection)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
 	}
 

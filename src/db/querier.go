@@ -49,8 +49,8 @@ type Querier interface {
 	InsertToken(ctx context.Context, arg InsertTokenParams) (Token, error)
 	// table: users
 	//
-	//  INSERT INTO users (id, email, username, encrypted_password, password_created_at)
-	//  VALUES (?, ?, ?, ?, ?) RETURNING id, email, username
+	//  INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
+	//  VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
 	InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error)
 	//InsertUsersTokens
 	//
@@ -86,11 +86,11 @@ type Querier interface {
 	SelectTokenFromJwtString(ctx context.Context, jwt string) (Token, error)
 	//SelectUserByEmail
 	//
-	//  SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE email = ?
+	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
 	SelectUserByEmail(ctx context.Context, email string) (User, error)
 	//SelectUserByUsername
 	//
-	//  SELECT id, email, username, encrypted_password, password_created_at FROM users WHERE username = ?
+	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
 	SelectUserByUsername(ctx context.Context, username string) (User, error)
 	//SelectUserIdFromToken
 	//
