@@ -89,11 +89,14 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 	ctx := context.Background()
 	errs := []AuthError{}
 
-	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
+        salt := uuid.NewString()
+
+	pass, err := bcrypt.GenerateFromPassword([]byte(c.Password + salt), bcrypt.DefaultCost)
 	if err != nil {
 		errs = append(errs, AuthError{Field: "", Err: utils.ErrHashPassword, Value: ""})
 		return "", nil, &errs
 	}
+
 
 	newUser, err := db.Db().InsertUser(
 		ctx,
@@ -101,6 +104,7 @@ func (c *SignUpCredentials) SignUp() (string, *uuid.UUID, *[]AuthError) {
 			Email:             c.Email,
 			Username:          c.Username,
 			EncryptedPassword: string(pass),
+                        PasswordSalt: salt,
 			PasswordCreatedAt: time.Now(),
 		})
 
@@ -145,7 +149,7 @@ func (c *SignInCredentials) SignIn() (*db.User, *[]AuthError) {
 		}
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword), []byte(c.Pass))
+	err := bcrypt.CompareHashAndPassword([]byte(user.EncryptedPassword + user.PasswordSalt), []byte(c.Pass))
 
 	if err != nil {
 		errs = append(errs, AuthError{Err: utils.ErrHashPassword})

@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/nathan-hello/htmx-template/src/auth"
@@ -31,7 +30,7 @@ func signInErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
 	if ok {
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
+		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
 	}
 	state := components.ClientState{
@@ -127,7 +126,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		}
 
 		auth.SetTokenCookies(w, access, refresh)
-		HandleRedirect(w, r, fmt.Sprintf("/profile/%s", claims.Username), nil)
+		http.Redirect(w, r, "/profile/%s"+claims.Username, http.StatusSeeOther)
 		return
 	}
 
@@ -139,5 +138,5 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 func SignOut(w http.ResponseWriter, r *http.Request) {
 	auth.DeleteJwtCookies(w)
-	HandleRedirect(w, r, "/", utils.ErrUserSignedOut)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -8,14 +8,13 @@ import (
 	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
-	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func Todo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
 	if !ok {
-		HandleRedirect(w, r, "/signin", utils.ErrBadLogin)
+                http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 	state := components.ClientState{
@@ -24,7 +23,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		if err := r.ParseForm(); err != nil {
-			HandleRedirect(w, r, "/?500=/", utils.ErrDbConnection)
+                        http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
 		}
 
@@ -32,7 +31,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 
 		if len(body) > 255 || len(body) < 3 {
 			// this should be a send htmx div like in auth.go
-			HandleRedirect(w, r, "/?500=/", utils.ErrBadReqTodosBodyShort)
+                        http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
 		}
 
@@ -65,8 +64,8 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 		todos, err := db.Db().SelectTodosByUsername(ctx, claims.Username)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				HandleRedirect(w, r, "/?500=/", utils.ErrDbSelectTodosByUser)
-				return
+                                http.Redirect(w, r, "/signup", http.StatusSeeOther)
+		        	return
 			}
 		}
 		components.Todo(state, todos).Render(r.Context(), w)
