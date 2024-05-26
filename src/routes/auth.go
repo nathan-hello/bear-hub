@@ -9,6 +9,7 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
+
 func signUpErrMsg(err error, errs *[]auth.AuthError, ctx context.Context, w http.ResponseWriter) {
 	if err != nil {
 		components.SignUpForm(components.RenderAuthError(&[]auth.AuthError{{Err: err}})).Render(ctx, w)
@@ -33,8 +34,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
 	}
-	state := components.ClientState{
-		IsAuthed: ok,
+	state := components.AuthState{
+		ClientState: components.ClientState{IsAuthed: ok},
 	}
 
 	if r.Method == "POST" {

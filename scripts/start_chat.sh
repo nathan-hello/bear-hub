@@ -20,5 +20,6 @@ main() {
 
 while true; do
         main
+        echo -e '\n'
         sleep 0.5
 done

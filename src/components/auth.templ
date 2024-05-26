@@ -3,7 +3,14 @@ package components
 import "fmt"
 import "github.com/nathan-hello/htmx-template/src/auth"
 
-templ user(borderColor string, value string) {
+func borderColor(t bool) string {
+	if t == true {
+		return "border-red-400"
+	}
+	return "border-blue-400"
+}
+
+templ user(errorBorder bool, value string) {
 	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
 	<div class="relative mb-6">
 		<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
@@ -15,7 +22,7 @@ templ user(borderColor string, value string) {
 		<input
 			type="text"
 			id="input-group-1"
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor) }
+			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="Smokey96 or smokey96@bears.com"
 			name="user"
 			value={ value }
@@ -23,7 +30,7 @@ templ user(borderColor string, value string) {
 	</div>
 }
 
-templ email(borderColor string, value string) {
+templ email(errorBorder bool, value string) {
 	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
 	<div class="relative mb-6">
 		<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
@@ -35,7 +42,7 @@ templ email(borderColor string, value string) {
 		<input
 			type="text"
 			id="input-group-1"
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor) }
+			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="brown@bears.com"
 			name="email"
 			value={ value }
@@ -43,7 +50,7 @@ templ email(borderColor string, value string) {
 	</div>
 }
 
-templ username(borderColor string, value string) {
+templ username(errorBorder bool, value string) {
 	<label for="website-admin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
 	<div class="flex mb-6">
 		<span class={ fmt.Sprintf("inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border rounded-e-0 rounded-s-md dark:bg-gray-600 dark:text-gray-400 %v", borderColor) }>
@@ -53,7 +60,7 @@ templ username(borderColor string, value string) {
 		</span>
 		<input
 			name="username"
-			class={ fmt.Sprintf("rounded-none rounded-e-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor) }
+			class={ fmt.Sprintf("rounded-none rounded-e-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
 			type="text"
 			id="website-admin"
 			placeholder="username"
@@ -62,77 +69,78 @@ templ username(borderColor string, value string) {
 	</div>
 }
 
-templ password(borderColor string, value string) {
+templ password(errorBorder bool) {
 	<div class="mb-6">
 		<label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
 		<input
 			type="password"
 			id="password"
 			name="password"
-			class={ fmt.Sprintf("bg-gray-50 border  text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor) }
+			class={ fmt.Sprintf("bg-gray-50 border  text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="•••••••••"
 			required
-			value={ value }
 		/>
 	</div>
 }
 
-templ passwordConfirm(borderColor string, value string) {
+templ passwordConfirm(errorBorder bool) {
 	<div class="mb-6">
 		<label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
 		<input
 			type="password"
 			name={ auth.FieldPassConf }
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor) }
+			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="•••••••••"
 			required
-			value={ value }
 		/>
 	</div>
 }
 
-templ SignUpForm(s map[string]FieldError) {
+templ SignUpForm(s AuthState) {
 	<div id="errors-container">
-		for _, v := range s {
-			@AlertBox(v.Err)
+		if s.UsernameErr != "" {
+			@AlertBox(s.UsernameErr)
+		}
+		if s.EmailErr != "" {
+			@AlertBox(s.UsernameErr)
 		}
 	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signup" id="sign-up-form" hx-target="this">
-		@email(s[auth.FieldEmail].BorderColor, s[auth.FieldEmail].Value)
-		@username(s[auth.FieldUsername].BorderColor, s[auth.FieldUsername].Value)
-		@password(s[auth.FieldPassword].BorderColor, "")
-		@passwordConfirm(s[auth.FieldPassConf].BorderColor, "")
+		@email(s.EmailErr != "", s.Email)
+		@username(s.UsernameErr != "", s.Username)
+		@password(s.PassErr != "")
+		@passwordConfirm(s.PassConfErr != "")
 		<button onclick="document.getElementById('errors-container').remove()" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignUp(s ClientState) {
-	@layout(LayoutParams{TabTitle: "Bear Hub - Sign Up"}, s) {
+templ SignUp(s AuthState) {
+	@layout(LayoutParams{TabTitle: "Bear Hub - Sign Up"}, s.ClientState) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-			@SignUpForm(nil)
+			@SignUpForm(s)
 		</div>
 	}
 }
 
-templ SignInForm(s map[string]FieldError) {
+templ SignInForm(s AuthState) {
 	<div id="errors-container">
-		for _, v := range s {
-			@AlertBox(v.Err)
+		for _, v := range s.RenderErrs() {
+			@AlertBox(v)
 		}
 	</div>
 	<div class="py-2"></div>
 	<form class="w-96 mx-auto" hx-post="/signin" id="sign-in-form" hx-target="this">
-		@user(s[auth.FieldUser].BorderColor, s[auth.FieldUser].Value)
-		@password(s[auth.FieldPassword].BorderColor, "")
+		@user(s.UsernameErr != "", s.Username)
+		@password(s.PassErr != "")
 		<button onclick="document.getElementById('errors-container').remove();" class="h-10 bg-blue-900 w-20" type="submit">Submit</button>
 	</form>
 }
 
-templ SignIn(s ClientState) {
-	@layout(LayoutParams{TabTitle: "Bear Hub - Sign In", NavTitle: "Sign In"}, s) {
+templ SignIn(s AuthState) {
+	@layout(LayoutParams{TabTitle: "Bear Hub - Sign In", NavTitle: "Sign In"}, s.ClientState) {
 		<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
-			@SignInForm(nil)
+			@SignInForm(s)
 			<a class="mx-auto bg-blue-600 w-48 h-16 rounded-md" href="/signup">Sign Up</a>
 		</div>
 	}
