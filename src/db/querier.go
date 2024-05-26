@@ -60,10 +60,6 @@ type Querier interface {
 	//
 	//  SELECT id, name, creator, created_at FROM chatrooms ORDER BY created_at DESC LIMIT ?
 	SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom, error)
-	//SelectEmailOrUsernameAlreadyExists
-	//
-	//  SELECT email FROM users WHERE email = ? OR username = ?
-	SelectEmailOrUsernameAlreadyExists(ctx context.Context, arg SelectEmailOrUsernameAlreadyExistsParams) (string, error)
 	// table: messages
 	//
 	//  SELECT id, author, message, color, room_id, created_at FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
@@ -86,12 +82,20 @@ type Querier interface {
 	SelectTokenFromJwtString(ctx context.Context, jwt string) (Token, error)
 	//SelectUserByEmail
 	//
+	//  SELECT id, email, username FROM users WHERE email = ?
+	SelectUserByEmail(ctx context.Context, email string) (SelectUserByEmailRow, error)
+	//SelectUserByEmailWithPassword
+	//
 	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
-	SelectUserByEmail(ctx context.Context, email string) (User, error)
+	SelectUserByEmailWithPassword(ctx context.Context, email string) (User, error)
 	//SelectUserByUsername
 	//
+	//  SELECT id, email, username FROM users WHERE username = ?
+	SelectUserByUsername(ctx context.Context, username string) (SelectUserByUsernameRow, error)
+	//SelectUserByUsernameWithPassword
+	//
 	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
-	SelectUserByUsername(ctx context.Context, username string) (User, error)
+	SelectUserByUsernameWithPassword(ctx context.Context, username string) (User, error)
 	//SelectUserIdFromToken
 	//
 	//  SELECT user_id FROM users_tokens WHERE token_id = ? LIMIT 1

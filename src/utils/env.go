@@ -27,6 +27,16 @@ type FullConfig struct {
 	MODE                string // "prod", "dev", "test"
 }
 
+var AuthConfig = struct {
+	EmailRequired    bool
+	UsernameRequired bool
+	PassLength       int
+}{
+	EmailRequired:    false,
+	UsernameRequired: true,
+	PassLength:       9,
+}
+
 func InitEnv(path string) error {
 	g, err := NewEnv(path)
 	if err != nil {
