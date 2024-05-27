@@ -27,57 +27,57 @@ func SiteRouter() {
 			middlewares: alice.New(
 				RejectSubroute("/"),
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/todo",
 			hfunc: routes.Todo,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET", "DELETE", "POST"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/auth",
 			hfunc: routes.Auth,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/auth/signup",
 			hfunc: routes.SignUp,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/auth/signout",
 			hfunc: routes.SignOut,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/auth/signin",
 			hfunc: routes.SignIn,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST"),
+				InjectClaimsOnValidToken,
 			)},
-		{route: "/profile",
+		{route: "/profile/",
 			hfunc: routes.UserProfile,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/chat",
 			hfunc: routes.Chat,
 			middlewares: alice.New(
 				Logging,
-				InjectClaimsOnValidToken,
 				AllowMethods("GET", "POST", "DELETE", "PUT"),
+				InjectClaimsOnValidToken,
 			)},
 		{route: "/ws/v1/chat/html",
 			hfunc: routes.ChatSocket,
@@ -158,7 +158,7 @@ func LoadStaticFiles() ([]Static, error) {
 
 func StaticRouter(files []Static) error {
 	for _, v := range files {
-		middles := alice.New(Logging, AllowMethods("GET"), CreateHeader("Content-Type", v.contentType))
+		middles := alice.New(CreateHeader("Content-Type", v.contentType))
 		file := v.filepath // closure shanigans
 		http.Handle(v.route, middles.ThenFunc(func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, file) }))
 		log.Printf("Creating route: %v, for file: %v, with Content-Type %v\n", v.route, file, v.contentType)

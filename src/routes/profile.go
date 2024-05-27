@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 )
 
 func UserProfile(w http.ResponseWriter, r *http.Request) {
+	claims, _ := auth.GetClaims(r)
 
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
@@ -19,6 +21,9 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestedProfile := pathSegments[2]
+        requestedProfileIsCurrentUser := claims != nil && claims.Username == requestedProfile 
+
+        requestedProfileIsCurrentUser = requestedProfileIsCurrentUser //todo: make this important in markup
 
 	todos, err := db.Db().SelectTodosByUsername(r.Context(), requestedProfile)
 

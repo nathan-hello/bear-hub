@@ -129,7 +129,7 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {
-	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+	_, ok := auth.GetClaims(r)
 	state := components.ClientState{
 		IsAuthed: ok,
 	}
