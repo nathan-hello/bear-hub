@@ -1,3 +1,8 @@
+include .env
+
+dev/sqlc:
+	DB_URI=${DB_URI} go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate 
+
 dev/templ:
 	templ generate -path src/components --watch
 
