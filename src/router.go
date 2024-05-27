@@ -95,7 +95,7 @@ func SiteRouter() {
 		http.Handle(v.route, v.middlewares.ThenFunc(v.hfunc))
 	}
 
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3001", nil)
 }
 
 type Static struct {
