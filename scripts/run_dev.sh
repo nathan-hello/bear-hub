@@ -24,9 +24,15 @@ log_with_timestamp() {
     echo -e "$cmd @ PID: $!"
 }
 
-log_with_timestamp "tailwindcss -i public/css/tw-base.css -o public/css/tw-output.css -w" "log/tailwind.log" "tailwindcss"
-log_with_timestamp "templ generate -path src/components --watch" "log/templ.log" "templ      "
-log_with_timestamp "air" "log/air.log" "air        "  
+tw_log="${dir}/../tmp/log/tailwind.log"
+air_log="${dir}/../tmp/log/air.log"
+templ_log="${dir}/../tmp/log/templ.log"
+
+touch $tw_log $air_log $templ_log
+
+log_with_timestamp "tailwindcss -i public/css/tw-base.css -o public/css/tw-output.css -w" $tw_log "tailwindcss"
+log_with_timestamp "templ generate -path src/components --watch" $templ_log "templ      "
+log_with_timestamp "go run github.com/cosmtrek/air@v1.52.0" $air_log "air        "  
 
 
 trap 'cleanup' INT # Trap interrupt signal and call cleanup function
