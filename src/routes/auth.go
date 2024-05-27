@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/nathan-hello/htmx-template/src/auth"
@@ -8,7 +9,7 @@ import (
 )
 
 func Auth(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
+	claims, ok := auth.GetClaims(r)
 	if ok {
 		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
@@ -18,7 +19,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(auth.ClaimsContextKey).(auth.CustomClaims)
+	claims, ok := auth.GetClaims(r)
 	if ok {
 		http.Redirect(w, r, "/profile/"+claims.Username, http.StatusSeeOther)
 		return
@@ -65,15 +66,17 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
+		log.Println("START SIGNUP")
 		components.SignUp(state, action).Render(r.Context(), w)
+		log.Println("END SIGNUP")
 		return
 	}
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	_, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
+	_, ok := auth.GetClaims(r)
 	if ok {
-		w.Header().Set("HX-Redirect", "/")
+                http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	state := components.ClientState{ IsAuthed: ok, }

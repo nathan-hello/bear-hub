@@ -15,8 +15,9 @@ func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		defer func() {
-			log.Printf("IP: %v, ROUTE REQUESTED: %v, RESPONSE TIME: %v\n", r.URL.User, r.URL.Path, time.Since(start))
+			log.Printf("IP: %v, ROUTE REQUESTED: %v, RESPONSE TIME: %v\n", r.RemoteAddr, r.URL.Path, time.Since(start))
 		}()
+                
 		next.ServeHTTP(w, r)
 	})
 }
@@ -69,17 +70,17 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 
 		claims, err := auth.ParseToken(access)
 		if err != nil {
-			log.Print("ERR: parsetoken:", access, err)
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// if claims is nil, it doesn't matter because
-		// we have to do a type assertion whenever we use it anyways
-		// and that will check if the type is ok
-		var claimsObj = claims
-		newCtx := context.WithValue(r.Context(), auth.ClaimsContextKey, claimsObj)
+                if claims == nil {
+                        log.Println("claims was nil")
+			next.ServeHTTP(w, r)
+			return
 
-		next.ServeHTTP(w, r.WithContext(newCtx))
+                }
+                wrapReq := r.WithContext(context.WithValue(r.Context(), auth.ClaimsContextKey, claims))
+		next.ServeHTTP(w, wrapReq)
 	})
 }

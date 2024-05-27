@@ -11,72 +11,70 @@ func borderColor(t bool) string {
 }
 
 templ user(errorBorder bool, value string) {
-	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username or Email</label>
-	<div class="relative mb-6">
-		<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-			<svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 16">
-				<path d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z"></path>
-				<path d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"></path>
-			</svg>
+	<div>
+		<label for="input-group-1" class="block mb-2 font-medium text-gray-900 dark:text-white">Username or Email</label>
+		<div class="relative mb-6">
+			<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+				@svgUser()
+			</div>
+			<input
+				type="text"
+				id="input-group-1"
+				class={ fmt.Sprintf("bg-gray-50 border text-gray-900  rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
+				placeholder="Smokey96 or smokey96@bears.com"
+				name="user"
+				value={ value }
+			/>
 		</div>
-		<input
-			type="text"
-			id="input-group-1"
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
-			placeholder="Smokey96 or smokey96@bears.com"
-			name="user"
-			value={ value }
-		/>
 	</div>
 }
 
 templ email(errorBorder bool, value string) {
-	<label for="input-group-1" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Email</label>
-	<div class="relative ">
-		<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-			<svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 16">
-				<path d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z"></path>
-				<path d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z"></path>
-			</svg>
+	<div>
+		<label for="input-group-1" class="block mb-2  font-medium text-gray-900 dark:text-white">Email (optional)</label>
+		<div class="relative ">
+			<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+				@svgEmail()
+			</div>
+			<input
+				type="text"
+				id="input-group-1"
+				class={ fmt.Sprintf("bg-gray-50 border text-gray-900  rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
+				placeholder="brown@bears.com"
+				name="email"
+				value={ value }
+			/>
 		</div>
-		<input
-			type="text"
-			id="input-group-1"
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
-			placeholder="brown@bears.com"
-			name="email"
-			value={ value }
-		/>
 	</div>
 }
 
 templ username(errorBorder bool, value string) {
-	<label for="website-admin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
-	<div class="flex mb-6">
-		<span class={ fmt.Sprintf("inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border rounded-e-0 rounded-s-md dark:bg-gray-600 dark:text-gray-400 %v", borderColor(errorBorder)) }>
-			<svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-				<path d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z"></path>
-			</svg>
-		</span>
-		<input
-			name="username"
-			class={ fmt.Sprintf("rounded-none rounded-e-lg bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
-			type="text"
-			id="website-admin"
-			placeholder="ilovepicnics00"
-			value={ value }
-		/>
+	<div>
+		<label for="username" class="block mb-2  font-medium text-gray-900 dark:text-white">Username</label>
+		<div class="relative">
+			<div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+				@svgUser()
+			</div>
+			<input
+				name="username"
+				class={ fmt.Sprintf("bg-gray-50 border text-gray-900  rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
+				type="text"
+				id="website-admin"
+				placeholder="ilovepicnics00"
+				value={ value }
+			/>
+		</div>
 	</div>
 }
 
 templ password(errorBorder bool) {
-	<div class="mb-6">
-		<label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+	<div>
+		<label for="password" class="block mb-2  font-medium text-gray-900 dark:text-white">Password</label>
 		<input
 			type="password"
 			id="password"
 			name="password"
-			class={ fmt.Sprintf("bg-gray-50 border  text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
+			class={ fmt.Sprintf("bg-gray-50 border  text-gray-900  rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="•••••••••"
 			required
 		/>
@@ -84,12 +82,12 @@ templ password(errorBorder bool) {
 }
 
 templ passwordConfirm(errorBorder bool) {
-	<div class="mb-6">
-		<label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
+	<div>
+		<label for="confirm_password" class="block font-medium text-gray-900 dark:text-white">Confirm password</label>
 		<input
 			type="password"
 			name={ "password-confirmation" }
-			class={ fmt.Sprintf("bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor(errorBorder)) }
+			class={ fmt.Sprintf("bg-gray-50 border text-gray-900  rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 %v", borderColor(errorBorder)) }
 			placeholder="•••••••••"
 			required
 		/>
@@ -97,11 +95,17 @@ templ passwordConfirm(errorBorder bool) {
 }
 
 templ submitFormButton() {
-	<button onclick="document.getElementById('errors-container').remove()" class="block w-60 mx-auto h-10 rounded-md bg-green-800 drop-shadow-md text-white " type="submit">Submit</button>
+	<button
+		onclick="document.getElementById('errors-container').remove()"
+		class="block w-60 my-2 mx-auto h-10 rounded-md bg-green-800 text-white "
+		type="submit"
+	>
+		Submit
+	</button>
 }
 
 templ authRedirect(s string, link string) {
-	<p class="mx-auto text-blue-950 w-min whitespace-nowrap mt-5  underline"><a href={ templ.URL(link) }>{ s }</a></p>
+	<p class="float-left my-2 mx-auto text-blue-950 w-min whitespace-nowrap mt-5  underline"><a href={ templ.URL(link) }>{ s }</a></p>
 }
 
 templ renderErrs(action auth.AuthHandler) {
@@ -115,7 +119,7 @@ templ renderErrs(action auth.AuthHandler) {
 }
 
 templ SignUpForm(a auth.SignUp) {
-	<form class=" flex flex-col w-96 mx-auto" hx-post="/auth/signup" hx-target="this">
+	<form class="text-2xl gap-y-4 flex flex-col max-w-screen-md mx-auto" hx-post="/auth/signup" hx-target="this">
 		<p class="font-semibold text-gray-100 text-center text-2xl mx-auto  border-b border-white w-min whitespace-nowrap px-20 pb-2 mb-6">
 			Create an account
 		</p>
@@ -125,8 +129,8 @@ templ SignUpForm(a auth.SignUp) {
 		@passwordConfirm(a.PassConfErr != "")
 		@submitFormButton()
 		@authRedirect("Already have an account?", "/auth/signin")
-                <div class="py-2"></div>
-                @renderErrs(&a)
+		<div class="py-2"></div>
+		@renderErrs(&a)
 	</form>
 }
 
@@ -139,7 +143,7 @@ templ SignUp(s ClientState, a auth.SignUp) {
 }
 
 templ SignInForm(a auth.SignIn) {
-	<form class="flex flex-col w-96 mx-auto" hx-post="/auth/signin" hx-target="this">
+	<form class="text-2xl gayp-y-4 flex flex-col max-w-screen-md mx-auto" hx-post="/auth/signin" hx-target="this">
 		<p class="font-semibold text-gray-100 text-center text-2xl mx-auto  border-b border-white w-min whitespace-nowrap px-20 pb-2 mb-6">
 			Sign In
 		</p>
@@ -147,7 +151,7 @@ templ SignInForm(a auth.SignIn) {
 		@password(a.PassErr != "")
 		@submitFormButton()
 		@authRedirect("Need an account?", "/auth/signup")
-                <div class="py-2"></div>
+		<div class="py-2"></div>
 		@renderErrs(&a)
 	</form>
 }

@@ -7,6 +7,15 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
+
+type ContextClaimType struct{}
+var ClaimsContextKey struct{} = ContextClaimType{}
+
+func GetClaims( r *http.Request) (*CustomClaims, bool) {
+        claims, ok := r.Context().Value(ClaimsContextKey).(*CustomClaims)
+        return claims, ok
+}
+
 func SetTokenCookies(w http.ResponseWriter, a string, r string) {
         secure := utils.Env().MODE == "prod" 
 

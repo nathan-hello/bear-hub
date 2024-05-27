@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,9 +15,6 @@ type JwtParams struct {
 	Family   string
 }
 
-type ContextClaimType string
-
-const ClaimsContextKey ContextClaimType = "claims"
 
 type CustomClaims struct {
 	jwt.RegisteredClaims
@@ -24,6 +22,10 @@ type CustomClaims struct {
 	Username string `json:"username"`
 	JwtType  string `json:"jwt_type"`
 	Family   string `json:"family"`
+}
+
+func (c *CustomClaims) String() string {
+        return fmt.Sprintf("%#v", c)
 }
 
 func NewTokenPair(j *JwtParams) (string, string, error) {
