@@ -6,7 +6,7 @@ root = "."
 tmp_dir = "tmp"
 
 [proxy]
-  enabled = true
+  enabled = false
   proxy_port = 3000
   app_port = 3001
 
