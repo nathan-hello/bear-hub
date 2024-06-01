@@ -81,6 +81,7 @@ func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) 
 		return "", false
 	}
 
+        
 	vAccess, vRefresh, err := ValidatePairOrRefresh(access.Value, refresh.Value)
 
 	if err != nil {

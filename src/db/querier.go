@@ -37,7 +37,7 @@ type Querier interface {
 	InsertChatroom(ctx context.Context, arg InsertChatroomParams) (int64, error)
 	// table: chatroom_members
 	//
-	//  INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+	//  INSERT OR IGNORE INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
 	InsertChatroomMember(ctx context.Context, arg InsertChatroomMemberParams) error
 	//InsertMessage
 	//
@@ -53,8 +53,8 @@ type Querier interface {
 	InsertToken(ctx context.Context, arg InsertTokenParams) (Token, error)
 	// table: users
 	//
-	//  INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
-	//  VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
+	//  INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color)
+	//  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, email, username
 	InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error)
 	//InsertUsersTokens
 	//
@@ -71,6 +71,10 @@ type Querier interface {
 	//
 	//  SELECT id, name, creator, created_at FROM chatrooms ORDER BY created_at DESC LIMIT ?
 	SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom, error)
+	//SelectColorFromUserAndRoom
+	//
+	//  SELECT chatroom_color FROM chatroom_members WHERE chatroom_id = ? AND user_id = ?
+	SelectColorFromUserAndRoom(ctx context.Context, arg SelectColorFromUserAndRoomParams) (string, error)
 	// table: messages
 	//
 	//  SELECT messages.id, messages.author_id, messages.author_username, messages.message, messages.room_id, messages.created_at, chatroom_members.chatroom_color
@@ -98,7 +102,7 @@ type Querier interface {
 	SelectTokenFromJwtString(ctx context.Context, jwt string) (Token, error)
 	//SelectUserByEmail
 	//
-	//  SELECT id, email, username FROM users WHERE email = ?
+	//  SELECT id, email, username, global_chat_color FROM users WHERE email = ?
 	SelectUserByEmail(ctx context.Context, email string) (SelectUserByEmailRow, error)
 	//SelectUserByEmailWithPassword
 	//
@@ -106,11 +110,11 @@ type Querier interface {
 	SelectUserByEmailWithPassword(ctx context.Context, email string) (User, error)
 	//SelectUserById
 	//
-	//  SELECT id, email, username FROM users WHERE id = ?
+	//  SELECT id, email, username, global_chat_color FROM users WHERE id = ?
 	SelectUserById(ctx context.Context, id string) (SelectUserByIdRow, error)
 	//SelectUserByUsername
 	//
-	//  SELECT id, email, username FROM users WHERE username = ?
+	//  SELECT id, email, username, global_chat_color FROM users WHERE username = ?
 	SelectUserByUsername(ctx context.Context, username string) (SelectUserByUsernameRow, error)
 	//SelectUserByUsernameWithPassword
 	//

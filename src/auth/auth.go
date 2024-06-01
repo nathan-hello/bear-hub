@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"net/mail"
 	"time"
@@ -65,7 +66,7 @@ func (a *SignUp) validateStrings() bool {
 		a.MiscErrs = append(a.MiscErrs, utils.ErrEmailOrUsernameReq.Error())
 	}
 
-	if utils.Env().AUTH_CONFIG.PasswordCheck(a.Password) {
+	if !utils.Env().AUTH_CONFIG.PasswordCheck(a.Password) {
 		a.PassErr = utils.ErrPasswordInvalid.Error()
 	}
 	if a.Password != a.PassConf {
@@ -111,6 +112,7 @@ func (a *SignUp) SignUp() *db.InsertUserRow {
 	pass, err := bcrypt.GenerateFromPassword([]byte(a.Password+salt), bcrypt.DefaultCost)
 
 	if err != nil {
+                log.Println(err)
 		a.MiscErrs = append(a.MiscErrs, utils.ErrHashPassword.Error())
 		return nil
 	}
@@ -118,6 +120,7 @@ func (a *SignUp) SignUp() *db.InsertUserRow {
 	newUser, err := db.Db().InsertUser(
 		ctx,
 		db.InsertUserParams{
+                        GlobalChatColor: "text-gray-500",
 			ID:                userId,
 			Email:             a.Email,
 			Username:          a.Username,
@@ -127,6 +130,7 @@ func (a *SignUp) SignUp() *db.InsertUserRow {
 		})
 
 	if err != nil {
+                log.Println(err)
 		a.MiscErrs = append(a.MiscErrs, utils.ErrDbInsertUser.Error())
 		return nil
 	}

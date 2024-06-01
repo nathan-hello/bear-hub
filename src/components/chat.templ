@@ -2,19 +2,19 @@ package components
 
 import "github.com/nathan-hello/htmx-template/src/utils"
 
-templ ChatRoot(s utils.ClientState, embed bool) {
+templ ChatRoot(s utils.ClientState, embed bool, messages []*utils.ChatMessage) {
 	if (embed) {
 		@minLayout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}) {
 			@chatScripts()
 			<div class="flex flex-col relative h-screen" style="">
-				@chatBox()
+				@chatBox(messages)
 			</div>
 		}
 	} else {
 		@layout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}, s) {
 			@chatScripts()
 			<div class="flex flex-col relative" style="height: calc(100vh - 64px);">
-				@chatBox()
+				@chatBox(messages)
 			</div>
 		}
 	}
@@ -24,13 +24,13 @@ templ ChatMessage(chat *utils.ChatMessage) {
 	<div hx-swap-oob="beforeend:#messages">
 		<div id={ chat.TimeToString(false) } class="">
 			<span class="text-white font-thin">{ chat.TimeToString(true) }</span>
-			<span class={ "font-semibold " + chat.Color }>{ chat.Author }</span>
+			<span class={ "font-semibold " + chat.Color }>{ chat.Username }</span>
 			<span class=" text-white">{ chat.Text }</span>
 		</div>
 	</div>
 }
 
-templ chatBox() {
+templ chatBox(messages []*utils.ChatMessage) {
 	<button
 		hidden
 		id="scroll-bottom-button"
@@ -42,9 +42,18 @@ templ chatBox() {
 	</button>
 	<div class="flex flex-col h-full">
 		<div id="message-container" class="flex-grow bg-gray-900 overflow-auto gap-y-1">
-			<div class="min-h-0" id="messages"></div>
+			<div class="min-h-0" id="messages">
+				if messages != nil {
+					for _, v := range messages {
+						if v == nil {
+							continue
+						}
+						@ChatMessage(v)
+					}
+				}
+			</div>
 		</div>
-		<div class="bg-gray-800 p-1" >
+		<div class="bg-gray-800 p-1">
 			@chatForm()
 		</div>
 	</div>

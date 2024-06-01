@@ -10,14 +10,14 @@ DELETE FROM todos WHERE id = ?;
 
 -- table: users
 -- name: InsertUser :one
-INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
-VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username;
+INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color)
+VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, email, username;
 -- name: SelectUserByEmail :one
-SELECT id, email, username FROM users WHERE email = ?;
+SELECT id, email, username, global_chat_color FROM users WHERE email = ?;
 -- name: SelectUserByUsername :one
-SELECT id, email, username FROM users WHERE username = ?;
+SELECT id, email, username, global_chat_color FROM users WHERE username = ?;
 -- name: SelectUserById :one
-SELECT id, email, username FROM users WHERE id = ?;
+SELECT id, email, username, global_chat_color FROM users WHERE id = ?;
 -- name: SelectUserByEmailWithPassword :one
 SELECT * FROM users WHERE email = ?;
 -- name: SelectUserByUsernameWithPassword :one
@@ -84,7 +84,7 @@ UPDATE messages SET message = ? WHERE id = ? RETURNING *;
 
 -- table: chatroom_members
 -- name: InsertChatroomMember :exec
-INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?);
+INSERT OR IGNORE INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?);
 -- name: SelectAllMembersByChatroom :many
 SELECT users.id, users.username, chatroom_members.chatroom_color 
 FROM chatroom_members 
@@ -97,8 +97,8 @@ JOIN chatrooms ON chatroom_members.chatroom_id = chatrooms.id
 WHERE chatroom_members.user_id = ?;
 -- DeleteChatroomMember :exec
 DELETE FROM chatroom_members WHERE chatroom_members.user_id = ? AND chatroom_members.chatroom_id = ?;
-
-
+-- name: SelectColorFromUserAndRoom :one
+SELECT chatroom_color FROM chatroom_members WHERE chatroom_id = ? AND user_id = ?;
 
 
 

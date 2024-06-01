@@ -16,7 +16,6 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	pathSegments := strings.Split(r.URL.Path, "/")
 	if pathSegments[1] != "profile" {
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
-
 		return
 	}
 
@@ -35,5 +34,5 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 
 	p := components.ProfileProps{Username: requestedProfile, Todos: &todos}
 
-	components.Profile(p).Render(r.Context(), w)
+	components.Profile(state, p).Render(r.Context(), w)
 }

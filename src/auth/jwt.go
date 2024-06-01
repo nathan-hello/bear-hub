@@ -93,7 +93,7 @@ func ParseToken(t string) (*utils.CustomClaims, error) {
 
 }
 
-func localValidateJwt(t string) error {
+func ValidateJwtFromString(t string) error {
 	token, err := jwt.Parse(
 		t, func(token *jwt.Token) (interface{}, error) {
 			ok := token.Method.Alg() == "HS256"
@@ -112,17 +112,14 @@ func localValidateJwt(t string) error {
 	if !token.Valid {
 		return utils.ErrInvalidToken
 	}
+        sub, err := token.Claims.GetSubject()
 
+        if err != nil {
+                
+        }
+
+	err = DbValidateJwt(t, sub)
 	return nil
-}
-
-func ValidateJwtFromString(t string) error {
-	err := localValidateJwt(t)
-	if err != nil {
-		return err
-	}
-	err = DbValidateJwt(t)
-	return err
 }
 
 func NewPairFromRefresh(r string) (string, string, error) {

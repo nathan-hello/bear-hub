@@ -8,6 +8,6 @@ module.exports = {
         extend: {},
     },
     plugins: [],
-    safelist: ["text-gray-500"]
+    safelist: ["text-gray-100"]
 }
 

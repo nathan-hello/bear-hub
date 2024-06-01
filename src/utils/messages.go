@@ -9,45 +9,40 @@ import (
 const TimeFormat = time.RFC3339
 
 type rawChatMessage struct {
-	Author string `json:"msg-author"`
 	Text   string `json:"msg-text"`
-	Color  string `json:"msg-color"`
 }
 
 type ChatMessage struct {
-	Raw       rawChatMessage
-	Author    string    `json:"msg-author"`
+        UserId string `json:"msg-userid"`
+        Username string `json:"msg-author"`
 	Text      string    `json:"msg-text"`
 	Color     string    `json:"msg-color"`
 	CreatedAt time.Time `json:"msg-time"`
 }
 
-func (c *ChatMessage) UnmarshalJSON(bits []byte) error {
-	c.Raw = rawChatMessage{}
-	err := json.Unmarshal(bits, &c.Raw)
-	if err != nil {
-		return err
-	}
+func NewChatFromBytes(bits []byte, username string, userId string, color string) (*ChatMessage, error) {
+        var raw rawChatMessage
+        err := json.Unmarshal(bits, &raw)
+        if err != nil {
+                return nil, err
+        }
+        if raw.Text == "" {
+                return nil, ErrNoTextInChatMsg
+        }
 
-	if c.Raw.Text == "" {
-		return ErrNoTextInChatMsg
-	}
+        if username == "" {
+                username = "anon"
+        }
 
-	if c.Raw.Author == "" {
-		c.Raw.Author = "anon"
-	}
+        fmt.Println(color)
 
-	if c.Raw.Color == "" {
-		c.Raw.Color = "text-gray-500"
-	}
-
-	c.Author = c.Raw.Author
-	c.Text = c.Raw.Text
-	c.Color = c.Raw.Color
-
-	c.CreatedAt = time.Now().UTC()
-
-	return nil
+        return &ChatMessage{
+                UserId: userId,
+                Username: username,
+                Text: raw.Text,
+                Color: color,
+                CreatedAt: time.Now().UTC(),
+        }, nil
 }
 
 // TimeToString(true)  = string(HH:MM)
