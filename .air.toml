@@ -6,7 +6,7 @@ root = "."
 tmp_dir = "tmp"
 
 [proxy]
-  enabled = false
+  enabled = true
   proxy_port = 3000
   app_port = 3001
 
@@ -22,18 +22,9 @@ bin = "tmp/main"
 # Customize binary, can setup environment variables when run your app.
 full_bin = "./tmp/main"
 # Watch these filename extensions.
-include_ext = ["go", "tpl", "tmpl", "html", "templ", "css"]
+include_ext = ["go", "templ", "html", "js", "css"]
 # Watch these directories if you specified.
-include_dir = [
-    # "src", 
-    # "src/sqlc/*", 
-    # "src/config/*",
-    # "src/static/*", 
-    # "src/static/css/*", 
-    # "src/components/*", 
-    # "src/sqlc/input/*", 
-    # "src/static/templates/*", 
-    ]
+include_dir = []
 # Watch these files.
 include_file = []
 # Ignore these filename extensions or directories.

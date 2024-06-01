@@ -2,46 +2,60 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
-type ChatMessage struct {
+const TimeFormat = time.RFC3339
+
+type rawChatMessage struct {
 	Author    string `json:"msg-author"`
 	Text      string `json:"msg-text"`
 	Color     string `json:"msg-color"`
-	CreatedAt string `json:"msg-time"`
 }
 
-func NewChatMsgFromBytes(bits []byte) (*ChatMessage, error) {
-	t := &ChatMessage{}
-	err := json.Unmarshal(bits, &t)
-	if err != nil {
-		return nil, err
-	}
-	err = t.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
+type ChatMessage struct {
+        raw  rawChatMessage
+	Author    string `json:"msg-author"`
+	Text      string `json:"msg-text"`
+	Color     string `json:"msg-color"`
+	CreatedAt *time.Time `json:"msg-time"`
 }
 
-func (c *ChatMessage) Validate() error {
-	if c.Text == "" {
-		return ErrNoTextInChatMsg
+func (c *ChatMessage) UnmarshalJSON(bits []byte) error {
+        var raw rawChatMessage
+	err := json.Unmarshal(bits, &raw)
+	if err != nil {
+		return err
 	}
-	if c.Author == "" {
-		c.Author = "anon"
-	}
-	if c.Color == "" {
-		c.Color = "text-gray-500"
-	}
-	if c.CreatedAt == "" {
-		c.CreatedAt = time.Now().UTC().Format(time.RFC3339)
-	}
+        if raw.Text == "" {
+                return ErrNoTextInChatMsg
+        }
+        
+        c.Author = raw.Author
+        c.Text = raw.Text
+        c.Color = raw.Color
+
+        if c.Author == "" {
+                c.Author = "anon"
+        }
+
+        if c.Color == "" {
+                c.Color = "text-gray-500"
+        }
+        
+        utcTime  := time.Now().UTC()
+        c.CreatedAt = &utcTime
+
 	return nil
-
 }
 
-func RenderTime(t *time.Time) string {
-	return t.UTC().Format(time.RFC3339)
+// TimeToString(true)  = string(HH:MM)
+//
+// TimeToString(false) = .Format(time.RFC3339)
+func (c *ChatMessage) TimeToString(hourMinute bool) string {
+        if hourMinute {
+                return fmt.Sprintf("%02d:%02d", c.CreatedAt.Hour(), c.CreatedAt.Minute())
+        }
+        return c.CreatedAt.Format(time.RFC3339)
 }
