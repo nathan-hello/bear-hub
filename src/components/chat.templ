@@ -22,8 +22,9 @@ templ ChatRoot(s ClientState, embed bool) {
 
 templ ChatMessage(chat *utils.ChatMessage) {
 	<div hx-swap-oob="beforeend:#messages">
-		<div id={ chat.CreatedAt } class="">
-			<span class={ "  " + " " + chat.Color }>&lt;{ chat.Author }&gt;</span>
+		<div id={ chat.TimeToString(false) } class="">
+			<span class="text-white font-thin">{ chat.TimeToString(true) }</span>
+			<span class={ "font-semibold " + chat.Color }>{ chat.Author }</span>
 			<span class=" text-white">{ chat.Text }</span>
 		</div>
 	</div>
@@ -50,7 +51,7 @@ templ chatBox() {
 }
 
 templ chatForm() {
-	<form class="flex" id="chat-form-id" ws-send="true" ws-connect="/ws/v1/chat/html" hx-ext="ws">
+	<form class="flex" id="chat-form-id" ws-send="true" ws-connect="ws://localhost:3001/ws/v1/chat/html" hx-ext="ws">
 		<button
 			id="dropdownTopButton"
 			data-dropdown-toggle="dropdownTop"

@@ -74,16 +74,17 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-
-		msg, err := utils.NewChatMsgFromBytes(clientMsg)
+                
+                var msg utils.ChatMessage
+		err = json.Unmarshal(clientMsg, &msg)
 		if err != nil {
 			log.Println(err)
-			return
+			w.Write([]byte(err.Error()))
 		}
 
 		buffMsg := &bytes.Buffer{}
 
-		components.ChatMessage(msg).Render(r.Context(), buffMsg) // write component to buffMsg
+		components.ChatMessage(&msg).Render(r.Context(), buffMsg) // write component to buffMsg
 		manager.BroadcastMessage(buffMsg.Bytes())
 
 	}
@@ -99,10 +100,6 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		c := utils.ChatMessage{}
 		err := json.NewDecoder(r.Body).Decode(&c)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-		}
-		err = c.Validate()
 		if err != nil {
 			w.Write([]byte(err.Error()))
 		}
@@ -152,11 +149,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 				Author:    msg.Author,
 				Text:      msg.Message,
 				Color:     msg.Color,
-				CreatedAt: utils.RenderTime(msg.CreatedAt),
-			}
-			err := m.Validate()
-			if err != nil {
-				continue
+                                CreatedAt: msg.CreatedAt,
 			}
 			components.ChatMessage(m).Render(r.Context(), &buffer)
 		}

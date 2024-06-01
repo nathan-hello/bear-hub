@@ -14,7 +14,7 @@ main() {
         curl -X POST \
           -H "Content-Type: application/json" \
           -d '{"msg-text": "'"${message}"'"}' \
-          http://localhost:3000/api/v1/chat/message             
+          http://localhost:3001/api/v1/chat/message             
 }
 
 
