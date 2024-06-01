@@ -15,6 +15,8 @@ type ClientState struct {
 
 var DefaultClientState = ClientState{
 	IsAuthed: false,
+        Username: "anon",
+        UserId: "",
 }
 
 type ContextClaimType struct{}

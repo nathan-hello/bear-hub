@@ -95,7 +95,7 @@ func (q *Queries) InsertChatroom(ctx context.Context, arg InsertChatroomParams) 
 }
 
 const insertChatroomMember = `-- name: InsertChatroomMember :exec
-INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+INSERT OR IGNORE INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
 `
 
 type InsertChatroomMemberParams struct {
@@ -106,7 +106,7 @@ type InsertChatroomMemberParams struct {
 
 // table: chatroom_members
 //
-//	INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+//	INSERT OR IGNORE INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
 func (q *Queries) InsertChatroomMember(ctx context.Context, arg InsertChatroomMemberParams) error {
 	_, err := q.db.ExecContext(ctx, insertChatroomMember, arg.ChatroomID, arg.UserID, arg.ChatroomColor)
 	return err
@@ -196,8 +196,8 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) (Token
 }
 
 const insertUser = `-- name: InsertUser :one
-INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
-VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
+INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color)
+VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, email, username
 `
 
 type InsertUserParams struct {
@@ -207,6 +207,7 @@ type InsertUserParams struct {
 	PasswordSalt      string
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
+	GlobalChatColor   string
 }
 
 type InsertUserRow struct {
@@ -217,8 +218,8 @@ type InsertUserRow struct {
 
 // table: users
 //
-//	INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at)
-//	VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username
+//	INSERT INTO users (id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color)
+//	VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, email, username
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error) {
 	row := q.db.QueryRowContext(ctx, insertUser,
 		arg.ID,
@@ -227,6 +228,7 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertU
 		arg.PasswordSalt,
 		arg.EncryptedPassword,
 		arg.PasswordCreatedAt,
+		arg.GlobalChatColor,
 	)
 	var i InsertUserRow
 	err := row.Scan(&i.ID, &i.Email, &i.Username)
@@ -325,6 +327,25 @@ func (q *Queries) SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom,
 		return nil, err
 	}
 	return items, nil
+}
+
+const selectColorFromUserAndRoom = `-- name: SelectColorFromUserAndRoom :one
+SELECT chatroom_color FROM chatroom_members WHERE chatroom_id = ? AND user_id = ?
+`
+
+type SelectColorFromUserAndRoomParams struct {
+	ChatroomID int64
+	UserID     string
+}
+
+// SelectColorFromUserAndRoom
+//
+//	SELECT chatroom_color FROM chatroom_members WHERE chatroom_id = ? AND user_id = ?
+func (q *Queries) SelectColorFromUserAndRoom(ctx context.Context, arg SelectColorFromUserAndRoomParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, selectColorFromUserAndRoom, arg.ChatroomID, arg.UserID)
+	var chatroom_color string
+	err := row.Scan(&chatroom_color)
+	return chatroom_color, err
 }
 
 const selectMessagesByChatroom = `-- name: SelectMessagesByChatroom :many
@@ -508,22 +529,28 @@ func (q *Queries) SelectTokenFromJwtString(ctx context.Context, jwt string) (Tok
 }
 
 const selectUserByEmail = `-- name: SelectUserByEmail :one
-SELECT id, email, username FROM users WHERE email = ?
+SELECT id, email, username, global_chat_color FROM users WHERE email = ?
 `
 
 type SelectUserByEmailRow struct {
-	ID       string
-	Email    string
-	Username string
+	ID              string
+	Email           string
+	Username        string
+	GlobalChatColor string
 }
 
 // SelectUserByEmail
 //
-//	SELECT id, email, username FROM users WHERE email = ?
+//	SELECT id, email, username, global_chat_color FROM users WHERE email = ?
 func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (SelectUserByEmailRow, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByEmail, email)
 	var i SelectUserByEmailRow
-	err := row.Scan(&i.ID, &i.Email, &i.Username)
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.GlobalChatColor,
+	)
 	return i, err
 }
 
@@ -550,42 +577,54 @@ func (q *Queries) SelectUserByEmailWithPassword(ctx context.Context, email strin
 }
 
 const selectUserById = `-- name: SelectUserById :one
-SELECT id, email, username FROM users WHERE id = ?
+SELECT id, email, username, global_chat_color FROM users WHERE id = ?
 `
 
 type SelectUserByIdRow struct {
-	ID       string
-	Email    string
-	Username string
+	ID              string
+	Email           string
+	Username        string
+	GlobalChatColor string
 }
 
 // SelectUserById
 //
-//	SELECT id, email, username FROM users WHERE id = ?
+//	SELECT id, email, username, global_chat_color FROM users WHERE id = ?
 func (q *Queries) SelectUserById(ctx context.Context, id string) (SelectUserByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, selectUserById, id)
 	var i SelectUserByIdRow
-	err := row.Scan(&i.ID, &i.Email, &i.Username)
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.GlobalChatColor,
+	)
 	return i, err
 }
 
 const selectUserByUsername = `-- name: SelectUserByUsername :one
-SELECT id, email, username FROM users WHERE username = ?
+SELECT id, email, username, global_chat_color FROM users WHERE username = ?
 `
 
 type SelectUserByUsernameRow struct {
-	ID       string
-	Email    string
-	Username string
+	ID              string
+	Email           string
+	Username        string
+	GlobalChatColor string
 }
 
 // SelectUserByUsername
 //
-//	SELECT id, email, username FROM users WHERE username = ?
+//	SELECT id, email, username, global_chat_color FROM users WHERE username = ?
 func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (SelectUserByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByUsername, username)
 	var i SelectUserByUsernameRow
-	err := row.Scan(&i.ID, &i.Email, &i.Username)
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.GlobalChatColor,
+	)
 	return i, err
 }
 

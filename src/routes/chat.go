@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -77,9 +78,14 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
+                color, err := db.Db().SelectColorFromUserAndRoom(r.Context(), db.SelectColorFromUserAndRoomParams{ChatroomID: DEFAULT_ROOM_ID, UserID: state.UserId})
+                if err != nil {
+                        color = "text-gray-500"
+                }
 
-		var msg utils.ChatMessage
-		err = json.Unmarshal(clientMsg, &msg)
+                
+
+                msg, err := utils.NewChatFromBytes(clientMsg, state.Username, state.UserId, color)
 		if err != nil {
 			log.Println(err)
 			w.Write([]byte(err.Error()))
@@ -89,22 +95,20 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			db.InsertMessageParams{
 				AuthorID:       &state.UserId,
-				AuthorUsername: msg.Author,
+				AuthorUsername: msg.Username,
 				Message:        msg.Text,
 				CreatedAt:      msg.CreatedAt,
 				RoomID:         DEFAULT_ROOM_ID,
 			})
 
 		buffMsg := &bytes.Buffer{}
-
-		components.ChatMessage(&msg).Render(r.Context(), buffMsg) // write component to buffMsg
+		components.ChatMessage(msg).Render(r.Context(), buffMsg) // write component to buffMsg
 		manager.BroadcastMessage(buffMsg.Bytes())
-
 	}
 }
 
 func ApiChat(w http.ResponseWriter, r *http.Request) {
-	//state := utils.GetClientState(r)
+	state := utils.GetClientState(r)
 	htmlResponse := r.Header.Get("Content-Type") == "text/html"
 	jsonResponse := r.Header.Get("Content-Type") == "application/json"
 	if !htmlResponse && !jsonResponse {
@@ -112,8 +116,18 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		c := utils.ChatMessage{}
-		err := json.NewDecoder(r.Body).Decode(&c)
+                body, err := io.ReadAll(r.Body)
+
+                if err != nil {
+			fmt.Fprintf(w, "{error: \"%v\"}", err)
+                }
+
+                color, _ := db.Db().SelectColorFromUserAndRoom(r.Context(), db.SelectColorFromUserAndRoomParams{ChatroomID: DEFAULT_ROOM_ID, UserID: state.UserId})
+                if color == "" {
+                        color = "text-gray-500"
+                }
+
+                c, err := utils.NewChatFromBytes(body, state.Username, state.UserId, color)
 		if err != nil {
 			fmt.Fprintf(w, "{error: \"%v\"}\n", err)
 			return
@@ -123,18 +137,21 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 
 		// We need to send html to subscribers no matter what
 		htmlMsg := bytes.Buffer{}
-		components.ChatMessage(&c).Render(r.Context(), &htmlMsg)
+		components.ChatMessage(c).Render(r.Context(), &htmlMsg)
 		manager.BroadcastMessage(htmlMsg.Bytes())
 
-		db.Db().InsertMessage(
+		err = db.Db().InsertMessage(
 			r.Context(),
 			db.InsertMessageParams{
 				AuthorID:       nil,
-				AuthorUsername: c.Author,
+				AuthorUsername: c.Username,
 				Message:        c.Text,
 				RoomID:         DEFAULT_ROOM_ID,
 				CreatedAt:      c.CreatedAt,
 			})
+		if err != nil {
+			log.Println(err)
+		}
 
 		if htmlResponse {
 			resp = htmlMsg.Bytes()
@@ -155,6 +172,7 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 	embed := r.URL.Query().Get("embed") == "true"
 
 	if r.Method == "GET" {
+
 		recents, err := db.Db().SelectMessagesByChatroom(
 			r.Context(),
 			db.SelectMessagesByChatroomParams{
@@ -165,26 +183,33 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 
-		var buffer bytes.Buffer
+		var renderedMessages []*utils.ChatMessage
 		for _, msg := range recents {
 			var color string
+                        var authorId string 
 			if msg.ChatroomColor == nil {
 				color = DEFAULT_CHAT_COLOR
 			} else {
 				color = *msg.ChatroomColor
 			}
+
+                        if msg.AuthorID == nil {
+                                authorId = ""
+                        } else {
+                                authorId = *msg.AuthorID
+                        }
+                        
+
 			m := &utils.ChatMessage{
-				Author:    msg.AuthorUsername,
+				Username:    msg.AuthorUsername,
+                                UserId: authorId,
 				Text:      msg.Message,
 				Color:     color,
 				CreatedAt: msg.CreatedAt,
 			}
-			components.ChatMessage(m).Render(r.Context(), &buffer)
+                        renderedMessages = append(renderedMessages, m)
 		}
 
-		components.ChatRoot(state, embed).Render(r.Context(), w)
-		w.Write(buffer.Bytes())
-
-		return
+                components.ChatRoot(state, embed, renderedMessages).Render(r.Context(), w)
 	}
 }

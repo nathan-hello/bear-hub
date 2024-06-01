@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
@@ -26,22 +27,26 @@ func DbInsertNewToken(t string, jwt_type string) error {
 	return nil
 }
 
-func DbValidateJwt(t string) error {
-	// TODO: validate jwt in database
-	// ctx := context.Background()
-	// d := Db()
-	//
-	// token, err := d.SelectTokenFromJwtString(ctx, t)
-	//
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		return ErrJwtNotInDb
-	// 	}
-	// 	return ErrDbSelectJwt
-	// }
-	// if !token.Valid {
-	// 	return ErrJwtInvalidInDb
-	// }
+func DbValidateJwt(t string, user string) error {
+	ctx := context.Background()
+	
+	token, err := db.Db().SelectTokenFromJwtString(ctx, t)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return utils.ErrJwtNotInDb
+		}
+		return utils.ErrDbSelectJwt
+	}
+	if !token.Valid {
+		return utils.ErrJwtInvalidInDb
+	}
+
+        _, err = db.Db().SelectUserById(context.Background(), user)
+
+        if err != nil {
+                return err
+        }
 
 	return nil
 }

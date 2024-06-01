@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS chatrooms (
 CREATE TABLE IF NOT EXISTS chatroom_members (
     chatroom_id INTEGER NOT NULL,
     user_id TEXT NOT NULL,
-    chatroom_color TEXT NOT NULL,
+    hatroom_color TEXT NOT NULL,
     PRIMARY KEY (chatroom_id, user_id),
     FOREIGN KEY (chatroom_id) REFERENCES chatrooms(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

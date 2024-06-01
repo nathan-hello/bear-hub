@@ -22,7 +22,7 @@ func SiteRouter() {
 	}
 
 	sites := []Site{
-		{route: "/",
+                {route: "/",
 			hfunc: routes.Root,
 			middlewares: alice.New(
 				RejectSubroute("/"),
