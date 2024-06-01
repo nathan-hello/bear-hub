@@ -81,7 +81,7 @@ INSERT INTO chatrooms (name, creator, created_at) VALUES (?, ?, ?) RETURNING id
 type InsertChatroomParams struct {
 	Name      string
 	Creator   string
-	CreatedAt *time.Time
+	CreatedAt time.Time
 }
 
 // InsertChatroom
@@ -94,26 +94,44 @@ func (q *Queries) InsertChatroom(ctx context.Context, arg InsertChatroomParams) 
 	return id, err
 }
 
+const insertChatroomMember = `-- name: InsertChatroomMember :exec
+INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+`
+
+type InsertChatroomMemberParams struct {
+	ChatroomID    int64
+	UserID        string
+	ChatroomColor string
+}
+
+// table: chatroom_members
+//
+//	INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+func (q *Queries) InsertChatroomMember(ctx context.Context, arg InsertChatroomMemberParams) error {
+	_, err := q.db.ExecContext(ctx, insertChatroomMember, arg.ChatroomID, arg.UserID, arg.ChatroomColor)
+	return err
+}
+
 const insertMessage = `-- name: InsertMessage :exec
-INSERT INTO messages (author, message, color, room_id, created_at) VALUES (?, ?, ?, ?, ?)
+INSERT INTO messages (author_id, author_username, message, room_id, created_at) VALUES (?, ?, ?, ?, ?)
 `
 
 type InsertMessageParams struct {
-	Author    string
-	Message   string
-	Color     string
-	RoomID    int64
-	CreatedAt *time.Time
+	AuthorID       *string
+	AuthorUsername string
+	Message        string
+	RoomID         int64
+	CreatedAt      time.Time
 }
 
 // InsertMessage
 //
-//	INSERT INTO messages (author, message, color, room_id, created_at) VALUES (?, ?, ?, ?, ?)
+//	INSERT INTO messages (author_id, author_username, message, room_id, created_at) VALUES (?, ?, ?, ?, ?)
 func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) error {
 	_, err := q.db.ExecContext(ctx, insertMessage,
-		arg.Author,
+		arg.AuthorID,
+		arg.AuthorUsername,
 		arg.Message,
-		arg.Color,
 		arg.RoomID,
 		arg.CreatedAt,
 	)
@@ -127,7 +145,7 @@ INSERT INTO todos (body, username, created_at) VALUES (?, ?, ?) RETURNING id, bo
 type InsertTodoParams struct {
 	Body      string
 	Username  string
-	CreatedAt *time.Time
+	CreatedAt time.Time
 }
 
 // InsertTodo
@@ -232,6 +250,48 @@ func (q *Queries) InsertUsersTokens(ctx context.Context, arg InsertUsersTokensPa
 	return err
 }
 
+const selectAllMembersByChatroom = `-- name: SelectAllMembersByChatroom :many
+SELECT users.id, users.username, chatroom_members.chatroom_color 
+FROM chatroom_members 
+JOIN users ON chatroom_members.user_id = users.id 
+WHERE chatroom_members.chatroom_id = ?
+`
+
+type SelectAllMembersByChatroomRow struct {
+	ID            string
+	Username      string
+	ChatroomColor string
+}
+
+// SelectAllMembersByChatroom
+//
+//	SELECT users.id, users.username, chatroom_members.chatroom_color
+//	FROM chatroom_members
+//	JOIN users ON chatroom_members.user_id = users.id
+//	WHERE chatroom_members.chatroom_id = ?
+func (q *Queries) SelectAllMembersByChatroom(ctx context.Context, chatroomID int64) ([]SelectAllMembersByChatroomRow, error) {
+	rows, err := q.db.QueryContext(ctx, selectAllMembersByChatroom, chatroomID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SelectAllMembersByChatroomRow
+	for rows.Next() {
+		var i SelectAllMembersByChatroomRow
+		if err := rows.Scan(&i.ID, &i.Username, &i.ChatroomColor); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const selectChatrooms = `-- name: SelectChatrooms :many
 SELECT id, name, creator, created_at FROM chatrooms ORDER BY created_at DESC LIMIT ?
 `
@@ -268,7 +328,12 @@ func (q *Queries) SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom,
 }
 
 const selectMessagesByChatroom = `-- name: SelectMessagesByChatroom :many
-SELECT id, author, message, color, room_id, created_at FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
+SELECT messages.id, messages.author_id, messages.author_username, messages.message, messages.room_id, messages.created_at, chatroom_members.chatroom_color
+FROM messages
+LEFT JOIN chatroom_members ON messages.room_id = chatroom_members.chatroom_id
+WHERE messages.room_id = ?
+ORDER BY messages.created_at DESC
+LIMIT ?
 `
 
 type SelectMessagesByChatroomParams struct {
@@ -276,25 +341,41 @@ type SelectMessagesByChatroomParams struct {
 	Limit  int64
 }
 
+type SelectMessagesByChatroomRow struct {
+	ID             int64
+	AuthorID       *string
+	AuthorUsername string
+	Message        string
+	RoomID         int64
+	CreatedAt      time.Time
+	ChatroomColor  *string
+}
+
 // table: messages
 //
-//	SELECT id, author, message, color, room_id, created_at FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
-func (q *Queries) SelectMessagesByChatroom(ctx context.Context, arg SelectMessagesByChatroomParams) ([]Message, error) {
+//	SELECT messages.id, messages.author_id, messages.author_username, messages.message, messages.room_id, messages.created_at, chatroom_members.chatroom_color
+//	FROM messages
+//	LEFT JOIN chatroom_members ON messages.room_id = chatroom_members.chatroom_id
+//	WHERE messages.room_id = ?
+//	ORDER BY messages.created_at DESC
+//	LIMIT ?
+func (q *Queries) SelectMessagesByChatroom(ctx context.Context, arg SelectMessagesByChatroomParams) ([]SelectMessagesByChatroomRow, error) {
 	rows, err := q.db.QueryContext(ctx, selectMessagesByChatroom, arg.RoomID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Message
+	var items []SelectMessagesByChatroomRow
 	for rows.Next() {
-		var i Message
+		var i SelectMessagesByChatroomRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Author,
+			&i.AuthorID,
+			&i.AuthorUsername,
 			&i.Message,
-			&i.Color,
 			&i.RoomID,
 			&i.CreatedAt,
+			&i.ChatroomColor,
 		); err != nil {
 			return nil, err
 		}
@@ -310,19 +391,19 @@ func (q *Queries) SelectMessagesByChatroom(ctx context.Context, arg SelectMessag
 }
 
 const selectMessagesByUser = `-- name: SelectMessagesByUser :many
-SELECT id, author, message, color, room_id, created_at FROM messages WHERE author = ? ORDER BY created_at DESC LIMIT ?
+SELECT id, author_id, author_username, message, room_id, created_at FROM messages WHERE author_id = ? ORDER BY created_at DESC LIMIT ?
 `
 
 type SelectMessagesByUserParams struct {
-	Author string
-	Limit  int64
+	AuthorID *string
+	Limit    int64
 }
 
 // SelectMessagesByUser
 //
-//	SELECT id, author, message, color, room_id, created_at FROM messages WHERE author = ? ORDER BY created_at DESC LIMIT ?
+//	SELECT id, author_id, author_username, message, room_id, created_at FROM messages WHERE author_id = ? ORDER BY created_at DESC LIMIT ?
 func (q *Queries) SelectMessagesByUser(ctx context.Context, arg SelectMessagesByUserParams) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, selectMessagesByUser, arg.Author, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, selectMessagesByUser, arg.AuthorID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -332,9 +413,9 @@ func (q *Queries) SelectMessagesByUser(ctx context.Context, arg SelectMessagesBy
 		var i Message
 		if err := rows.Scan(
 			&i.ID,
-			&i.Author,
+			&i.AuthorID,
+			&i.AuthorUsername,
 			&i.Message,
-			&i.Color,
 			&i.RoomID,
 			&i.CreatedAt,
 		); err != nil {
@@ -447,12 +528,12 @@ func (q *Queries) SelectUserByEmail(ctx context.Context, email string) (SelectUs
 }
 
 const selectUserByEmailWithPassword = `-- name: SelectUserByEmailWithPassword :one
-SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE email = ?
 `
 
 // SelectUserByEmailWithPassword
 //
-//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE email = ?
 func (q *Queries) SelectUserByEmailWithPassword(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByEmailWithPassword, email)
 	var i User
@@ -463,7 +544,28 @@ func (q *Queries) SelectUserByEmailWithPassword(ctx context.Context, email strin
 		&i.PasswordSalt,
 		&i.EncryptedPassword,
 		&i.PasswordCreatedAt,
+		&i.GlobalChatColor,
 	)
+	return i, err
+}
+
+const selectUserById = `-- name: SelectUserById :one
+SELECT id, email, username FROM users WHERE id = ?
+`
+
+type SelectUserByIdRow struct {
+	ID       string
+	Email    string
+	Username string
+}
+
+// SelectUserById
+//
+//	SELECT id, email, username FROM users WHERE id = ?
+func (q *Queries) SelectUserById(ctx context.Context, id string) (SelectUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, selectUserById, id)
+	var i SelectUserByIdRow
+	err := row.Scan(&i.ID, &i.Email, &i.Username)
 	return i, err
 }
 
@@ -488,12 +590,12 @@ func (q *Queries) SelectUserByUsername(ctx context.Context, username string) (Se
 }
 
 const selectUserByUsernameWithPassword = `-- name: SelectUserByUsernameWithPassword :one
-SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE username = ?
 `
 
 // SelectUserByUsernameWithPassword
 //
-//	SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+//	SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE username = ?
 func (q *Queries) SelectUserByUsernameWithPassword(ctx context.Context, username string) (User, error) {
 	row := q.db.QueryRowContext(ctx, selectUserByUsernameWithPassword, username)
 	var i User
@@ -504,6 +606,7 @@ func (q *Queries) SelectUserByUsernameWithPassword(ctx context.Context, username
 		&i.PasswordSalt,
 		&i.EncryptedPassword,
 		&i.PasswordCreatedAt,
+		&i.GlobalChatColor,
 	)
 	return i, err
 }
@@ -520,6 +623,47 @@ func (q *Queries) SelectUserIdFromToken(ctx context.Context, tokenID int64) (str
 	var user_id string
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const selectUsersJoinedChatrooms = `-- name: SelectUsersJoinedChatrooms :many
+SELECT chatroom_members.chatroom_color, chatroom_members.chatroom_id
+FROM chatroom_members 
+JOIN chatrooms ON chatroom_members.chatroom_id = chatrooms.id 
+WHERE chatroom_members.user_id = ?
+`
+
+type SelectUsersJoinedChatroomsRow struct {
+	ChatroomColor string
+	ChatroomID    int64
+}
+
+// SelectUsersJoinedChatrooms
+//
+//	SELECT chatroom_members.chatroom_color, chatroom_members.chatroom_id
+//	FROM chatroom_members
+//	JOIN chatrooms ON chatroom_members.chatroom_id = chatrooms.id
+//	WHERE chatroom_members.user_id = ?
+func (q *Queries) SelectUsersJoinedChatrooms(ctx context.Context, userID string) ([]SelectUsersJoinedChatroomsRow, error) {
+	rows, err := q.db.QueryContext(ctx, selectUsersJoinedChatrooms, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SelectUsersJoinedChatroomsRow
+	for rows.Next() {
+		var i SelectUsersJoinedChatroomsRow
+		if err := rows.Scan(&i.ChatroomColor, &i.ChatroomID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const selectUsersTokens = `-- name: SelectUsersTokens :many
@@ -577,7 +721,7 @@ func (q *Queries) UpdateChatroomName(ctx context.Context, arg UpdateChatroomName
 }
 
 const updateMessage = `-- name: UpdateMessage :one
-UPDATE messages SET message = ? WHERE id = ? RETURNING id, author, message, color, room_id, created_at
+UPDATE messages SET message = ? WHERE id = ? RETURNING id, author_id, author_username, message, room_id, created_at
 `
 
 type UpdateMessageParams struct {
@@ -587,15 +731,15 @@ type UpdateMessageParams struct {
 
 // UpdateMessage
 //
-//	UPDATE messages SET message = ? WHERE id = ? RETURNING id, author, message, color, room_id, created_at
+//	UPDATE messages SET message = ? WHERE id = ? RETURNING id, author_id, author_username, message, room_id, created_at
 func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error) {
 	row := q.db.QueryRowContext(ctx, updateMessage, arg.Message, arg.ID)
 	var i Message
 	err := row.Scan(
 		&i.ID,
-		&i.Author,
+		&i.AuthorID,
+		&i.AuthorUsername,
 		&i.Message,
-		&i.Color,
 		&i.RoomID,
 		&i.CreatedAt,
 	)

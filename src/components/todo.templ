@@ -2,6 +2,7 @@ package components
 
 import "github.com/nathan-hello/htmx-template/src/db"
 import "fmt"
+import "github.com/nathan-hello/htmx-template/src/utils"
 
 templ createTodo() {
 	<div class="w-full flex my-5">
@@ -34,7 +35,7 @@ templ TodoRow(v *db.Todo) {
 	</tr>
 }
 
-templ Todo(s ClientState, todos []db.Todo) {
+templ Todo(s utils.ClientState, todos []db.Todo) {
 	@layout(LayoutParams{TabTitle: "Todos", NavTitle: "Todos"}, s) {
 		<div id="todos-table-and-submitter">
 			<div class="w-[60vw] min-w-fit mt-20 mx-auto overflow-x-auto rounded-xl">

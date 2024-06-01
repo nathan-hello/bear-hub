@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,19 +12,6 @@ type JwtParams struct {
 	Username string
 	UserId   string
 	Family   string
-}
-
-
-type CustomClaims struct {
-	jwt.RegisteredClaims
-	UserId   string `json:"sub"`
-	Username string `json:"username"`
-	JwtType  string `json:"jwt_type"`
-	Family   string `json:"family"`
-}
-
-func (c *CustomClaims) String() string {
-        return fmt.Sprintf("%#v", c)
 }
 
 func NewTokenPair(j *JwtParams) (string, string, error) {
@@ -76,10 +62,10 @@ func NewTokenPair(j *JwtParams) (string, string, error) {
 
 }
 
-func ParseToken(t string) (*CustomClaims, error) {
+func ParseToken(t string) (*utils.CustomClaims, error) {
 	token, err := jwt.ParseWithClaims(
 		t,
-		&CustomClaims{},
+		&utils.CustomClaims{},
 		func(token *jwt.Token) (interface{}, error) {
 			ok := token.Method.Alg() == "HS256"
 			if !ok {
@@ -98,7 +84,7 @@ func ParseToken(t string) (*CustomClaims, error) {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*CustomClaims)
+	claims, ok := token.Claims.(*utils.CustomClaims)
 	if !ok {
 		return nil, utils.ErrParsingJwt
 	}
@@ -165,7 +151,6 @@ func ValidatePairOrRefresh(a string, r string) (string, string, error) {
 		}
 		// if access is good but refresh is bad, we don't refresh based off
 		// of access tokens, so it's better to just error and reauth
-		utils.PrintlnOnDevMode("errjwtgoodaccbadref:", err)
 		return "", "", utils.ErrJwtGoodAccBadRef
 	}
 

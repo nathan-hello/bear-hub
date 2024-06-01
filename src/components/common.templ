@@ -1,8 +1,9 @@
 package components
 
 import "fmt"
+import "github.com/nathan-hello/htmx-template/src/utils"
 
-templ navbar(p LayoutParams, s ClientState) {
+templ navbar(p LayoutParams, s utils.ClientState) {
 	<nav class="h-16 bg-white border-gray-200 dark:bg-gray-900">
 		<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
 			<a href="https://flowbite.com/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -22,8 +23,8 @@ templ navbar(p LayoutParams, s ClientState) {
 					</ul>
 				} else {
 					<div id="guest-nav-actions" hidden="true" class="font-medium text-lg w-full flex space-x-5">
-						@navbarLink("/auth/signup",  "Sign Up")
-						@navbarLink("/auth/signin",  "Sign In")
+						@navbarLink("/auth/signup", "Sign Up")
+						@navbarLink("/auth/signin", "Sign In")
 						@navbarLink("/credits", "Credits")
 					</div>
 				}
@@ -32,7 +33,7 @@ templ navbar(p LayoutParams, s ClientState) {
 	</nav>
 }
 
-templ layout(p LayoutParams, s ClientState) {
+templ layout(p LayoutParams, s utils.ClientState) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -40,7 +41,7 @@ templ layout(p LayoutParams, s ClientState) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ p.TabTitle }</title>
 			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-                        <script>htmx.logAll()</script>
+			<script>htmx.logAll()</script>
 			<link rel="stylesheet" type="text/css" href="/css/tw-output.css"/>
 			@navbar(p, s)
 		</head>
@@ -65,7 +66,6 @@ templ minLayout(p LayoutParams) {
 			{ children... }
 		</body>
 	</html>
-        
 }
 
 templ AlertBox(s string) {
@@ -81,7 +81,7 @@ templ navbarLink(href templ.SafeURL, text string) {
 }
 
 templ Profile(p ProfileProps) {
-	@layout(LayoutParams{TabTitle: "Profile", NavTitle: "profile"}, ClientState{IsAuthed: false}) {
+	@layout(LayoutParams{TabTitle: "Profile", NavTitle: "profile"}, utils.ClientState{IsAuthed: false}) {
 		{ fmt.Sprintf("%#v\n", p) }
 	}
 }

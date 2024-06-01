@@ -12,23 +12,29 @@ type Chatroom struct {
 	ID        int64
 	Name      string
 	Creator   string
-	CreatedAt *time.Time
+	CreatedAt time.Time
+}
+
+type ChatroomMember struct {
+	ChatroomID    int64
+	UserID        string
+	ChatroomColor string
 }
 
 type Message struct {
-	ID        int64
-	Author    string
-	Message   string
-	Color     string
-	RoomID    int64
-	CreatedAt *time.Time
+	ID             int64
+	AuthorID       *string
+	AuthorUsername string
+	Message        string
+	RoomID         int64
+	CreatedAt      time.Time
 }
 
 type Todo struct {
 	ID        int64
 	Body      string
 	Username  string
-	CreatedAt *time.Time
+	CreatedAt time.Time
 }
 
 type Token struct {
@@ -46,6 +52,7 @@ type User struct {
 	PasswordSalt      string
 	EncryptedPassword string
 	PasswordCreatedAt time.Time
+	GlobalChatColor   string
 }
 
 type UsersToken struct {

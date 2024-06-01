@@ -9,6 +9,7 @@ import (
 
 	"github.com/justinas/alice"
 	"github.com/nathan-hello/htmx-template/src/auth"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func Logging(next http.Handler) http.Handler {
@@ -80,7 +81,7 @@ func InjectClaimsOnValidToken(next http.Handler) http.Handler {
 			return
 
                 }
-                wrapReq := r.WithContext(context.WithValue(r.Context(), auth.ClaimsContextKey, claims))
+                wrapReq := r.WithContext(context.WithValue(r.Context(), utils.ClaimsContextKey, claims))
 		next.ServeHTTP(w, wrapReq)
 	})
 }

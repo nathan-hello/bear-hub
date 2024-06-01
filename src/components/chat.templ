@@ -2,7 +2,7 @@ package components
 
 import "github.com/nathan-hello/htmx-template/src/utils"
 
-templ ChatRoot(s ClientState, embed bool) {
+templ ChatRoot(s utils.ClientState, embed bool) {
 	if (embed) {
 		@minLayout(LayoutParams{TabTitle: "Bear Hub - Chat", NavTitle: "Bear Chat"}) {
 			@chatScripts()
