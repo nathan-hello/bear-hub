@@ -5,20 +5,17 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
+	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
 func Todo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	claims, ok := r.Context().Value(auth.ClaimsContextKey).(*auth.CustomClaims)
-	if !ok {
+        state := utils.GetClientState(r)
+	if !state.IsAuthed {
                 http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
-	}
-	state := components.ClientState{
-		IsAuthed: ok,
 	}
 
 	if r.Method == "POST" {
@@ -35,7 +32,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		row, err := db.Db().InsertTodo(ctx, db.InsertTodoParams{Body: body, Username: claims.Username})
+		row, err := db.Db().InsertTodo(ctx, db.InsertTodoParams{Body: body, Username: state.Username})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -61,7 +58,7 @@ func Todo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		todos, err := db.Db().SelectTodosByUsername(ctx, claims.Username)
+		todos, err := db.Db().SelectTodosByUsername(ctx, state.Username)
 		if err != nil {
 			if err != sql.ErrNoRows {
                                 http.Redirect(w, r, "/signup", http.StatusSeeOther)

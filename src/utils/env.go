@@ -19,23 +19,25 @@ type Dotenv struct {
 	JWT_SECRET string
 }
 
+type authConfig struct {
+	EmailRequired    bool
+	UsernameRequired bool
+        PasswordCheck func(string) bool
+}
+
+func passwordCheck(p string) bool {
+return len(p) > 7
+}
+
 type FullConfig struct {
 	DB_URI              string
 	JWT_SECRET          string
 	REFRESH_EXPIRY_TIME time.Duration
 	ACCESS_EXPIRY_TIME  time.Duration
 	MODE                string // "prod", "dev", "test"
+        AUTH_CONFIG *authConfig
 }
 
-var AuthConfig = struct {
-	EmailRequired    bool
-	UsernameRequired bool
-	PassLength       int
-}{
-	EmailRequired:    false,
-	UsernameRequired: true,
-	PassLength:       9,
-}
 
 func InitEnv(path string) error {
 	g, err := NewEnv(path)
@@ -47,12 +49,19 @@ func InitEnv(path string) error {
 		panic("DB_URI or JWT_SECRET uninitiated")
 	}
 	if !initialized {
+                a := authConfig{
+	EmailRequired:    false,
+	UsernameRequired: true,
+	PasswordCheck:       passwordCheck,
+}
+
 		config = FullConfig{
 			DB_URI:              envFile.DB_URI,
 			JWT_SECRET:          envFile.JWT_SECRET,
 			REFRESH_EXPIRY_TIME: time.Hour * 72,
 			ACCESS_EXPIRY_TIME:  time.Hour * 24,
 			MODE:                "dev",
+                        AUTH_CONFIG: &a,
 		}
 		initialized = true
 	}

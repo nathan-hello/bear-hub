@@ -50,12 +50,12 @@ func (a *SignUp) FlushPasswords() {
 func (a *SignUp) validateStrings() bool {
 	_, emailErr := mail.ParseAddress(a.Email)
 	if emailErr != nil {
-		if utils.AuthConfig.EmailRequired {
+		if utils.Env().AUTH_CONFIG.EmailRequired {
 			a.EmailErr = utils.ErrEmailInvalid.Error()
 		}
 	}
 	if len(a.Username) < 3 {
-		if utils.AuthConfig.UsernameRequired {
+		if utils.Env().AUTH_CONFIG.UsernameRequired {
 			a.UsernameErr = utils.ErrUsernameTooShort.Error()
 
 		}
@@ -65,7 +65,7 @@ func (a *SignUp) validateStrings() bool {
 		a.MiscErrs = append(a.MiscErrs, utils.ErrEmailOrUsernameReq.Error())
 	}
 
-	if len(a.Password) < 7 {
+	if utils.Env().AUTH_CONFIG.PasswordCheck(a.Password) {
 		a.PassErr = utils.ErrPasswordInvalid.Error()
 	}
 	if a.Password != a.PassConf {

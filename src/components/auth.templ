@@ -2,6 +2,7 @@ package components
 
 import "fmt"
 import "github.com/nathan-hello/htmx-template/src/auth"
+import "github.com/nathan-hello/htmx-template/src/utils"
 
 func borderColor(t bool) string {
 	if t == true {
@@ -134,7 +135,7 @@ templ SignUpForm(a auth.SignUp) {
 	</form>
 }
 
-templ SignUp(s ClientState, a auth.SignUp) {
+templ SignUp(s utils.ClientState, a auth.SignUp) {
 	@layout(LayoutParams{TabTitle: "Bear Hub - Sign Up"}, s) {
 		<div class="pt-8">
 			@SignUpForm(a)
@@ -156,7 +157,7 @@ templ SignInForm(a auth.SignIn) {
 	</form>
 }
 
-templ SignIn(s ClientState, a auth.SignIn) {
+templ SignIn(s utils.ClientState, a auth.SignIn) {
 	@layout(LayoutParams{TabTitle: "Bear Hub - Sign In", NavTitle: "Sign In"}, s) {
 		<div class="pt-8">
 			@SignInForm(a)

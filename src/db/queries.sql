@@ -16,6 +16,8 @@ VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, username;
 SELECT id, email, username FROM users WHERE email = ?;
 -- name: SelectUserByUsername :one
 SELECT id, email, username FROM users WHERE username = ?;
+-- name: SelectUserById :one
+SELECT id, email, username FROM users WHERE id = ?;
 -- name: SelectUserByEmailWithPassword :one
 SELECT * FROM users WHERE email = ?;
 -- name: SelectUserByUsernameWithPassword :one
@@ -63,12 +65,44 @@ UPDATE chatrooms SET name = ? WHERE id = ? RETURNING *;
 
 -- table: messages
 -- name: SelectMessagesByChatroom :many
+SELECT messages.*, chatroom_members.chatroom_color
+FROM messages
+LEFT JOIN chatroom_members ON messages.room_id = chatroom_members.chatroom_id
+WHERE messages.room_id = ?
+ORDER BY messages.created_at DESC
+LIMIT ?;
 SELECT * FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?;
 -- name: SelectMessagesByUser :many
-SELECT * FROM messages WHERE author = ? ORDER BY created_at DESC LIMIT ?;
+SELECT * FROM messages WHERE author_id = ? ORDER BY created_at DESC LIMIT ?;
 -- name: InsertMessage :exec
-INSERT INTO messages (author, message, color, room_id, created_at) VALUES (?, ?, ?, ?, ?);
+INSERT INTO messages (author_id, author_username, message, room_id, created_at) VALUES (?, ?, ?, ?, ?);
 -- name: DeleteMessage :exec
 DELETE FROM messages WHERE id = ?;
 -- name: UpdateMessage :one
 UPDATE messages SET message = ? WHERE id = ? RETURNING *;
+
+
+-- table: chatroom_members
+-- name: InsertChatroomMember :exec
+INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?);
+-- name: SelectAllMembersByChatroom :many
+SELECT users.id, users.username, chatroom_members.chatroom_color 
+FROM chatroom_members 
+JOIN users ON chatroom_members.user_id = users.id 
+WHERE chatroom_members.chatroom_id = ?;
+-- name: SelectUsersJoinedChatrooms :many
+SELECT chatroom_members.chatroom_color, chatroom_members.chatroom_id
+FROM chatroom_members 
+JOIN chatrooms ON chatroom_members.chatroom_id = chatrooms.id 
+WHERE chatroom_members.user_id = ?;
+-- DeleteChatroomMember :exec
+DELETE FROM chatroom_members WHERE chatroom_members.user_id = ? AND chatroom_members.chatroom_id = ?;
+
+
+
+
+
+
+
+
+

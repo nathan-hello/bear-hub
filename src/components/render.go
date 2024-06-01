@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathan-hello/htmx-template/src/db"
 )
+
 type LayoutParams struct {
 	TabTitle string
 	NavTitle string
@@ -16,12 +17,8 @@ type ProfileProps struct {
 	Todos    *[]db.Todo
 }
 
-func formatTime(t *time.Time) string {
+func formatTime(t time.Time) string {
 	return t.Format(time.RFC822)
-}
-
-type ClientState struct {
-	IsAuthed bool
 }
 
 func sentenceizeString(s string) string {
@@ -30,6 +27,6 @@ func sentenceizeString(s string) string {
 	}
 	runes := []rune(s)
 	runes[0] = unicode.ToUpper(runes[0])
-        runes = append(runes, '.')
+	runes = append(runes, '.')
 	return string(runes)
 }

@@ -35,9 +35,13 @@ type Querier interface {
 	//
 	//  INSERT INTO chatrooms (name, creator, created_at) VALUES (?, ?, ?) RETURNING id
 	InsertChatroom(ctx context.Context, arg InsertChatroomParams) (int64, error)
+	// table: chatroom_members
+	//
+	//  INSERT INTO chatroom_members (chatroom_id, user_id, chatroom_color) VALUES (?, ?, ?)
+	InsertChatroomMember(ctx context.Context, arg InsertChatroomMemberParams) error
 	//InsertMessage
 	//
-	//  INSERT INTO messages (author, message, color, room_id, created_at) VALUES (?, ?, ?, ?, ?)
+	//  INSERT INTO messages (author_id, author_username, message, room_id, created_at) VALUES (?, ?, ?, ?, ?)
 	InsertMessage(ctx context.Context, arg InsertMessageParams) error
 	//InsertTodo
 	//
@@ -56,17 +60,29 @@ type Querier interface {
 	//
 	//  INSERT INTO users_tokens (user_id, token_id) VALUES (?, ?)
 	InsertUsersTokens(ctx context.Context, arg InsertUsersTokensParams) error
+	//SelectAllMembersByChatroom
+	//
+	//  SELECT users.id, users.username, chatroom_members.chatroom_color
+	//  FROM chatroom_members
+	//  JOIN users ON chatroom_members.user_id = users.id
+	//  WHERE chatroom_members.chatroom_id = ?
+	SelectAllMembersByChatroom(ctx context.Context, chatroomID int64) ([]SelectAllMembersByChatroomRow, error)
 	// table: chatrooms
 	//
 	//  SELECT id, name, creator, created_at FROM chatrooms ORDER BY created_at DESC LIMIT ?
 	SelectChatrooms(ctx context.Context, limit int64) ([]Chatroom, error)
 	// table: messages
 	//
-	//  SELECT id, author, message, color, room_id, created_at FROM messages WHERE room_id = ? ORDER BY created_at DESC LIMIT ?
-	SelectMessagesByChatroom(ctx context.Context, arg SelectMessagesByChatroomParams) ([]Message, error)
+	//  SELECT messages.id, messages.author_id, messages.author_username, messages.message, messages.room_id, messages.created_at, chatroom_members.chatroom_color
+	//  FROM messages
+	//  LEFT JOIN chatroom_members ON messages.room_id = chatroom_members.chatroom_id
+	//  WHERE messages.room_id = ?
+	//  ORDER BY messages.created_at DESC
+	//  LIMIT ?
+	SelectMessagesByChatroom(ctx context.Context, arg SelectMessagesByChatroomParams) ([]SelectMessagesByChatroomRow, error)
 	//SelectMessagesByUser
 	//
-	//  SELECT id, author, message, color, room_id, created_at FROM messages WHERE author = ? ORDER BY created_at DESC LIMIT ?
+	//  SELECT id, author_id, author_username, message, room_id, created_at FROM messages WHERE author_id = ? ORDER BY created_at DESC LIMIT ?
 	SelectMessagesByUser(ctx context.Context, arg SelectMessagesByUserParams) ([]Message, error)
 	// table: todos
 	//
@@ -86,20 +102,31 @@ type Querier interface {
 	SelectUserByEmail(ctx context.Context, email string) (SelectUserByEmailRow, error)
 	//SelectUserByEmailWithPassword
 	//
-	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE email = ?
+	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE email = ?
 	SelectUserByEmailWithPassword(ctx context.Context, email string) (User, error)
+	//SelectUserById
+	//
+	//  SELECT id, email, username FROM users WHERE id = ?
+	SelectUserById(ctx context.Context, id string) (SelectUserByIdRow, error)
 	//SelectUserByUsername
 	//
 	//  SELECT id, email, username FROM users WHERE username = ?
 	SelectUserByUsername(ctx context.Context, username string) (SelectUserByUsernameRow, error)
 	//SelectUserByUsernameWithPassword
 	//
-	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at FROM users WHERE username = ?
+	//  SELECT id, email, username, password_salt, encrypted_password, password_created_at, global_chat_color FROM users WHERE username = ?
 	SelectUserByUsernameWithPassword(ctx context.Context, username string) (User, error)
 	//SelectUserIdFromToken
 	//
 	//  SELECT user_id FROM users_tokens WHERE token_id = ? LIMIT 1
 	SelectUserIdFromToken(ctx context.Context, tokenID int64) (string, error)
+	//SelectUsersJoinedChatrooms
+	//
+	//  SELECT chatroom_members.chatroom_color, chatroom_members.chatroom_id
+	//  FROM chatroom_members
+	//  JOIN chatrooms ON chatroom_members.chatroom_id = chatrooms.id
+	//  WHERE chatroom_members.user_id = ?
+	SelectUsersJoinedChatrooms(ctx context.Context, userID string) ([]SelectUsersJoinedChatroomsRow, error)
 	// table: users_tokens
 	//
 	//  SELECT user_id, token_id FROM users_tokens WHERE user_id = ?
@@ -110,7 +137,7 @@ type Querier interface {
 	UpdateChatroomName(ctx context.Context, arg UpdateChatroomNameParams) (Chatroom, error)
 	//UpdateMessage
 	//
-	//  UPDATE messages SET message = ? WHERE id = ? RETURNING id, author, message, color, room_id, created_at
+	//  UPDATE messages SET message = ? WHERE id = ? RETURNING id, author_id, author_username, message, room_id, created_at
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error)
 	//UpdateTodo
 	//

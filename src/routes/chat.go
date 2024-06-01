@@ -9,11 +9,13 @@ import (
 	"sync"
 
 	gws "github.com/gorilla/websocket"
-	"github.com/nathan-hello/htmx-template/src/auth"
 	"github.com/nathan-hello/htmx-template/src/components"
 	"github.com/nathan-hello/htmx-template/src/db"
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
+
+const DEFAULT_ROOM_ID = 1
+const DEFAULT_CHAT_COLOR = "text-gray-500"
 
 var upgrader = gws.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -59,6 +61,7 @@ var manager = Manager{
 }
 
 func ChatSocket(w http.ResponseWriter, r *http.Request) {
+	state := utils.GetClientState(r)
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -74,13 +77,23 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-                
-                var msg utils.ChatMessage
+
+		var msg utils.ChatMessage
 		err = json.Unmarshal(clientMsg, &msg)
 		if err != nil {
 			log.Println(err)
 			w.Write([]byte(err.Error()))
 		}
+
+		db.Db().InsertMessage(
+			r.Context(),
+			db.InsertMessageParams{
+				AuthorID:       &state.UserId,
+				AuthorUsername: msg.Author,
+				Message:        msg.Text,
+				CreatedAt:      msg.CreatedAt,
+				RoomID:         DEFAULT_ROOM_ID,
+			})
 
 		buffMsg := &bytes.Buffer{}
 
@@ -91,6 +104,7 @@ func ChatSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiChat(w http.ResponseWriter, r *http.Request) {
+	//state := utils.GetClientState(r)
 	htmlResponse := r.Header.Get("Content-Type") == "text/html"
 	jsonResponse := r.Header.Get("Content-Type") == "application/json"
 	if !htmlResponse && !jsonResponse {
@@ -101,15 +115,26 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 		c := utils.ChatMessage{}
 		err := json.NewDecoder(r.Body).Decode(&c)
 		if err != nil {
-			w.Write([]byte(err.Error()))
+			fmt.Fprintf(w, "{error: \"%v\"}\n", err)
+			return
 		}
 
 		var resp []byte
 
 		// We need to send html to subscribers no matter what
-		var htmlMsg bytes.Buffer
+		htmlMsg := bytes.Buffer{}
 		components.ChatMessage(&c).Render(r.Context(), &htmlMsg)
 		manager.BroadcastMessage(htmlMsg.Bytes())
+
+		db.Db().InsertMessage(
+			r.Context(),
+			db.InsertMessageParams{
+				AuthorID:       nil,
+				AuthorUsername: c.Author,
+				Message:        c.Text,
+				RoomID:         DEFAULT_ROOM_ID,
+				CreatedAt:      c.CreatedAt,
+			})
 
 		if htmlResponse {
 			resp = htmlMsg.Bytes()
@@ -126,17 +151,14 @@ func ApiChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func Chat(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetClaims(r)
-	state := components.ClientState{
-		IsAuthed: ok,
-	}
+	state := utils.GetClientState(r)
 	embed := r.URL.Query().Get("embed") == "true"
 
 	if r.Method == "GET" {
 		recents, err := db.Db().SelectMessagesByChatroom(
 			r.Context(),
 			db.SelectMessagesByChatroomParams{
-				RoomID: 1,
+				RoomID: DEFAULT_ROOM_ID,
 				Limit:  10,
 			})
 		if err != nil {
@@ -145,11 +167,17 @@ func Chat(w http.ResponseWriter, r *http.Request) {
 
 		var buffer bytes.Buffer
 		for _, msg := range recents {
+			var color string
+			if msg.ChatroomColor == nil {
+				color = DEFAULT_CHAT_COLOR
+			} else {
+				color = *msg.ChatroomColor
+			}
 			m := &utils.ChatMessage{
-				Author:    msg.Author,
+				Author:    msg.AuthorUsername,
 				Text:      msg.Message,
-				Color:     msg.Color,
-                                CreatedAt: msg.CreatedAt,
+				Color:     color,
+				CreatedAt: msg.CreatedAt,
 			}
 			components.ChatMessage(m).Render(r.Context(), &buffer)
 		}

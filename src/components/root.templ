@@ -1,6 +1,8 @@
 package components
 
-templ Root(s ClientState) {
+import "github.com/nathan-hello/htmx-template/src/utils"
+
+templ Root(s utils.ClientState) {
 	@layout(
 		LayoutParams{TabTitle: "Bear Hub", NavTitle: "Bear Hub"},
 		s,

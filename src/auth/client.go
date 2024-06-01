@@ -7,17 +7,8 @@ import (
 	"github.com/nathan-hello/htmx-template/src/utils"
 )
 
-
-type ContextClaimType struct{}
-var ClaimsContextKey struct{} = ContextClaimType{}
-
-func GetClaims( r *http.Request) (*CustomClaims, bool) {
-        claims, ok := r.Context().Value(ClaimsContextKey).(*CustomClaims)
-        return claims, ok
-}
-
 func SetTokenCookies(w http.ResponseWriter, a string, r string) {
-        secure := utils.Env().MODE == "prod" 
+	secure := utils.Env().MODE == "prod"
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
@@ -27,7 +18,6 @@ func SetTokenCookies(w http.ResponseWriter, a string, r string) {
 		HttpOnly: secure,
 		Path:     "/",
 		SameSite: http.SameSiteLaxMode,
-
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -75,20 +65,18 @@ func DeleteJwtCookies(w http.ResponseWriter) {
 func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) {
 	access, err := r.Cookie("access_token")
 	if err != nil {
-                if err == http.ErrNoCookie {
-                        return "", false
-                }
-                utils.PrintlnOnDevMode("delete access because r.Cookie err", err) 
+		if err == http.ErrNoCookie {
+			return "", false
+		}
 		DeleteJwtCookies(w)
 		return "", false
 	}
 
 	refresh, err := r.Cookie("refresh_token")
 	if err != nil {
-                if err == http.ErrNoCookie {
-                        return "", false
-                }
-                utils.PrintlnOnDevMode("delete refresh because r.Cookie err", err) 
+		if err == http.ErrNoCookie {
+			return "", false
+		}
 		DeleteJwtCookies(w)
 		return "", false
 	}
@@ -96,7 +84,6 @@ func ValidateJwtOrDelete(w http.ResponseWriter, r *http.Request) (string, bool) 
 	vAccess, vRefresh, err := ValidatePairOrRefresh(access.Value, refresh.Value)
 
 	if err != nil {
-                utils.PrintlnOnDevMode("delete vaccess/vrefresh", err) 
 		DeleteJwtCookies(w)
 		return "", false
 	}
