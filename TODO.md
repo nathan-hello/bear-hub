@@ -1,5 +1,5 @@
 1. auth!
-    - email magic links, reset links, oauth, totp, api keys
+    - email magic links, reset links, oauth, totp with backup, qr code signin, api keys
     - multiple paths to auth the same account (oauth google/github, email)
     - perms: `admin`, `user`, `guest`
 
